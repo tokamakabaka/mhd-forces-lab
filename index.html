@@ -263,6 +263,8 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
 .tex-source pre{margin:10px 0 0;padding:12px;border:1px solid var(--line);border-radius:9px;background:rgba(0,0,0,.3);color:var(--muted);font-family:var(--mono);font-size:10px;line-height:1.7;overflow-x:auto;white-space:pre}
 .field-quote{margin-top:18px;padding:18px 21px;border-left:2px solid var(--cyan);background:rgba(86,217,255,.035);border-radius:0 10px 10px 0;font-size:13px;line-height:1.8;color:var(--ink-2)}
 .field-quote b{color:var(--cyan);font-weight:600}
+.field-quote a{color:var(--amber);border-bottom:1px solid rgba(255,193,94,.35);padding-bottom:1px}
+.field-quote a:hover{border-color:var(--amber)}
 
 /* ============ concept ============ */
 .concept-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
@@ -964,7 +966,7 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
             =
             n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R
           \]</div>
-          <p class="eq-note">左边 \(mn\,d\mathbf u/dt\) 是单位体积的动量变化率；右边每一项都是单位体积的力（N/m³）。图片把 \(p\) 记为压强张量的对角项，把 \(\overleftrightarrow{\Pi}\) 记为非对角项。</p>
+          <p class="eq-note">左边 \(mn\,d\mathbf u/dt\) 是单位体积的动量变化率；右边每一项都是单位体积的力（N/m³）。图片把 \(p\) 记为压强张量的对角项，把 \(\overleftrightarrow{\Pi}\) 记为非对角项；若写成完整压强张量 \(\mathbf P=p\mathbf I+\overleftrightarrow{\Pi}\)，则 \(-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}=-\nabla\cdot\mathbf P\)。</p>
           <details class="tex-source">
             <summary>查看 TeX 源码</summary>
             <pre>mn\frac{d\mathbf u}{dt}
@@ -1007,7 +1009,7 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
         <p class="note" style="margin-top:12px">符号约定很重要：图片里的 \(\overleftrightarrow{\Pi}\) 与 \(\nabla\) 前的负号绑定；若采用 \(\boldsymbol\sigma=-p\mathbf I+\boldsymbol\tau\) 且粘性力写成 \(+\nabla\cdot\boldsymbol\tau\)，则 \(\overleftrightarrow{\Pi}=-\boldsymbol\tau\)。两种写法描述的是同一个偏应力。</p>
       </div>
 
-      <div class="field-quote" style="border-left-color:var(--amber);background:rgba(255,193,94,.035)"><b>为什么左边是“动量变化率”而不是“力”？</b>因为 \(mn\) 是单位体积的质量，乘以加速度就是单位体积的惯性项。右边才是单位体积的力；把两边都除以 \(mn\)，就得到熟悉的“加速度 = 比力”形式。</div>
+      <div class="field-quote" style="border-left-color:var(--amber);background:rgba(255,193,94,.035)"><b>为什么左边是“动量变化率”而不是“力”？</b>因为 \(mn\) 是单位体积的质量，乘以加速度就是单位体积的惯性项。右边才是单位体积的力；把两边都除以 \(mn\)，就得到熟悉的“加速度 = 比力”形式。完整推导、符号表与所有公式源码见 <a href="MHD-notes.pdf">MHD 完整讲义 PDF</a> 与 <a href="MHD-notes.md">Markdown 源文件</a>。</div>
     </div>
   </section>
 

@@ -178,6 +178,20 @@ $$
 - $-\nabla\cdot\overleftrightarrow{\Pi}$ 是**粘滞力**，$\overleftrightarrow{\Pi}$ 是压强张量的非对角项，属于表面力；
 - $\mathbf R$ 是异种粒子弹性碰撞造成的摩擦阻力，是体积力；同类粒子碰撞由于动量守恒，对 $\mathbf R$ 没有贡献。
 
+若把完整压强张量写成
+
+$$
+\mathbf P=p\mathbf I+\overleftrightarrow{\Pi},
+$$
+
+则压力与偏应力合在一起给出
+
+$$
+-\nabla\cdot\mathbf P=-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}.
+$$
+
+这也是图片中 $-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}$ 的来源。
+
 ## 2.3 与常见 MHD 方程的对应
 
 对单组分流体，$\mathbf R=0$，$mn=\rho$，$\mathbf u=\mathbf v$。对多组分等离子体，把各物种的方程相加，可以得到单流体方程。对应关系如下：
