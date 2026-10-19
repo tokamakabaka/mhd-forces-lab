@@ -1,0 +1,3273 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="体积力与表面力的理论、直觉与交互实验：用流体元解剖磁流体力学中的热压力、粘滞力和电磁力。">
+<meta property="og:title" content="体积力 × 表面力 | MHD 流体元实验室">
+<meta property="og:description" content="拖动滑块解剖流体元，实时观察热压力、粘滞力与电磁力如何在 MHD 动量方程中竞争。">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#060a11">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='22' fill='%23060a11'/%3E%3Cpath d='M24 24h48v10H34v20h30v10H34v18H24z' fill='%2356d9ff'/%3E%3C/svg%3E">
+<title>体积力 × 表面力 | MHD 流体元实验室</title>
+<style>
+/* ============ foundations ============ */
+:root{
+  --bg:#060a11;
+  --bg-2:#0a111d;
+  --panel:rgba(13,22,37,.78);
+  --panel-solid:#0d1625;
+  --panel-soft:rgba(20,33,54,.55);
+  --line:rgba(154,184,220,.14);
+  --line-strong:rgba(154,184,220,.28);
+  --ink:#eaf2fd;
+  --ink-2:#c4d4e7;
+  --muted:#8fa5bd;
+  --dim:#647a92;
+  --cyan:#56d9ff;
+  --cyan-deep:#1c9fd6;
+  --amber:#ffc15e;
+  --amber-deep:#e9962e;
+  --magenta:#ff7fb1;
+  --violet:#a79bff;
+  --green:#6fe7b5;
+  --red:#ff7f7f;
+  --blue:#74a8ff;
+  --maxw:1240px;
+  --radius:22px;
+  --radius-sm:14px;
+  --mono:"Cascadia Code","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  --sans:"Segoe UI Variable Text","Microsoft YaHei UI","PingFang SC","Noto Sans SC",system-ui,sans-serif;
+  --display:"Segoe UI Variable Display","Microsoft YaHei UI","PingFang SC","Noto Sans SC",system-ui,sans-serif;
+  --shadow:0 26px 80px rgba(0,0,0,.38);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:86px}
+body{
+  margin:0;
+  color:var(--ink);
+  background:
+    radial-gradient(1100px 720px at 78% -8%,rgba(49,140,210,.16),transparent 62%),
+    radial-gradient(850px 680px at -12% 18%,rgba(255,163,64,.07),transparent 58%),
+    radial-gradient(900px 720px at 45% 105%,rgba(110,88,220,.09),transparent 62%),
+    var(--bg);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background-image:
+    linear-gradient(rgba(140,175,215,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(140,175,215,.045) 1px,transparent 1px);
+  background-size:72px 72px;
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 30%,black 20%,transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 30%,black 20%,transparent 78%);
+}
+::selection{background:rgba(86,217,255,.28);color:#fff}
+a{color:inherit;text-decoration:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3{font-family:var(--display);font-weight:650;letter-spacing:-.025em}
+canvas{display:block;max-width:100%}
+.wrap{width:min(calc(100% - 44px),var(--maxw));margin-inline:auto}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip{position:fixed;left:16px;top:-80px;z-index:300;background:#fff;color:#06101c;padding:10px 16px;border-radius:10px;transition:top .2s}
+.skip:focus{top:12px}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ============ top bar ============ */
+.progress{position:fixed;top:0;left:0;z-index:210;height:2px;width:0;background:linear-gradient(90deg,var(--cyan),var(--violet),var(--amber));box-shadow:0 0 14px rgba(86,217,255,.6)}
+.topbar{
+  position:fixed;inset:0 0 auto 0;z-index:200;
+  height:68px;
+  border-bottom:1px solid transparent;
+  transition:background .28s,border-color .28s,backdrop-filter .28s;
+}
+.topbar.scrolled{background:rgba(6,11,19,.76);border-bottom-color:var(--line);backdrop-filter:blur(18px) saturate(140%)}
+.topbar .wrap{height:100%;display:flex;align-items:center;justify-content:space-between;gap:26px}
+.brand{display:flex;align-items:center;gap:12px;min-width:max-content}
+.brand-mark{width:34px;height:34px;border-radius:11px;position:relative;background:linear-gradient(145deg,rgba(86,217,255,.2),rgba(167,155,255,.12));border:1px solid rgba(86,217,255,.35);display:grid;place-items:center;box-shadow:inset 0 0 14px rgba(86,217,255,.12)}
+.brand-mark::before{content:"";width:14px;height:14px;border:1.5px solid var(--cyan);border-radius:3px;transform:rotate(12deg)}
+.brand-mark::after{content:"";position:absolute;width:4px;height:4px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.brand-text{display:flex;flex-direction:column;line-height:1.1}
+.brand-text strong{font-size:14px;letter-spacing:.04em;font-weight:650}
+.brand-text span{font-size:10px;letter-spacing:.2em;color:var(--dim);margin-top:4px;font-family:var(--mono)}
+.nav-links{display:flex;align-items:center;gap:6px}
+.nav-links a{font-size:13px;color:var(--muted);padding:8px 11px;border-radius:9px;transition:.18s}
+.nav-links a:hover{color:var(--ink);background:rgba(255,255,255,.055)}
+.top-actions{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:12px;padding:11px 18px;font-size:13.5px;font-weight:600;letter-spacing:.01em;transition:transform .18s,background .18s,border-color .18s,box-shadow .18s;white-space:nowrap}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,#77e6ff,#58b8ff 55%,#8f9dff);color:#04121f;box-shadow:0 10px 28px rgba(70,180,255,.22)}
+.btn-primary:hover{box-shadow:0 14px 34px rgba(70,180,255,.34)}
+.btn-ghost{background:rgba(255,255,255,.035);border-color:var(--line-strong);color:var(--ink-2)}
+.btn-ghost:hover{background:rgba(255,255,255,.07);border-color:rgba(154,184,220,.4)}
+.btn-small{padding:8px 13px;border-radius:10px;font-size:12.5px}
+.icon{width:16px;height:16px;flex:0 0 auto}
+
+/* ============ hero ============ */
+.hero{position:relative;padding:146px 0 76px;overflow:hidden}
+.hero::after{content:"";position:absolute;left:50%;bottom:-1px;width:min(1100px,90vw);height:1px;background:linear-gradient(90deg,transparent,rgba(86,217,255,.45),rgba(255,193,94,.3),transparent);transform:translateX(-50%)}
+.hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:58px;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--cyan);font-size:11.5px;font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;margin-bottom:26px}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 0 rgba(86,217,255,.5);animation:pulse 2.8s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(86,217,255,.42)}50%{box-shadow:0 0 0 8px rgba(86,217,255,0)}}
+.hero h1{font-size:clamp(40px,4.7vw,66px);line-height:1.09;letter-spacing:-.045em;font-weight:680;margin-bottom:24px}
+.hero h1 .accent-c,.hero h1 .accent-a{position:relative;display:inline-block;font-weight:700}
+.hero h1 .accent-c{color:var(--cyan);text-shadow:0 0 35px rgba(86,217,255,.25)}
+.hero h1 .accent-a{color:var(--amber);text-shadow:0 0 35px rgba(255,193,94,.2)}
+.hero h1 .accent-c::after,.hero h1 .accent-a::after{content:"";position:absolute;left:2%;right:2%;bottom:-.04em;height:1px;opacity:.45}
+.hero h1 .accent-c::after{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.hero h1 .accent-a::after{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+.hero-lede{max-width:590px;color:var(--ink-2);font-size:17px;line-height:1.82;margin-bottom:31px}
+.hero-lede strong{color:var(--ink);font-weight:650}
+.cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:33px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:26px;border-top:1px solid var(--line);padding-top:19px;max-width:610px}
+.hero-stat{display:flex;align-items:baseline;gap:8px;color:var(--muted);font-size:12px}
+.hero-stat b{font-family:var(--mono);font-size:17px;color:var(--ink);font-weight:500}
+.hero-art{position:relative;min-width:0}
+.hero-glow{position:absolute;inset:4% -4% 8% -4%;background:radial-gradient(closest-side,rgba(49,144,214,.22),transparent 72%);filter:blur(18px);z-index:0}
+.hero-card{position:relative;z-index:1;border:1px solid var(--line-strong);border-radius:28px;padding:16px;background:linear-gradient(160deg,rgba(18,31,51,.9),rgba(8,14,24,.88));box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden}
+.hero-card::before{content:"";position:absolute;inset:0;background:radial-gradient(500px 300px at 80% 0%,rgba(86,217,255,.09),transparent 60%);pointer-events:none}
+.hc-head{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 11px;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
+.hc-head .live{display:flex;align-items:center;gap:6px;color:var(--green)}
+.hc-head .live i{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.hero-svg{width:100%;height:auto;border-radius:18px;background:linear-gradient(180deg,rgba(7,13,23,.9),rgba(10,19,31,.65));border:1px solid rgba(154,184,220,.1)}
+.hc-eq{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:11px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(4,9,16,.55);font-family:var(--mono);font-size:11.5px;color:var(--ink-2);overflow:auto;white-space:nowrap}
+.hc-eq em{font-style:normal;color:var(--cyan)}
+.hc-eq .amber{color:var(--amber)}
+.hc-eq .pink{color:var(--magenta)}
+.float-tag{position:absolute;z-index:3;padding:6px 10px;border-radius:9px;background:rgba(7,13,22,.82);border:1px solid var(--line-strong);font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink-2);backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,.28)}
+.float-tag.a{top:15%;right:-5%;color:var(--amber);border-color:rgba(255,193,94,.28)}
+.float-tag.b{bottom:18%;left:-5%;color:var(--cyan);border-color:rgba(86,217,255,.28)}
+.svg-label{font-family:var(--mono);font-size:10px;letter-spacing:.04em;fill:#a8bdd2}
+.svg-small{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;fill:#6e849b}
+.svg-eq{font-family:var(--mono);font-size:15px;fill:#dceafa}
+.arrow-line{stroke-linecap:round}
+.dashmove{stroke-dasharray:5 7;animation:dash 2.8s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-48}}
+.breathe{animation:breathe 4.2s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.6}50%{opacity:1}}
+
+/* ============ generic section ============ */
+.section{padding:92px 0;position:relative}
+.section + .section{border-top:1px solid rgba(154,184,220,.08)}
+.section-head{display:grid;grid-template-columns:86px minmax(0,1fr);gap:22px;margin-bottom:38px;align-items:start}
+.section-no{font-family:var(--mono);font-size:12px;color:var(--cyan);letter-spacing:.13em;padding-top:8px;position:relative}
+.section-no::after{content:"";display:block;width:42px;height:1px;background:linear-gradient(90deg,var(--cyan),transparent);margin-top:12px;opacity:.6}
+.kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:11px}
+.section-title{font-size:clamp(29px,3.4vw,45px);line-height:1.18;letter-spacing:-.035em;margin-bottom:13px}
+.section-lede{max-width:800px;color:var(--muted);font-size:15.5px;line-height:1.85}
+.section-lede strong{color:var(--ink-2);font-weight:600}
+.accent-cyan{color:var(--cyan)}
+.accent-amber{color:var(--amber)}
+.accent-magenta{color:var(--magenta)}
+.accent-green{color:var(--green)}
+.card{border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(160deg,rgba(16,27,45,.74),rgba(9,16,28,.66));box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.card-pad{padding:27px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:7px;border:1px solid var(--line);background:rgba(255,255,255,.035);font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);white-space:nowrap}
+.chip.c{border-color:rgba(86,217,255,.25);color:var(--cyan);background:rgba(86,217,255,.06)}
+.chip.a{border-color:rgba(255,193,94,.25);color:var(--amber);background:rgba(255,193,94,.06)}
+.chip.m{border-color:rgba(255,127,177,.25);color:var(--magenta);background:rgba(255,127,177,.06)}
+.chip.g{border-color:rgba(111,231,181,.25);color:var(--green);background:rgba(111,231,181,.06)}
+.chip.v{border-color:rgba(167,155,255,.25);color:var(--violet);background:rgba(167,155,255,.06)}
+.note{font-size:12px;color:var(--dim);line-height:1.7}
+.formula{font-family:var(--mono);font-size:14px;line-height:1.7;color:var(--ink-2)}
+.formula .op{color:var(--dim)}
+.formula .c{color:var(--cyan)}
+.formula .a{color:var(--amber)}
+.formula .m{color:var(--magenta)}
+.formula .g{color:var(--green)}
+.formula .v{color:var(--violet)}
+.formula-block{padding:14px 17px;border:1px solid var(--line);border-radius:12px;background:rgba(4,9,16,.45);overflow:auto}
+
+/* ============ math & field momentum ============ */
+mjx-container[jax="SVG"]{color:var(--ink-2);max-width:100%}
+mjx-container[jax="SVG"][display="true"]{margin:0!important}
+mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
+.math-block{
+  padding:16px 18px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:rgba(4,9,16,.48);
+  overflow-x:auto;
+  overflow-y:hidden;
+  color:var(--ink-2);
+  line-height:1.5;
+}
+.math-block + .math-block{margin-top:9px}
+.math-block--xl{padding:24px 20px;border-color:rgba(86,217,255,.22);background:linear-gradient(145deg,rgba(86,217,255,.055),rgba(4,9,16,.45));font-size:1.14em}
+.math-caption{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--dim);margin-top:8px}
+.math-inline{white-space:nowrap}
+.field-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:19px}
+.field-card{padding:28px;position:relative;overflow:hidden}
+.field-card h3{font-size:20px;margin:12px 0 7px}
+.field-card p{font-size:13px;line-height:1.82;color:var(--muted);margin:10px 0}
+.field-card p b{color:var(--ink-2)}
+.field-card .math-block{margin-top:13px}
+.field-flow{margin-top:19px;display:grid;grid-template-columns:1.05fr .95fr;gap:32px;padding:28px;align-items:center}
+.field-flow h3{font-size:22px;margin-bottom:8px}
+.field-flow p{font-size:13px;line-height:1.8;color:var(--muted);margin:10px 0}
+.field-flow p b{color:var(--ink-2)}
+.field-diagram{border:1px solid var(--line);border-radius:16px;background:radial-gradient(ellipse at 50% 40%,#0b1a2b,#040a12 75%);overflow:hidden;min-height:290px;display:flex;align-items:center}
+.field-diagram svg{width:100%;height:auto;display:block}
+.flow-labels{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.mhd-limit{margin-top:19px;display:grid;grid-template-columns:1.08fr .92fr;gap:24px 30px;padding:28px;align-items:center;position:relative;overflow:hidden}
+.mhd-limit::before{content:"";position:absolute;right:-120px;top:-160px;width:380px;height:380px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,127,177,.11),transparent 70%)}
+.mhd-limit h3{font-size:21px;margin:9px 0 8px;position:relative;z-index:1}
+.mhd-limit p{font-size:13px;line-height:1.8;color:var(--muted);position:relative;z-index:1}
+.mhd-limit .math-block{position:relative;z-index:1}
+.mhd-limit .math-block--wide{grid-column:2;grid-row:1 / span 2}
+.image-eq-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:19px;margin-bottom:19px}
+.image-eq-card{padding:30px;position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(17,31,50,.9),rgba(8,15,26,.8))}
+.image-eq-card::before{content:"";position:absolute;left:-100px;top:-130px;width:340px;height:340px;border-radius:50%;background:radial-gradient(closest-side,rgba(86,217,255,.13),transparent 70%);pointer-events:none}
+.image-eq-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px;position:relative;z-index:1}
+.image-eq-head h3{font-size:22px;margin-top:7px;line-height:1.35}
+.image-eq-card .math-block{position:relative;z-index:1}
+.image-eq-card .eq-note{position:relative;z-index:1;font-size:12px;line-height:1.8;color:var(--muted);margin-top:12px}
+.symbol-card{padding:27px}
+.symbol-card h3{font-size:19px;margin-bottom:12px}
+.symbol-list{display:flex;flex-direction:column}
+.symbol-row{display:grid;grid-template-columns:42px 1fr;gap:11px;padding:10px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.symbol-row:last-child{border-bottom:0;padding-bottom:0}
+.symbol-row .sym{font-family:var(--mono);font-size:13px;color:var(--cyan);white-space:nowrap}
+.symbol-row .desc{font-size:11.5px;line-height:1.65;color:var(--muted)}
+.symbol-row .desc b{color:var(--ink-2);font-weight:600}
+.mapping-card{padding:28px}
+.mapping-card h3{font-size:19px;margin-bottom:7px}
+.mapping-card > p{font-size:12px;color:var(--muted);line-height:1.75;margin-bottom:15px}
+.mapping-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.mapping-table{width:100%;border-collapse:collapse;min-width:690px;font-size:11.5px}
+.mapping-table th{text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--dim);font-weight:500;padding:11px 13px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.025);white-space:nowrap}
+.mapping-table td{padding:10px 13px;border-bottom:1px solid rgba(154,184,220,.08);color:var(--muted);vertical-align:top;line-height:1.6}
+.mapping-table tr:last-child td{border-bottom:0}
+.mapping-table td:first-child{font-family:var(--mono);color:var(--cyan);white-space:nowrap}
+.mapping-table td:nth-child(2){color:var(--ink-2)}
+.mapping-table code{font-family:var(--mono);font-size:10.5px;color:var(--amber)}
+.tex-source{margin-top:15px;border-top:1px solid var(--line);padding-top:11px}
+.tex-source summary{cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim);list-style:none}
+.tex-source summary::-webkit-details-marker{display:none}
+.tex-source summary::before{content:"+ ";color:var(--cyan)}
+.tex-source[open] summary::before{content:"− "}
+.tex-source pre{margin:10px 0 0;padding:12px;border:1px solid var(--line);border-radius:9px;background:rgba(0,0,0,.3);color:var(--muted);font-family:var(--mono);font-size:10px;line-height:1.7;overflow-x:auto;white-space:pre}
+.field-quote{margin-top:18px;padding:18px 21px;border-left:2px solid var(--cyan);background:rgba(86,217,255,.035);border-radius:0 10px 10px 0;font-size:13px;line-height:1.8;color:var(--ink-2)}
+.field-quote b{color:var(--cyan);font-weight:600}
+
+/* ============ concept ============ */
+.concept-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.force-card{padding:29px;position:relative;overflow:hidden;min-height:355px;display:flex;flex-direction:column}
+.force-card::before{content:"";position:absolute;inset:auto -20% -45% 30%;height:320px;background:radial-gradient(closest-side,var(--fc-glow),transparent 70%);pointer-events:none;opacity:.8}
+.force-card.body{--fc-glow:rgba(255,127,177,.16);--fc:var(--magenta)}
+.force-card.surface{--fc-glow:rgba(255,193,94,.14);--fc:var(--amber)}
+.fc-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:19px;position:relative;z-index:1}
+.fc-title{display:flex;align-items:center;gap:10px;font-size:21px;font-weight:650;letter-spacing:-.02em}
+.fc-title .fc-dot{width:9px;height:9px;border-radius:50%;background:var(--fc);box-shadow:0 0 14px var(--fc)}
+.fc-en{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--dim);margin-top:4px}
+.fc-copy{color:var(--ink-2);font-size:14.5px;line-height:1.8;position:relative;z-index:1;margin-bottom:16px}
+.fc-copy b{color:var(--ink);font-weight:650}
+.fc-icon{width:100%;height:126px;border:1px solid var(--line);border-radius:14px;background:rgba(4,9,16,.32);margin-bottom:16px;position:relative;z-index:1}
+.fc-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:auto;position:relative;z-index:1}
+.fc-scale{position:absolute;right:22px;bottom:21px;font-family:var(--mono);font-size:10px;color:var(--fc);letter-spacing:.05em;z-index:1}
+
+.bridge{margin-top:18px;display:grid;grid-template-columns:1.18fr .82fr;gap:30px;padding:28px 30px;align-items:center;position:relative;overflow:hidden}
+.bridge::before{content:"";position:absolute;width:380px;height:380px;border-radius:50%;right:-190px;top:-210px;border:1px solid rgba(86,217,255,.12);box-shadow:0 0 80px rgba(86,217,255,.06) inset}
+.bridge h3{font-size:22px;margin-bottom:10px}
+.bridge p{color:var(--muted);font-size:14px;line-height:1.8;max-width:600px}
+.bridge p b{color:var(--ink-2)}
+.bridge-formula{display:flex;flex-direction:column;gap:8px;position:relative;z-index:1}
+.bridge-formula .formula-block{font-size:12.5px}
+
+.scaling{margin-top:18px;padding:30px;display:grid;grid-template-columns:.9fr 1.1fr;gap:42px;align-items:center}
+.scaling h3{font-size:22px;margin-bottom:9px}
+.scaling p{color:var(--muted);font-size:14px;line-height:1.8;max-width:480px}
+.scaling p b{color:var(--ink-2)}
+.scale-control{margin-top:23px}
+.scale-control .slider-head{margin-bottom:9px}
+.scale-readout{display:flex;align-items:baseline;gap:8px;margin-bottom:15px}
+.scale-readout b{font-family:var(--mono);font-size:31px;font-weight:500;color:var(--cyan);letter-spacing:-.03em}
+.scale-readout span{font-size:12px;color:var(--dim)}
+.scale-bars{display:flex;align-items:flex-end;gap:36px;height:170px;padding:10px 18px 0;border-bottom:1px solid var(--line);position:relative}
+.scale-bars::before,.scale-bars::after{content:"";position:absolute;left:0;right:0;border-top:1px dashed rgba(154,184,220,.1)}
+.scale-bars::before{top:33%}.scale-bars::after{top:66%}
+.scale-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:8px;position:relative;z-index:1}
+.scale-col .bar{width:min(92px,80%);border-radius:9px 9px 3px 3px;min-height:3px;transition:height .25s ease;position:relative}
+.scale-col .bar.body{background:linear-gradient(180deg,rgba(255,127,177,.95),rgba(255,127,177,.24));box-shadow:0 0 28px rgba(255,127,177,.2)}
+.scale-col .bar.surface{background:linear-gradient(180deg,rgba(255,193,94,.95),rgba(255,193,94,.2));box-shadow:0 0 28px rgba(255,193,94,.18)}
+.scale-col label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em;white-space:nowrap}
+.scale-ratio{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:15px;padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:rgba(4,9,16,.3);font-size:12px;color:var(--muted)}
+.scale-ratio b{font-family:var(--mono);color:var(--amber);font-size:16px;font-weight:500}
+.scale-note{font-size:11px;color:var(--dim);margin-top:10px}
+
+/* ============ controls ============ */
+.range{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:99px;background:linear-gradient(90deg,rgba(86,217,255,.65),rgba(167,155,255,.36));outline:none;margin:8px 0 2px}
+.range::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:#e8f8ff;border:2px solid #40bde9;box-shadow:0 0 0 4px rgba(86,217,255,.1),0 0 14px rgba(86,217,255,.35);cursor:grab}
+.range::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#e8f8ff;border:2px solid #40bde9;box-shadow:0 0 0 4px rgba(86,217,255,.1);cursor:grab}
+.range:active::-webkit-slider-thumb{cursor:grabbing;box-shadow:0 0 0 5px rgba(86,217,255,.16),0 0 18px rgba(86,217,255,.5)}
+.slider-stack{display:flex;flex-direction:column;gap:16px}
+.slider-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:12px;color:var(--muted)}
+.slider-head label{color:var(--ink-2)}
+.slider-head output{font-family:var(--mono);font-size:11px;color:var(--cyan);background:rgba(86,217,255,.07);border:1px solid rgba(86,217,255,.14);padding:2px 7px;border-radius:5px;white-space:nowrap}
+.chip-toggle{display:flex;flex-wrap:wrap;gap:8px}
+.toggle{position:relative;display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.025);font-size:12px;color:var(--muted);cursor:pointer;user-select:none;transition:.18s}
+.toggle input{position:absolute;opacity:0;width:1px;height:1px}
+.toggle .dot{width:7px;height:7px;border-radius:50%;background:var(--tc,var(--dim));box-shadow:0 0 0 3px rgba(255,255,255,.02);transition:.18s;opacity:.55}
+.toggle:has(input:checked){border-color:color-mix(in srgb,var(--tc,var(--cyan)) 42%,transparent);background:color-mix(in srgb,var(--tc,var(--cyan)) 9%,transparent);color:var(--ink)}
+.toggle:has(input:checked) .dot{opacity:1;box-shadow:0 0 10px var(--tc,var(--cyan))}
+.toggle:focus-within{outline:2px solid var(--cyan);outline-offset:2px}
+.preset-row{display:flex;flex-wrap:wrap;gap:7px}
+.preset{border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--muted);border-radius:8px;padding:7px 10px;font-size:11px;transition:.16s}
+.preset:hover{color:var(--ink);border-color:var(--line-strong);background:rgba(255,255,255,.055)}
+.preset.active{color:#06111c;background:linear-gradient(135deg,#8ee9ff,#65bfff);border-color:transparent;font-weight:650;box-shadow:0 4px 18px rgba(86,200,255,.18)}
+.panel-label{font-family:var(--mono);font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:var(--dim);margin-bottom:9px}
+
+/* ============ fluid element lab ============ */
+.lab-shell{display:grid;grid-template-columns:330px minmax(0,1fr);gap:19px;align-items:stretch}
+.lab-side{padding:25px;display:flex;flex-direction:column;gap:18px}
+.lab-side h3{font-size:20px;margin-bottom:2px}
+.lab-side .lede{font-size:12.5px;line-height:1.75;color:var(--muted)}
+.lab-main{min-width:0;display:flex;flex-direction:column;gap:12px}
+.canvas-frame{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#0c1a2c,#050a12 75%);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.canvas-frame canvas{width:100%;height:auto;aspect-ratio:800/600}
+.canvas-tag{position:absolute;top:12px;left:13px;display:flex;align-items:center;gap:7px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:rgba(5,11,19,.65);backdrop-filter:blur(8px);font-family:var(--mono);font-size:8.5px;letter-spacing:.13em;color:var(--dim);pointer-events:none}
+.canvas-tag i{width:4px;height:4px;border-radius:50%;background:var(--cyan);box-shadow:0 0 7px var(--cyan)}
+.force-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.metric{padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:rgba(9,17,29,.62);min-width:0}
+.metric .m-label{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;letter-spacing:.08em;color:var(--dim);margin-bottom:3px;white-space:nowrap}
+.m-label i{width:5px;height:5px;border-radius:50%;background:var(--mc);flex:0 0 auto}
+.metric .m-value{font-family:var(--mono);font-size:14px;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.metric.total{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.055)}
+.metric.total .m-value{color:#fff}
+.force-strip .metric:nth-child(1){--mc:var(--cyan)}
+.force-strip .metric:nth-child(2){--mc:var(--amber)}
+.force-strip .metric:nth-child(3){--mc:var(--magenta)}
+.force-strip .metric:nth-child(4){--mc:var(--green)}
+.force-strip .metric:nth-child(5){--mc:#fff}
+.tiny-note{font-size:11px;line-height:1.7;color:var(--dim)}
+.tiny-note b{color:var(--ink-2);font-weight:600}
+.legend-row{display:flex;flex-wrap:wrap;gap:9px 13px;font-size:10px;color:var(--dim)}
+.legend-row span{display:inline-flex;align-items:center;gap:5px}
+.legend-row i{width:12px;height:2px;border-radius:2px;background:var(--lc);box-shadow:0 0 6px var(--lc)}
+.legend-row span:nth-child(1){--lc:var(--cyan)}.legend-row span:nth-child(2){--lc:var(--amber)}.legend-row span:nth-child(3){--lc:var(--magenta)}.legend-row span:nth-child(4){--lc:var(--green)}.legend-row span:nth-child(5){--lc:#fff}
+
+/* ============ derivation / equation ============ */
+.derivation-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:19px;align-items:stretch}
+.derivation{padding:28px;display:flex;flex-direction:column;gap:18px}
+.derive-step{display:grid;grid-template-columns:29px 1fr;gap:14px;align-items:start}
+.derive-num{width:27px;height:27px;border-radius:8px;border:1px solid rgba(86,217,255,.25);background:rgba(86,217,255,.06);display:grid;place-items:center;font-family:var(--mono);font-size:10px;color:var(--cyan)}
+.derive-body h4{font-size:13.5px;font-weight:600;color:var(--ink-2);margin-bottom:6px;letter-spacing:0}
+.derive-body p{font-size:12.5px;line-height:1.75;color:var(--muted);margin-bottom:9px}
+.derive-body .formula-block{font-size:12px;padding:10px 12px}
+.derive-body .formula-block + p{margin-top:9px}
+.derive-note{margin-top:auto;padding-top:15px;border-top:1px solid var(--line);font-size:10.5px;line-height:1.7;color:var(--dim)}
+.derive-note b{color:var(--muted);font-weight:500}
+.stress-card{padding:27px;display:flex;flex-direction:column;gap:15px;justify-content:center;position:relative;overflow:hidden}
+.stress-card::before{content:"";position:absolute;right:-80px;top:-90px;width:240px;height:240px;border-radius:50%;background:radial-gradient(closest-side,rgba(167,155,255,.13),transparent)}
+.matrix{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:15px;border:1px solid var(--line);border-radius:12px;background:rgba(4,9,16,.45);position:relative;z-index:1}
+.matrix div{padding:8px 6px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--ink-2);border-radius:7px;background:rgba(255,255,255,.02)}
+.matrix .normal{color:var(--cyan);background:rgba(86,217,255,.06)}
+.matrix .shear{color:var(--amber);background:rgba(255,193,94,.06)}
+.stress-card h3{font-size:18px}
+.stress-card p{font-size:12.5px;color:var(--muted);line-height:1.75}
+.eq-explorer{margin-top:19px;display:grid;grid-template-columns:1.28fr .72fr;gap:0;overflow:hidden}
+.eq-panel{padding:29px 28px;min-width:0;border-right:1px solid var(--line)}
+.eq-display{display:flex;flex-wrap:wrap;align-items:center;gap:9px;font-family:var(--mono);font-size:clamp(15px,1.65vw,20px);line-height:1.8;letter-spacing:-.02em;margin:7px 0 18px}
+.eq-display .base{color:var(--ink-2)}
+.eq-display .equals{color:var(--dim);margin:0 2px}
+.term{border:1px solid var(--line);background:rgba(255,255,255,.025);border-radius:8px;padding:3px 8px;transition:.16s;position:relative;font-family:var(--mono);cursor:pointer}
+.term:hover,.term[aria-pressed="true"]{transform:translateY(-2px);background:rgba(255,255,255,.075)}
+.term[data-term="pressure"]{color:var(--cyan);border-color:rgba(86,217,255,.25)}
+.term[data-term="viscous"]{color:var(--amber);border-color:rgba(255,193,94,.25)}
+.term[data-term="lorentz"]{color:var(--magenta);border-color:rgba(255,127,177,.25)}
+.term[data-term="gravity"]{color:var(--green);border-color:rgba(111,231,181,.25)}
+.term[aria-pressed="true"]{box-shadow:0 0 0 3px rgba(255,255,255,.05)}
+.eq-caption{font-size:11.5px;color:var(--dim);line-height:1.8;padding-top:16px;border-top:1px solid var(--line)}
+.eq-caption .unit{font-family:var(--mono);color:var(--muted)}
+.eq-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.term-panel{padding:28px;min-height:320px;display:none}
+.term-panel.active{display:block;animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.term-panel .tp-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px}
+.term-panel h3{font-size:20px;margin-bottom:3px}
+.term-panel .tp-sym{font-family:var(--mono);font-size:18px;color:var(--tc,var(--cyan))}
+.term-panel p{font-size:13px;color:var(--muted);line-height:1.85;margin-bottom:11px}
+.term-panel p b{color:var(--ink-2)}
+.tp-fact{display:flex;flex-direction:column;gap:7px;margin-top:16px;padding-top:15px;border-top:1px solid var(--line)}
+.tp-fact div{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:var(--dim)}
+.tp-fact b{font-family:var(--mono);color:var(--ink-2);font-weight:500;text-align:right}
+
+/* ============ EM section ============ */
+.em-grid{display:grid;grid-template-columns:1fr 1fr;gap:19px}
+.em-card{padding:27px;position:relative;overflow:hidden}
+.em-card h3{font-size:20px;margin-bottom:7px}
+.em-card .em-sub{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--dim);margin-bottom:16px}
+.em-card p{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:13px}
+.em-card p b{color:var(--ink-2)}
+.em-figure{height:155px;border:1px solid var(--line);border-radius:13px;background:rgba(4,9,16,.34);margin:4px 0 16px;overflow:hidden}
+.em-figure svg{width:100%;height:100%}
+.em-formula{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:rgba(4,9,16,.38);margin-top:auto;overflow:auto;white-space:nowrap}
+.em-math{margin-top:auto;padding:11px 12px;font-size:.9em}
+.em-formula .a{color:var(--amber)}.em-formula .m{color:var(--magenta)}.em-formula .c{color:var(--cyan)}
+.decomp{margin-top:19px;padding:26px 28px;display:grid;grid-template-columns:.9fr 1.1fr;gap:30px;align-items:center}
+.decomp h3{font-size:19px;margin-bottom:9px}
+.decomp p{font-size:13px;color:var(--muted);line-height:1.8}
+.decomp .formula-block{font-size:14px}
+.decomp .formula-block > span{display:block;margin:2px 0}
+.pinch-grid{display:grid;grid-template-columns:1fr 1fr;gap:19px;margin-top:19px}
+.pinch{padding:21px;display:grid;grid-template-columns:78px 1fr;gap:17px;align-items:center}
+.pinch svg{width:78px;height:78px}
+.pinch h4{font-size:14px;margin-bottom:4px}
+.pinch p{font-size:11.5px;color:var(--muted);line-height:1.65}
+.pinch code{font-family:var(--mono);font-size:10px;color:var(--cyan)}
+
+/* ============ MHD sandbox ============ */
+.sim-card{border:1px solid var(--line-strong);border-radius:26px;background:linear-gradient(165deg,rgba(15,27,45,.93),rgba(7,12,21,.95));box-shadow:var(--shadow);overflow:hidden;position:relative}
+.sim-head{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:15px 19px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.sim-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:650}
+.sim-title .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 2s infinite}
+.sim-title small{font-family:var(--mono);font-size:8.5px;letter-spacing:.15em;color:var(--dim);font-weight:400}
+.sim-head-right{display:flex;align-items:center;gap:8px}
+.sim-body{display:grid;grid-template-columns:minmax(0,1fr) 286px;gap:0}
+.sim-stage{position:relative;min-width:0;padding:18px;background:radial-gradient(ellipse at 50% 50%,rgba(8,20,34,.8),rgba(4,8,14,.9));display:flex;flex-direction:column;gap:11px}
+.sim-canvas-wrap{position:relative;border:1px solid rgba(154,184,220,.14);border-radius:15px;overflow:hidden;background:#050b12;cursor:crosshair}
+.sim-canvas-wrap canvas{width:100%;height:auto;aspect-ratio:1/1}
+.sim-overlay{position:absolute;inset:0;pointer-events:none;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.sim-badge{padding:5px 8px;border:1px solid rgba(154,184,220,.16);border-radius:7px;background:rgba(4,9,16,.74);backdrop-filter:blur(8px);font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;color:var(--muted);line-height:1.6}
+.sim-badge b{color:var(--ink-2);font-weight:500}
+.sim-hint{display:flex;justify-content:space-between;gap:10px;font-size:10px;color:var(--dim);line-height:1.6;padding:0 2px;flex-wrap:wrap}
+.sim-hint span{display:inline-flex;align-items:center;gap:5px}
+.sim-hint i{width:4px;height:4px;border-radius:50%;background:var(--cyan)}
+.sim-side{padding:19px 19px 18px;border-left:1px solid var(--line);background:rgba(5,10,18,.35);display:flex;flex-direction:column;gap:17px}
+.sim-side .slider-stack{gap:13px}
+.sim-side .slider-head{font-size:11px}
+.sim-side .slider-head output{font-size:10px}
+.sim-view{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#0d1828;color:var(--ink-2);font-size:11.5px;outline:none}
+.sim-view:focus{border-color:rgba(86,217,255,.5)}
+.sim-readouts{padding:13px 18px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);gap:8px;background:rgba(4,9,16,.35)}
+.sim-readouts .metric{background:transparent;border:0;padding:0 0 0 11px;border-left:1px solid var(--line)}
+.sim-readouts .metric:first-child{padding-left:0;border-left:0}
+.sim-readouts .m-value{font-size:12.5px}
+.sim-note{padding:12px 19px 16px;font-size:10.5px;color:var(--dim);line-height:1.7;border-top:1px solid rgba(154,184,220,.06);background:rgba(4,9,16,.2)}
+.sim-note b{color:var(--muted);font-weight:500}
+.sim-status{padding:4px 8px;border-radius:6px;border:1px solid rgba(111,231,181,.2);background:rgba(111,231,181,.06);font-family:var(--mono);font-size:8px;letter-spacing:.08em;color:var(--green);white-space:nowrap}
+.sim-status.paused{color:var(--amber);border-color:rgba(255,193,94,.22);background:rgba(255,193,94,.06)}
+.icon-btn{width:31px;height:31px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.035);color:var(--ink-2);transition:.16s}
+.icon-btn:hover{background:rgba(255,255,255,.08);border-color:var(--line-strong)}
+.icon-btn svg{width:13px;height:13px}
+
+/* ============ scale lab ============ */
+.scale-lab{display:grid;grid-template-columns:390px minmax(0,1fr);gap:19px;align-items:start}
+.scale-controls{padding:23px;display:flex;flex-direction:column;gap:14px}
+.scale-controls .preset-row{margin-bottom:3px}
+.scale-controls .slider-stack{gap:11px}
+.scale-controls .range{height:3px;margin:6px 0 0}
+.scale-controls .slider-head{font-size:10.5px}
+.scale-controls .slider-head output{font-size:9px;padding:1px 5px}
+.scale-output{display:flex;flex-direction:column;gap:19px;min-width:0}
+.bars-card{padding:24px 25px 21px;min-height:320px}
+.bars-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:19px;flex-wrap:wrap}
+.bars-head h3{font-size:18px}
+.bars-head p{font-size:11px;color:var(--dim);max-width:400px;line-height:1.6}
+.dominant{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border:1px solid rgba(255,193,94,.24);border-radius:8px;background:rgba(255,193,94,.06);font-size:11px;color:var(--amber);white-space:nowrap}
+.dominant b{font-weight:650;color:#fff}
+.bar-chart{display:flex;flex-direction:column;gap:11px}
+.bar-row{display:grid;grid-template-columns:122px 1fr 93px;align-items:center;gap:12px}
+.bar-name{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.bar-name i{width:7px;height:7px;border-radius:2px;background:var(--bc,var(--cyan));flex:0 0 auto}
+.bar-track{height:7px;border-radius:9px;background:rgba(255,255,255,.045);overflow:hidden;position:relative}
+.bar-fill{height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,color-mix(in srgb,var(--bc) 50%,transparent),var(--bc));transition:width .3s ease;box-shadow:0 0 12px color-mix(in srgb,var(--bc) 35%,transparent)}
+.bar-val{font-family:var(--mono);font-size:10px;color:var(--ink-2);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bar-row.inertia{opacity:.62}
+.bar-row.inertia .bar-name{color:var(--dim)}
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:22px;padding-top:19px;border-top:1px solid var(--line)}
+.metric-card{padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(4,9,16,.3);min-width:0}
+.metric-card .mk{font-family:var(--mono);font-size:9px;color:var(--dim);display:flex;justify-content:space-between;gap:6px;margin-bottom:3px}
+.metric-card .mv{font-family:var(--mono);font-size:15px;color:var(--ink);letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.metric-card .md{font-size:8.5px;color:var(--dim);line-height:1.45;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.metric-card.hot{border-color:rgba(255,193,94,.18);background:rgba(255,193,94,.035)}
+.metric-card.cool{border-color:rgba(86,217,255,.16);background:rgba(86,217,255,.03)}
+.scale-foot{font-size:10.5px;color:var(--dim);line-height:1.7;margin-top:11px}
+.scale-foot b{color:var(--muted);font-weight:500}
+
+/* ============ pitfalls / quiz ============ */
+.pitfalls{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pitfall{padding:21px;position:relative}
+.pitfall .pf-label{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;color:var(--red);margin-bottom:9px}
+.pitfall .pf-label::before{content:"×";display:grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid rgba(255,127,127,.25);font-size:9px;color:var(--red)}
+.pitfall h4{font-size:13.5px;line-height:1.55;margin-bottom:8px;color:var(--ink-2)}
+.pitfall p{font-size:11.5px;color:var(--muted);line-height:1.75}
+.pitfall p b{color:var(--green);font-weight:600}
+.quiz-card{padding:26px 28px}
+.quiz-top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.quiz-top h3{font-size:20px}
+.quiz-score{font-family:var(--mono);font-size:11px;color:var(--muted);padding:7px 11px;border:1px solid var(--line);border-radius:8px;background:rgba(4,9,16,.3)}
+.quiz-score b{color:var(--cyan);font-size:14px;font-weight:500}
+.quiz-list{display:flex;flex-direction:column;gap:20px}
+.quiz-item{padding-bottom:19px;border-bottom:1px solid var(--line)}
+.quiz-item:last-child{border-bottom:0;padding-bottom:0}
+.quiz-q{font-size:13.5px;color:var(--ink-2);margin-bottom:10px;line-height:1.7}
+.quiz-q .qn{font-family:var(--mono);font-size:10px;color:var(--cyan);margin-right:8px}
+.quiz-opts{display:flex;flex-wrap:wrap;gap:7px}
+.quiz-opt{padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.025);font-size:11.5px;color:var(--muted);transition:.16s;text-align:left}
+.quiz-opt:hover{border-color:var(--line-strong);color:var(--ink)}
+.quiz-opt.correct{border-color:rgba(111,231,181,.5);background:rgba(111,231,181,.09);color:var(--green)}
+.quiz-opt.wrong{border-color:rgba(255,127,127,.5);background:rgba(255,127,127,.08);color:var(--red)}
+.quiz-explain{display:none;margin-top:9px;font-size:11px;line-height:1.7;color:var(--muted);padding:9px 11px;border-left:2px solid var(--line-strong);background:rgba(255,255,255,.02)}
+.quiz-explain.show{display:block}
+.quiz-explain b{color:var(--ink-2);font-weight:600}
+
+/* ============ footer ============ */
+.footer{padding:52px 0 40px;border-top:1px solid var(--line);background:rgba(4,8,14,.55)}
+.footer-grid{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:38px;align-items:start}
+.footer h4{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);font-family:var(--mono);margin-bottom:12px}
+.footer p,.footer li{font-size:11.5px;color:var(--muted);line-height:1.8}
+.footer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:5px}
+.footer a{color:var(--ink-2);border-bottom:1px solid rgba(154,184,220,.18)}
+.footer a:hover{color:var(--cyan);border-color:var(--cyan)}
+.footer-bottom{display:flex;justify-content:space-between;gap:20px;margin-top:35px;padding-top:18px;border-top:1px solid rgba(154,184,220,.08);font-size:10px;color:var(--dim);flex-wrap:wrap;align-items:center}
+.footer-actions{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+.footer-share{border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink-2);border-radius:7px;padding:5px 10px;font-size:10px;transition:.18s}
+.footer-share:hover{border-color:rgba(86,217,255,.35);color:var(--cyan);background:rgba(86,217,255,.06)}
+.footer-share.done{border-color:rgba(111,231,181,.35);color:var(--green);background:rgba(111,231,181,.06)}
+
+/* ============ responsive ============ */
+@media(max-width:1080px){
+  .hero-grid{grid-template-columns:1fr .9fr;gap:38px}
+  .lab-shell{grid-template-columns:300px minmax(0,1fr)}
+  .sim-body{grid-template-columns:minmax(0,1fr) 260px}
+  .scale-lab{grid-template-columns:350px minmax(0,1fr)}
+  .nav-links a:nth-child(n+5){display:none}
+}
+@media(max-width:900px){
+  .hero{padding-top:120px}
+  .hero-grid{grid-template-columns:1fr;gap:44px}
+  .hero-art{max-width:620px}
+  .section{padding:74px 0}
+  .section-head{grid-template-columns:1fr;gap:10px}
+  .section-no{padding-top:0}.section-no::after{display:none}
+  .concept-grid,.em-grid,.derivation-grid,.pinch-grid{grid-template-columns:1fr}
+  .field-grid,.field-flow,.image-eq-grid,.mhd-limit{grid-template-columns:1fr}
+  .mhd-limit .math-block--wide{grid-column:auto;grid-row:auto}
+  .bridge,.scaling,.decomp{grid-template-columns:1fr;gap:20px}
+  .lab-shell{grid-template-columns:1fr}
+  .lab-main{order:-1}
+  .lab-side{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+  .lab-side h3,.lab-side .lede{grid-column:1/-1}
+  .lab-side .slider-stack{grid-column:1/-1}
+  .eq-explorer{grid-template-columns:1fr}
+  .eq-panel{border-right:0;border-bottom:1px solid var(--line)}
+  .term-panel{min-height:0}
+  .sim-body{grid-template-columns:1fr}
+  .sim-side{border-left:0;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:15px 20px}
+  .sim-side .slider-stack{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+  .sim-side .panel-label,.sim-side .sim-view{grid-column:1/-1}
+  .sim-readouts{grid-template-columns:repeat(3,1fr)}
+  .sim-readouts .metric:nth-child(4){border-left:0;padding-left:0}
+  .scale-lab{grid-template-columns:1fr}
+  .scale-controls{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px}
+  .scale-controls .preset-row,.scale-controls .slider-stack{grid-column:1/-1}
+  .scale-controls .slider-stack{display:grid;grid-template-columns:1fr 1fr;gap:13px 18px}
+  .pitfalls{grid-template-columns:1fr 1fr}
+  .footer-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:720px){
+  .wrap{width:calc(100% - 30px)}
+  .nav-links{display:none}
+  .top-actions .btn-ghost{display:none}
+  .brand-text span{display:none}
+  .hero{padding:108px 0 56px}
+  .hero h1{font-size:clamp(39px,11vw,58px)}
+  .hero-lede{font-size:15px}
+  .hero-stats{gap:14px 20px}
+  .float-tag{display:none}
+  .hc-eq{font-size:9.5px;gap:8px}
+  .force-strip{grid-template-columns:repeat(2,1fr)}
+  .force-strip .metric:last-child{grid-column:1/-1}
+  .lab-side{grid-template-columns:1fr}
+  .lab-side .preset-row{grid-column:auto}
+  .sim-head{gap:10px}
+  .sim-title{flex:1 1 auto;min-width:0;gap:8px}
+  .sim-title span{white-space:nowrap}
+  .sim-title small{display:none}
+  .sim-head-right{width:100%;justify-content:flex-end}
+  .field-card,.image-eq-card,.symbol-card,.mapping-card,.mhd-limit,.field-flow{padding:21px}
+  .symbol-row{grid-template-columns:36px 1fr}
+  .mapping-table{min-width:620px}
+  .math-block{padding:13px 12px}
+  .math-block--xl{padding:17px 13px}
+  .sim-stage{padding:10px}
+  .sim-readouts{grid-template-columns:1fr 1fr}
+  .sim-readouts .metric:nth-child(3){border-left:0;padding-left:0}
+  .sim-readouts .metric:nth-child(4){padding-left:11px;border-left:1px solid var(--line)}
+  .sim-side{grid-template-columns:1fr}
+  .sim-side .slider-stack{grid-template-columns:1fr}
+  .scale-controls{grid-template-columns:1fr}
+  .scale-controls .slider-stack{grid-template-columns:1fr 1fr;gap:11px 14px}
+  .scale-controls .slider-head{display:block;line-height:1.5}
+  .scale-controls .slider-head output{display:inline-block;margin-top:3px}
+  .bar-row{grid-template-columns:93px 1fr 78px;gap:8px}
+  .bar-name{font-size:10px}
+  .bar-val{font-size:9px}
+  .metrics-grid{grid-template-columns:1fr 1fr}
+  .pitfalls{grid-template-columns:1fr}
+  .quiz-card{padding:22px 19px}
+  .footer-grid{grid-template-columns:1fr}
+  .section-title{font-size:clamp(26px,7vw,35px)}
+  .scaling,.bridge,.decomp,.bars-card{padding:22px}
+  .scale-bars{gap:20px;padding-inline:4px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+@media print{
+  @page{size:A4;margin:15mm}
+  :root{--bg:#fff;--ink:#111;--ink-2:#222;--muted:#444;--dim:#666;--line:#ddd;--line-strong:#bbb}
+  html,body{background:#fff;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body::before,.topbar,.progress,.hero-art,.hero-stats,.skip,.lab-main,.lab-side,.sim-card,.scale-controls,.quiz-card,.cta-row,.footer-bottom,.float-tag,.no-print,.scale-control,#element-lab,#sandbox,#quiz{display:none!important}
+  .hero{padding:0 0 10pt}
+  .hero h1{font-size:44px;margin-bottom:12px}
+  .hero-lede{font-size:13.5px;margin-bottom:0}
+  .hero-grid{grid-template-columns:1fr}
+  .section{padding:16pt 0;break-inside:auto}
+  .section-head{grid-template-columns:1fr;break-after:avoid}
+  .section-no::after{display:none}
+  .formula-block,.matrix,.em-figure,.scale-bars,.pinch,.metric-card{break-inside:avoid}
+  .derivation,.stress-card,.bridge,.scaling,.eq-explorer,.decomp,.em-card,.pinch,.bars-card{break-inside:avoid}
+  .math-block{break-inside:avoid;background:#fafafa;border-color:#ddd;overflow:visible!important}
+  .field-grid,.field-flow,.image-eq-grid,.mhd-limit{grid-template-columns:1fr}
+  .tex-source{display:none!important}
+  #equation{break-before:page}
+  .chip{font-size:8px;padding:3px 5px}
+  .fc-chips{gap:3px}
+  .force-card,.pitfall{break-inside:auto}
+  .term-panel{animation:none!important;opacity:1!important}
+  .em-formula,.formula-block{overflow:visible!important;white-space:normal!important}
+  .em-formula{font-size:9px;line-height:1.5}
+  .force-card{min-height:0;padding:18px}
+  .force-card::before{display:none}
+  .fc-icon{height:96px;background:#fff;border-color:#ddd;margin-bottom:10px}
+  .fc-copy{font-size:12px;line-height:1.65;margin-bottom:10px}
+  .chip{color:#444!important;border-color:#ddd!important;background:#fafafa!important}
+  .scale-ratio{background:#f6f6f6;border-color:#ddd}
+  .scale-ratio b{color:#9a5b00}
+  .card,.force-card,.bridge,.scaling,.eq-explorer,.pitfall{border-color:#ddd;background:#fff;box-shadow:none}
+  .hero h1 .accent-c,.hero h1 .accent-a{color:#111;text-shadow:none}
+  .em-figure,.formula-block,.matrix{background:#fafafa}
+  .eq-panel{border-color:#ddd}
+  .term{border-color:#ddd;color:#111!important}
+  .decomp,.derivation-grid,.concept-grid,.em-grid,.pitfalls{grid-template-columns:1fr 1fr}
+  .scale-lab{display:block}
+  .scale-output{display:block}
+  .scale-bars{height:120px}
+  .footer{background:#fff;break-before:auto}
+  a{text-decoration:none;color:#111}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<div class="progress" id="progress"></div>
+
+<header class="topbar" id="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="回到首页">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text"><strong>力 · 场 · 流体</strong><span>MHD PRIMER</span></span>
+    </a>
+    <nav class="nav-links" aria-label="章节导航">
+      <a href="#field-momentum">场的动量</a>
+      <a href="#fluid-equation">流体元方程</a>
+      <a href="#concept">受力分类</a>
+      <a href="#equation">方程解剖</a>
+      <a href="#sandbox">MHD 沙盒</a>
+      <a href="#scales">量级实验室</a>
+    </nav>
+    <div class="top-actions">
+      <a class="btn btn-ghost btn-small no-print" href="MHD-notes.pdf" target="_blank" rel="noopener">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 12h6M9 16h6"/></svg>
+        完整讲义 PDF
+      </a>
+      <a class="btn btn-primary btn-small" href="#element-lab">开始实验
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <!-- ================= HERO ================= -->
+  <section class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="pulse-dot"></span>连续介质力学 × 磁流体力学 · 交互讲义</div>
+        <h1>力，究竟作用在<br><span class="accent-c">体积</span>，还是<span class="accent-a">表面</span>？</h1>
+        <p class="hero-lede">从电动力学的<strong>场动量</strong>与<strong>Maxwell 应力</strong>出发，把 MHD 动量方程拆成一本“力的账本”：<strong>热压力</strong>与<strong>粘滞力</strong>从边界接触中来，<strong>电磁力</strong>则穿透整个流体元。拖动滑块，看它们怎样相加、相消与竞争。</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#element-lab">切开一个流体元
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="#field-momentum">从场的动量开始</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><b>03</b><span>可交互实验</span></div>
+          <div class="hero-stat"><b>2D</b><span>实时 MHD 求解</span></div>
+          <div class="hero-stat"><b>TeX</b><span>公式 · 离线可用</span></div>
+        </div>
+      </div>
+
+      <div class="hero-art" aria-hidden="true">
+        <div class="hero-glow"></div>
+        <div class="hero-card">
+          <div class="hc-head"><span>CONTROL VOLUME / 01</span><span class="live"><i></i>FORCES LIVE</span></div>
+          <svg class="hero-svg" viewBox="0 0 560 438" role="img" aria-label="流体元受力示意图：压力在边界，重力与电磁力在体积内">
+            <defs>
+              <marker id="m-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#56d9ff"/></marker>
+              <marker id="m-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#ffc15e"/></marker>
+              <marker id="m-pink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#ff7fb1"/></marker>
+              <marker id="m-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#6fe7b5"/></marker>
+              <marker id="m-white" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#f2f8ff"/></marker>
+              <radialGradient id="vol-grad" cx="45%" cy="40%" r="70%"><stop offset="0%" stop-color="#163a56" stop-opacity=".75"/><stop offset="100%" stop-color="#0a1a2b" stop-opacity=".5"/></radialGradient>
+              <linearGradient id="scan" x1="0" x2="1"><stop offset="0%" stop-color="#56d9ff" stop-opacity="0"/><stop offset="50%" stop-color="#56d9ff" stop-opacity=".35"/><stop offset="100%" stop-color="#56d9ff" stop-opacity="0"/></linearGradient>
+            </defs>
+            <rect x="22" y="18" width="516" height="402" rx="16" fill="#08121f" stroke="#1a2a3f"/>
+            <g opacity=".6" stroke="#18324a" stroke-width=".6">
+              <path d="M60 80H500M60 140H500M60 200H500M60 260H500M60 320H500M60 380H500"/>
+              <path d="M100 52V386M180 52V386M260 52V386M340 52V386M420 52V386M500 52V386"/>
+            </g>
+            <rect x="154" y="96" width="252" height="246" rx="14" fill="url(#vol-grad)" stroke="#3d7095" stroke-width="1.2" stroke-dasharray="7 7"/>
+            <text x="160" y="86" class="svg-small">流体元 V，边界 ∂V</text>
+            <!-- pressure, normal surface tractions -->
+            <g stroke="#56d9ff" stroke-width="1.7" marker-end="url(#m-cyan)" class="dashmove">
+              <path d="M108 150H147"/><path d="M108 218H147"/><path d="M108 286H147"/>
+              <path d="M452 150H413"/><path d="M452 218H413"/><path d="M452 286H413"/>
+              <path d="M205 60V91"/><path d="M280 60V91"/><path d="M355 60V91"/>
+              <path d="M205 378V347"/><path d="M280 378V347"/><path d="M355 378V347"/>
+            </g>
+            <g fill="#56d9ff">
+              <text x="92" y="135" class="svg-label">−p n</text>
+              <text x="441" y="135" class="svg-label">−p n</text>
+            </g>
+
+            <!-- viscous, tangential -->
+            <g stroke="#ffc15e" stroke-width="1.7" marker-end="url(#m-amber)">
+              <path d="M180 100H230"/><path d="M260 100H310"/><path d="M340 100H378"/>
+              <path d="M180 338H218"/><path d="M260 338H300"/><path d="M340 338H378"/>
+            </g>
+            <text x="386" y="89" class="svg-label" fill="#ffc15e">τ·n</text>
+
+            <!-- body: gravity -->
+            <g stroke="#6fe7b5" stroke-width="1.5" marker-end="url(#m-green)" opacity=".95">
+              <path d="M188 150v28"/><path d="M232 150v28"/><path d="M276 150v28"/><path d="M320 150v28"/><path d="M364 150v28"/>
+              <path d="M188 224v28"/><path d="M232 224v28"/><path d="M276 224v28"/><path d="M320 224v28"/><path d="M364 224v28"/>
+            </g>
+            <text x="378" y="254" class="svg-label" fill="#6fe7b5">ρg</text>
+
+            <!-- body: Lorentz -->
+            <g stroke="#ff7fb1" stroke-width="1.8" marker-end="url(#m-pink)" class="breathe">
+              <path d="M198 300l37-22"/><path d="M262 300l37-22"/><path d="M326 300l37-22"/>
+            </g>
+            <text x="376" y="285" class="svg-label" fill="#ff7fb1">J × B</text>
+
+            <!-- current symbols -->
+            <g fill="none" stroke="#ff9bc4" stroke-width="1.1" opacity=".8">
+              <circle cx="188" cy="194" r="5"/><circle cx="232" cy="194" r="5"/><circle cx="276" cy="194" r="5"/><circle cx="320" cy="194" r="5"/><circle cx="364" cy="194" r="5"/>
+              <path d="M185 191l6 6M191 191l-6 6"/><path d="M229 191l6 6M235 191l-6 6"/><path d="M273 191l6 6M279 191l-6 6"/><path d="M317 191l6 6M323 191l-6 6"/><path d="M361 191l6 6M367 191l-6 6"/>
+            </g>
+
+            <!-- net force -->
+            <g>
+              <path d="M280 218L366 166" stroke="#f2f8ff" stroke-width="2.4" marker-end="url(#m-white)" stroke-linecap="round"/>
+              <circle cx="280" cy="218" r="3.2" fill="#f2f8ff"/>
+              <text x="372" y="160" class="svg-label" fill="#f2f8ff">Σf</text>
+            </g>
+
+            <line x1="60" y1="389" x2="500" y2="389" stroke="url(#scan)" stroke-width="1"/>
+            <text x="40" y="412" class="svg-small">边界上的接触力  ∮ t(n) dS</text>
+            <text x="342" y="412" class="svg-small">体积内的场力  ∫ f dV</text>
+          </svg>
+          <div class="hc-eq" aria-hidden="true">
+            <span>ρ <em>D</em><b>v</b>/<em>Dt</em> =</span>
+            <span class="pink">J×B</span>
+            <span>−</span>
+            <span>∇p</span>
+            <span>+</span>
+            <span>∇·τ</span>
+          </div>
+        </div>
+        <div class="float-tag a">体积力 · ∝ L³</div>
+        <div class="float-tag b">表面力 · ∝ L²</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MOMENTUM ================= -->
+  <section class="section" id="field-momentum">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">01</div>
+        <div>
+          <div class="kicker">Field momentum · Maxwell stress</div>
+          <h2 class="section-title">先看场：<span class="accent-cyan">电磁力</span>也有自己的动量账本</h2>
+          <p class="section-lede">在电动力学里，电荷受到的洛伦兹力并不是“凭空超距”的。场本身携带动量，麦克斯韦应力张量描述场动量穿过界面的通量。把这张账本取非相对论极限，就自然得到 MHD 里的 <strong>J×B 体积力</strong>，以及<strong>磁压与磁张力</strong>。</p>
+        </div>
+      </div>
+
+      <div class="field-grid">
+        <article class="card field-card">
+          <span class="chip c">LORENTZ FORCE DENSITY</span>
+          <h3>电荷受到的力，可以写成密度</h3>
+          <p>单位体积内，电荷受到的电场力与电流受到的磁场力合在一起，就是洛伦兹力密度：</p>
+          <div class="math-block">\[
+            \mathbf f=\rho_e\mathbf E+\mathbf J\times\mathbf B
+          \]</div>
+          <p>其中 \(\rho_e\) 是体电荷密度，\(\mathbf J\) 是电流密度。场并不是“没有动量”的数学工具；它携带动量密度</p>
+          <div class="math-block">\[
+            \mathbf g=\varepsilon_0\,\mathbf E\times\mathbf B=\frac{1}{c^2}\mathbf S
+          \]</div>
+          <p>这里 \(\mathbf S=\mathbf E\times\mathbf B/\mu_0\) 是坡印廷矢量。场的动量可以转化为粒子的机械动量，反之亦然。</p>
+        </article>
+
+        <article class="card field-card">
+          <span class="chip v">MAXWELL STRESS TENSOR</span>
+          <h3>把力写成穿过界面的通量</h3>
+          <p>麦克斯韦应力张量把电场、磁场的应力打包成一个对称张量：</p>
+          <div class="math-block">\[
+            T_{ij}=
+            \varepsilon_0\left(E_iE_j-\frac12\delta_{ij}E^2\right)
+            +\frac{1}{\mu_0}\left(B_iB_j-\frac12\delta_{ij}B^2\right)
+          \]</div>
+          <p>它的散度给出单位体积的电磁力，再补上场动量的时间变化：</p>
+          <div class="math-block">\[
+            \mathbf f+\frac{\partial\mathbf g}{\partial t}
+            =\nabla\cdot\mathbf T
+          \]</div>
+          <p>这就是电磁场的动量守恒：<b>左边是“粒子+场”的动量源，右边是应力穿过边界的通量</b>。</p>
+        </article>
+      </div>
+
+      <div class="card field-flow">
+        <div class="field-diagram" aria-hidden="true">
+          <svg viewBox="0 0 520 330">
+            <defs>
+              <marker id="fm-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10z" fill="#56d9ff"/></marker>
+              <marker id="fm-pink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10z" fill="#ff7fb1"/></marker>
+              <marker id="fm-violet" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10z" fill="#a79bff"/></marker>
+            </defs>
+            <rect x="18" y="16" width="484" height="298" rx="14" fill="#07121f" stroke="#1b3048"/>
+            <g opacity=".55" stroke="#17324a" stroke-width=".7">
+              <path d="M50 70H470M50 130H470M50 190H470M50 250H470"/>
+              <path d="M100 46V286M180 46V286M260 46V286M340 46V286M420 46V286"/>
+            </g>
+            <rect x="148" y="88" width="224" height="154" rx="10" fill="rgba(13,37,57,.65)" stroke="#3a6f93" stroke-dasharray="6 6"/>
+            <!-- field lines -->
+            <g stroke="#56d9ff" stroke-width="1.2" opacity=".55" fill="none">
+              <path d="M36 110C110 98 120 160 148 160" marker-end="url(#fm-cyan)"/>
+              <path d="M36 190C110 180 118 210 148 210" marker-end="url(#fm-cyan)"/>
+              <path d="M484 116C410 104 402 162 372 162" marker-end="url(#fm-cyan)"/>
+              <path d="M484 204C410 194 400 220 372 220" marker-end="url(#fm-cyan)"/>
+            </g>
+            <!-- charges / current -->
+            <g>
+              <circle cx="200" cy="138" r="9" fill="rgba(255,127,177,.16)" stroke="#ff7fb1"/><text x="196" y="143" fill="#ff9bc4" font-size="12" font-family="monospace">+</text>
+              <circle cx="244" cy="186" r="9" fill="rgba(86,217,255,.13)" stroke="#56d9ff"/><text x="239" y="191" fill="#56d9ff" font-size="14" font-family="monospace">−</text>
+              <path d="M286 120c-28 0-32 44-4 44 26 0 24 42-2 42" fill="none" stroke="#ffc15e" stroke-width="1.7"/>
+              <circle cx="280" cy="120" r="3" fill="#ffc15e"/><circle cx="280" cy="206" r="3" fill="#ffc15e"/>
+              <path d="M280 116v8M276 120h8" stroke="#ffc15e" stroke-width="1"/>
+            </g>
+            <!-- body force arrows inside -->
+            <g stroke="#ff7fb1" stroke-width="1.7" marker-end="url(#fm-pink)" opacity=".9">
+              <path d="M196 238l16-13"/><path d="M252 238l16-13"/>
+            </g>
+            <!-- surface traction arrows -->
+            <g stroke="#a79bff" stroke-width="1.5" marker-end="url(#fm-violet)" opacity=".9">
+              <path d="M148 112h-25"/><path d="M148 218h-25"/>
+              <path d="M372 112h25"/><path d="M372 218h25"/>
+              <path d="M200 88V63"/><path d="M320 88V63"/>
+              <path d="M200 242v25"/><path d="M320 242v25"/>
+            </g>
+            <text x="56" y="105" class="svg-small" fill="#56d9ff">E, B</text>
+            <text x="395" y="105" class="svg-small" fill="#56d9ff">E, B</text>
+            <text x="156" y="72" class="svg-label" fill="#a79bff">T · n</text>
+            <text x="229" y="270" class="svg-label" fill="#ff7fb1">∫ f dV</text>
+            <text x="204" y="264" class="svg-small" fill="#8fa5bd">电荷 / 电流</text>
+            <text x="346" y="276" class="svg-small" fill="#8fa5bd">∮ T·n dS</text>
+            <text x="36" y="304" class="svg-small" fill="#6e849b">场的动量密度 g 在体积内，Maxwell 应力穿过边界</text>
+          </svg>
+        </div>
+        <div>
+          <span class="chip v">CONTROL VOLUME</span>
+          <h3>表面通量 vs. 体积源</h3>
+          <p>对任意控制体 \(V\) 积分，电磁场的动量账本写成：</p>
+          <div class="math-block">\[
+            \int_V\mathbf f\,dV
+            +\frac{d}{dt}\int_V\mathbf g\,dV
+            =\oint_{\partial V}\mathbf T\cdot\mathbf n\,dS
+          \]</div>
+          <p>左边是体积内的力与场动量变化；右边是应力穿过边界的通量。对静态场，场动量项消失，于是 \(\mathbf f=\nabla\cdot\mathbf T\)：<b>体积力可以完全由边界上的应力通量来解释</b>。</p>
+          <div class="flow-labels"><span class="chip c">体积内：f, g</span><span class="chip v">边界上：T·n</span></div>
+        </div>
+      </div>
+
+      <div class="card mhd-limit">
+        <div>
+          <span class="chip m">MHD LIMIT</span>
+          <h3>丢掉位移电流与场动量，剩下 J×B</h3>
+          <p>在非相对论 MHD 中，电场能、位移电流和场动量项相对于磁压都是小量。只保留磁场部分：</p>
+          <div class="flow-labels"><span class="chip">∇×B = μ₀J</span><span class="chip">∂g/∂t → 0</span><span class="chip">ρ_eE 忽略</span></div>
+        </div>
+        <div class="math-block math-block--wide">\[
+          \mathbf T_M=\frac{1}{\mu_0}\left(\mathbf B\mathbf B-\frac12B^2\mathbf I\right),
+          \qquad
+          \nabla\cdot\mathbf T_M=\mathbf J\times\mathbf B
+        \]</div>
+        <p style="grid-column:1/-1;margin-top:-4px">这一步把“场的应力”变成了 MHD 的洛伦兹体积力。再往下拆，就是磁压与磁张力：\(\mathbf J\times\mathbf B=-\nabla(B^2/2\mu_0)+(\mathbf B\cdot\nabla)\mathbf B/\mu_0\)。</p>
+      </div>
+
+      <div class="field-quote"><b>记住这个桥：</b>场动量守恒告诉我们，电磁力可以写成 Maxwell 应力的散度；到了流体，应力仍然是表面通量，而 \(J\times B\) 是它在体积内的力密度。接下来的流体元方程，只是把这本账换成了“粒子数密度 × 单粒子受力”的语言。</div>
+    </div>
+  </section>
+
+  <!-- ================= FLUID EQUATION ================= -->
+  <section class="section" id="fluid-equation">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">02</div>
+        <div>
+          <div class="kicker">From field stress to a fluid element</div>
+          <h2 class="section-title">从场的账本，到<span class="accent-amber">流体元的账本</span></h2>
+          <p class="section-lede">图片中的方程用粒子数密度、单粒子受力和压强张量来记账。它和前面按单位体积写的 MHD 方程是同一本账，只是符号与“每粒子 / 每体积”的单位不同。</p>
+        </div>
+      </div>
+
+      <div class="image-eq-grid">
+        <article class="card image-eq-card">
+          <div class="image-eq-head">
+            <div>
+              <span class="chip c">图中方程 · PER VOLUME</span>
+              <h3>流体元运动方程</h3>
+            </div>
+            <span class="mono" style="font-size:9px;color:var(--dim);padding-top:6px">IMAGE / 01</span>
+          </div>
+          <div class="math-block math-block--xl">\[
+            mn\frac{d\mathbf u}{dt}
+            =
+            n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R
+          \]</div>
+          <p class="eq-note">左边 \(mn\,d\mathbf u/dt\) 是单位体积的动量变化率；右边每一项都是单位体积的力（N/m³）。图片把 \(p\) 记为压强张量的对角项，把 \(\overleftrightarrow{\Pi}\) 记为非对角项。</p>
+          <details class="tex-source">
+            <summary>查看 TeX 源码</summary>
+            <pre>mn\frac{d\mathbf u}{dt}
+=
+n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
+          </details>
+        </article>
+
+        <aside class="card symbol-card">
+          <h3>符号逐一对应</h3>
+          <div class="symbol-list">
+            <div class="symbol-row"><span class="sym">n</span><span class="desc"><b>数密度</b>：单位体积的粒子数，m⁻³。</span></div>
+            <div class="symbol-row"><span class="sym">m</span><span class="desc"><b>单粒子质量</b>；\(mn=\rho\) 是质量密度。</span></div>
+            <div class="symbol-row"><span class="sym">u</span><span class="desc"><b>流体元速度</b>；\(d\mathbf u/dt\) 是随体加速度。</span></div>
+            <div class="symbol-row"><span class="sym">F</span><span class="desc"><b>单个粒子受到的力</b>；电磁场中 \(\mathbf F=q(\mathbf E+\mathbf u\times\mathbf B)\)。</span></div>
+            <div class="symbol-row"><span class="sym">p</span><span class="desc"><b>各向同性压强</b>：压强张量的对角部分，产生法向表面力。</span></div>
+            <div class="symbol-row"><span class="sym">\(\overleftrightarrow{\Pi}\)</span><span class="desc"><b>偏应力/非对角压强张量</b>：粘性、剪切与各向异性压力，产生偏斜的表面力。</span></div>
+            <div class="symbol-row"><span class="sym">R</span><span class="desc"><b>异种粒子碰撞摩擦</b>：α 粒子与 β 粒子碰撞损失的动量；同类粒子碰撞因动量守恒而相互抵消。</span></div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="card mapping-card">
+        <h3>和按单位体积写的 MHD 方程对照</h3>
+        <p>把 \(\mathbf F=q(\mathbf E+\mathbf u\times\mathbf B)\) 代入，并对所有物种求和；在准中性单流体极限下，总电磁力密度化为 \(\rho_e\mathbf E+\mathbf J\times\mathbf B\)，其中 \(\mathbf J=\sum_s n_sq_s\mathbf u_s\)。若图片针对某一物种（例如 α 粒子），则 \(n\mathbf F\) 只是该物种的电磁力贡献，\(\mathbf R\) 才是它与其他物种的摩擦。</p>
+        <div class="mapping-scroll">
+          <table class="mapping-table">
+            <thead><tr><th>图片符号</th><th>物理含义</th><th>本页/常见 MHD 写法</th></tr></thead>
+            <tbody>
+              <tr><td>mn</td><td>质量密度</td><td>\(\rho\)</td></tr>
+              <tr><td>u</td><td>流体元速度</td><td>\(\mathbf v\)（或仍写 \(\mathbf u\)）</td></tr>
+              <tr><td>nF</td><td>单粒子受力 × 数密度 = 电磁力密度</td><td>\(\rho_e\mathbf E+\mathbf J\times\mathbf B\)；准中性 MHD 中主要为 \(\mathbf J\times\mathbf B\)</td></tr>
+              <tr><td>−∇p</td><td>各向同性压力梯度，表面力</td><td>\(-\nabla p\)</td></tr>
+              <tr><td>−∇·Π↔</td><td>偏应力/粘性力，表面力</td><td>\(\nabla\cdot\boldsymbol\tau\)；若 \(\boldsymbol\sigma=-p\mathbf I+\boldsymbol\tau\)，则 \(\overleftrightarrow{\Pi}=-\boldsymbol\tau\)</td></tr>
+              <tr><td>R</td><td>异种粒子碰撞摩擦，体积力</td><td>常略去；或作为阻力/电阻/离子—中性粒子摩擦项保留</td></tr>
+              <tr><td>（可加）ρg</td><td>重力，体积力</td><td>\(\rho\mathbf g\)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note" style="margin-top:12px">符号约定很重要：图片里的 \(\overleftrightarrow{\Pi}\) 与 \(\nabla\) 前的负号绑定；若采用 \(\boldsymbol\sigma=-p\mathbf I+\boldsymbol\tau\) 且粘性力写成 \(+\nabla\cdot\boldsymbol\tau\)，则 \(\overleftrightarrow{\Pi}=-\boldsymbol\tau\)。两种写法描述的是同一个偏应力。</p>
+      </div>
+
+      <div class="field-quote" style="border-left-color:var(--amber);background:rgba(255,193,94,.035)"><b>为什么左边是“动量变化率”而不是“力”？</b>因为 \(mn\) 是单位体积的质量，乘以加速度就是单位体积的惯性项。右边才是单位体积的力；把两边都除以 \(mn\)，就得到熟悉的“加速度 = 比力”形式。</div>
+    </div>
+  </section>
+
+  <!-- ================= CONCEPT ================= -->
+  <section class="section" id="concept">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">03</div>
+        <div>
+          <div class="kicker">The two ledgers of force</div>
+          <h2 class="section-title">先分清：力是<span class="accent-cyan">怎样传到</span>流体元上的？</h2>
+          <p class="section-lede">连续介质力学不按“力出现在哪里”分类，而按<strong>传递方式</strong>分类。一个在体积内、一个在边界上；一个正比于 L³，一个正比于 L²。这个区别决定了方程长什么样，也决定了尺度缩小后谁说了算。</p>
+        </div>
+      </div>
+
+      <div class="concept-grid">
+        <article class="card force-card body">
+          <div class="fc-head">
+            <div>
+              <div class="fc-title"><span class="fc-dot"></span>体积力</div>
+              <div class="fc-en">BODY FORCE · f&nbsp;[N m⁻³]</div>
+            </div>
+            <span class="chip m">∝ L³</span>
+          </div>
+          <p class="fc-copy">不需要接触。它作用在流体元内部<strong>每一个质量元或电荷元</strong>上，总力与体积（质量）成正比。重力、电场力、磁场力都属于这一类。</p>
+          <svg class="fc-icon" viewBox="0 0 420 118" aria-hidden="true">
+            <rect x="26" y="18" width="368" height="84" rx="10" fill="rgba(255,127,177,.025)" stroke="rgba(255,127,177,.16)" stroke-dasharray="5 5"/>
+            <g fill="#ff7fb1" opacity=".9">
+              <circle cx="70" cy="42" r="2.5"/><circle cx="130" cy="42" r="2.5"/><circle cx="190" cy="42" r="2.5"/><circle cx="250" cy="42" r="2.5"/><circle cx="310" cy="42" r="2.5"/><circle cx="370" cy="42" r="2.5"/>
+              <circle cx="70" cy="76" r="2.5"/><circle cx="130" cy="76" r="2.5"/><circle cx="190" cy="76" r="2.5"/><circle cx="250" cy="76" r="2.5"/><circle cx="310" cy="76" r="2.5"/><circle cx="370" cy="76" r="2.5"/>
+            </g>
+            <g stroke="#ff7fb1" stroke-width="1.5" marker-end="url(#m-pink)" opacity=".95">
+              <path d="M70 45v21"/><path d="M130 45v21"/><path d="M190 45v21"/><path d="M250 45v21"/><path d="M310 45v21"/><path d="M370 45v21"/>
+              <path d="M70 78v16"/><path d="M130 78v16"/><path d="M190 78v16"/><path d="M250 78v16"/><path d="M310 78v16"/><path d="M370 78v16"/>
+            </g>
+            <text x="28" y="112" class="svg-small" fill="#8fa5bd">作用在每个体积元上 · 无接触 · 总力 ∝ 体积</text>
+          </svg>
+          <div class="fc-chips"><span class="chip m">重力 ρg</span><span class="chip m">电磁力 J×B</span><span class="chip">单位质量 b = f/ρ</span></div>
+          <div class="fc-scale">F ∝ L³</div>
+        </article>
+
+        <article class="card force-card surface">
+          <div class="fc-head">
+            <div>
+              <div class="fc-title"><span class="fc-dot"></span>表面力</div>
+              <div class="fc-en">SURFACE FORCE · t(n)&nbsp;[N m⁻²]</div>
+            </div>
+            <span class="chip a">∝ L²</span>
+          </div>
+          <p class="fc-copy">通过边界<strong>接触</strong>传递。相邻物质在每一小片界面上施加牵引力 t(n)，总力与面积成正比。压力是法向推挤，粘性应力还能沿切向拖拽。</p>
+          <svg class="fc-icon" viewBox="0 0 420 118" aria-hidden="true">
+            <rect x="112" y="22" width="196" height="76" rx="8" fill="rgba(255,193,94,.03)" stroke="rgba(255,193,94,.24)"/>
+            <g stroke="#ffc15e" stroke-width="1.5" marker-end="url(#m-amber)">
+              <path d="M68 40h34"/><path d="M68 60h34"/><path d="M68 80h34"/>
+              <path d="M352 40h-34"/><path d="M352 60h-34"/><path d="M352 80h-34"/>
+              <path d="M130 8v13"/><path d="M190 8v13"/><path d="M250 8v13"/><path d="M310 8v13"/>
+              <path d="M130 112v-13"/><path d="M190 112v-13"/><path d="M250 112v-13"/><path d="M310 112v-13"/>
+            </g>
+            <g stroke="#ff7fb1" stroke-width="1.4" opacity=".9" marker-end="url(#m-pink)">
+              <path d="M124 27h28"/><path d="M180 27h28"/><path d="M236 27h28"/><path d="M292 27h18"/>
+              <path d="M124 93h18"/><path d="M166 93h28"/><path d="M222 93h28"/><path d="M278 93h28"/>
+            </g>
+            <text x="28" y="112" class="svg-small" fill="#8fa5bd">作用在边界上 · 需要接触 · 总力 ∝ 面积</text>
+          </svg>
+          <div class="fc-chips"><span class="chip a">压力 −p n</span><span class="chip a">粘性 τ·n</span><span class="chip">牵引力 t(n)=σ·n</span></div>
+          <div class="fc-scale">F ∝ L²</div>
+        </article>
+      </div>
+
+      <div class="card bridge">
+        <div>
+          <div class="kicker">The bridge</div>
+          <h3>表面力为什么会“变成”体积分？</h3>
+          <p>因为对流体元来说，边界力常常几乎两两抵消：均匀压力从四面八方挤压，合力为零。只有<strong>应力在空间上不均匀</strong>时，才留下一个正比于体积的净力。散度定理正是把“边界上的账”改写成“体积内的力密度”的桥梁。</p>
+        </div>
+        <div class="bridge-formula">
+          <div class="math-block">\[
+            \oint_{\partial V}\mathbf t(\mathbf n)\,dS
+            =\oint_{\partial V}\boldsymbol\sigma\cdot\mathbf n\,dS
+            =\int_V\nabla\cdot\boldsymbol\sigma\,dV
+          \]</div>
+          <div class="math-block">\[
+            \nabla\cdot\boldsymbol\sigma
+            =-\nabla p+\nabla\cdot\boldsymbol\tau
+            \qquad(\text{牛顿流体})
+          \]</div>
+        </div>
+      </div>
+
+      <div class="card scaling">
+        <div>
+          <div class="kicker">Scale experiment</div>
+          <h3>把尺寸缩小，谁更强势？</h3>
+          <p>让特征尺寸从 <b>L₀</b> 缩小。体积力总量按 L³ 缩，表面力总量只按 L² 缩，于是<strong>表面力相对越来越强</strong>。这就是小液滴、微流控、微游泳体与微生物尺度下，粘性/表面效应压过重力的原因。</p>
+          <div class="scale-control">
+            <div class="slider-head"><label for="scaleSize">特征尺寸 L / L₀</label><output id="scaleSizeOut">1.00</output></div>
+            <input class="range" id="scaleSize" type="range" min="0.18" max="1" step="0.01" value="1">
+          </div>
+          <div class="scale-ratio"><span>表面力 / 体积力（相对 L₀）</span><b id="scaleRatio">1.00×</b></div>
+          <div class="scale-note">条形高度按同一基准归一化；比例与具体力的大小无关，只由几何尺度律决定。</div>
+        </div>
+        <div>
+          <div class="scale-bars" aria-hidden="true">
+            <div class="scale-col"><div class="bar body" id="scaleBodyBar" style="height:70%"></div><label>F<sub>body</sub> ∝ L³</label></div>
+            <div class="scale-col"><div class="bar surface" id="scaleSurfaceBar" style="height:70%"></div><label>F<sub>surface</sub> ∝ L²</label></div>
+          </div>
+          <div class="scale-readout"><b id="scaleSizeBig">1.00</b><span>× L₀ &nbsp;·&nbsp; <span id="scaleChange">基准尺度</span></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FLUID ELEMENT LAB ================= -->
+  <section class="section" id="element-lab">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">04</div>
+        <div>
+          <div class="kicker">Interactive 01 / fluid element</div>
+          <h2 class="section-title">一个流体元的<span class="accent-cyan">受力解剖</span></h2>
+          <p class="section-lede">这不是静态示意图，而是一本可以改参数的力矢量账本。所有箭头都是<strong>力密度</strong>（单位体积的力），所以能逐项相加。注意：压力与粘性画在<strong>边界</strong>，重力与电磁力画在<strong>体积内</strong>。</p>
+        </div>
+      </div>
+
+      <div class="lab-shell">
+        <aside class="card lab-side">
+          <div>
+            <div class="kicker" style="margin-bottom:7px">Controls</div>
+            <h3>控制这个流体元</h3>
+            <p class="lede">箭头长度是相对值。拖动压力梯度、磁场方向与剪切曲率，观察合力怎样改变。</p>
+          </div>
+
+          <div>
+            <div class="panel-label">场景预设</div>
+            <div class="preset-row" id="elementPresets">
+              <button class="preset active" type="button" data-el-preset="all">全开</button>
+              <button class="preset" type="button" data-el-preset="static">静止</button>
+              <button class="preset" type="button" data-el-preset="pressure">压力驱动</button>
+              <button class="preset" type="button" data-el-preset="em">电磁加速</button>
+              <button class="preset" type="button" data-el-preset="shear">剪切流</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="panel-label">显示哪些力</div>
+            <div class="chip-toggle">
+              <label class="toggle" style="--tc:var(--cyan)"><input type="checkbox" id="tgPressure" checked><span class="dot"></span>压力</label>
+              <label class="toggle" style="--tc:var(--amber)"><input type="checkbox" id="tgViscous" checked><span class="dot"></span>粘性</label>
+              <label class="toggle" style="--tc:var(--magenta)"><input type="checkbox" id="tgEM" checked><span class="dot"></span>电磁力</label>
+              <label class="toggle" style="--tc:var(--green)"><input type="checkbox" id="tgGravity" checked><span class="dot"></span>重力</label>
+            </div>
+          </div>
+
+          <div class="slider-stack">
+            <div>
+              <div class="slider-head"><label for="rngGrad">压力梯度 ∂p/∂x</label><output id="outGrad">+0.55</output></div>
+              <input class="range" id="rngGrad" type="range" min="-1" max="1" step="0.01" value="0.55">
+            </div>
+            <div>
+              <div class="slider-head"><label for="rngB">磁场方向 θ</label><output id="outB">35°</output></div>
+              <input class="range" id="rngB" type="range" min="0" max="360" step="1" value="35">
+            </div>
+            <div>
+              <div class="slider-head"><label for="rngJ">电流密度 J<sub>z</sub>（出纸面为正）</label><output id="outJ">+0.75</output></div>
+              <input class="range" id="rngJ" type="range" min="-1" max="1" step="0.01" value="0.75">
+            </div>
+            <div>
+              <div class="slider-head"><label for="rngShear">剪切率 γ</label><output id="outShear">0.60</output></div>
+              <input class="range" id="rngShear" type="range" min="0" max="1" step="0.01" value="0.6">
+            </div>
+            <div>
+              <div class="slider-head"><label for="rngCurv">剪切曲率 κ</label><output id="outCurv">+0.35</output></div>
+              <input class="range" id="rngCurv" type="range" min="-1" max="1" step="0.01" value="0.35">
+            </div>
+            <div>
+              <div class="slider-head"><label for="rngMu">粘度 μ</label><output id="outMu">0.60</output></div>
+              <input class="range" id="rngMu" type="range" min="0" max="1" step="0.01" value="0.6">
+            </div>
+          </div>
+          <div class="tiny-note"><b>读图提示：</b>压力箭头在边界，指向流体元内部；粘性箭头沿边界切向；重力与 J×B 箭头铺满体积。中心白色箭头是合力密度 Σf。数值分量以 x 向右、y 向上为正。</div>
+        </aside>
+
+        <div class="lab-main">
+          <div class="canvas-frame">
+            <div class="canvas-tag"><i></i>FORCE LEDGER / ΔV → 0</div>
+            <canvas id="elementCanvas" width="800" height="600" aria-label="流体元受力矢量图：边界上显示压力和粘性牵引力，体积内显示重力和洛伦兹力，中心显示合力"></canvas>
+          </div>
+          <div class="force-strip" aria-live="polite">
+            <div class="metric"><div class="m-label"><i></i>压力 −∇p</div><div class="m-value" id="fP">+1.10</div></div>
+            <div class="metric"><div class="m-label"><i></i>粘性 ∇·τ</div><div class="m-value" id="fV">+0.63</div></div>
+            <div class="metric"><div class="m-label"><i></i>电磁 J×B</div><div class="m-value" id="fL">+0.77</div></div>
+            <div class="metric"><div class="m-label"><i></i>重力 ρg</div><div class="m-value" id="fG">0.00</div></div>
+            <div class="metric total"><div class="m-label"><i></i>合力 Σf</div><div class="m-value" id="fTot">+…</div></div>
+          </div>
+          <div class="legend-row">
+            <span><i></i>压力（法向 · 表面）</span>
+            <span><i></i>粘性（切向 · 表面）</span>
+            <span><i></i>洛伦兹（体积）</span>
+            <span><i></i>重力（体积）</span>
+            <span><i></i>合力密度</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EQUATION ================= -->
+  <section class="section" id="equation">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">05</div>
+        <div>
+          <div class="kicker">From boundary traction to force density</div>
+          <h2 class="section-title">从边界上的力，到方程里的<span class="accent-amber">每一项</span></h2>
+          <p class="section-lede">对随流体运动的材料体积应用动量定理，再对表面力使用散度定理，就得到 MHD 的流体元运动方程。点一点方程中的彩色项，看它属于哪本账。</p>
+        </div>
+      </div>
+
+      <div class="derivation-grid">
+        <div class="card derivation">
+          <div class="derive-step">
+            <div class="derive-num">01</div>
+            <div class="derive-body">
+              <h4>对材料体积写动量定理</h4>
+              <p>V(t) 跟着流体一起运动，∂V 是它的边界，n 是外法向。右边是体积力与边界牵引力。</p>
+              <div class="math-block">\[
+                \frac{d}{dt}\int_V\rho\mathbf v\,dV
+                =\int_V(\rho\mathbf g+\mathbf J\times\mathbf B)\,dV
+                +\oint_{\partial V}\mathbf t(\mathbf n)\,dS
+              \]</div>
+            </div>
+          </div>
+          <div class="derive-step">
+            <div class="derive-num">02</div>
+            <div class="derive-body">
+              <h4>用 Cauchy 应力描述接触力</h4>
+              <p>牵引力不只取决于位置，还取决于截面方向。Cauchy 应力张量 σ 把法向 n 映射成牵引力。</p>
+              <div class="math-block">\[
+                \mathbf t(\mathbf n)=\boldsymbol\sigma\cdot\mathbf n
+                \quad\Longrightarrow\quad
+                \oint_{\partial V}\boldsymbol\sigma\cdot\mathbf n\,dS
+                =\int_V\nabla\cdot\boldsymbol\sigma\,dV
+              \]</div>
+            </div>
+          </div>
+          <div class="derive-step">
+            <div class="derive-num">03</div>
+            <div class="derive-body">
+              <h4>拆成压力与粘性，得到运动方程</h4>
+              <p>对牛顿流体 σ = −pI + τ。体积分对任意 V 都成立，于是得到微分形式的流体元方程。</p>
+              <div class="math-block">\[
+                \rho\frac{D\mathbf v}{Dt}
+                =-\nabla p+\nabla\cdot\boldsymbol\tau
+                +\mathbf J\times\mathbf B+\rho\mathbf g
+              \]</div>
+            </div>
+          </div>
+          <div class="derive-note"><b>数值实现里：</b>表面力通常离散为面通量，体积力离散为单元源项。有限体积法把这个“两本账”的结构直接写进了代码。</div>
+        </div>
+
+        <div class="card stress-card">
+          <span class="chip v">本构关系</span>
+          <h3>应力张量：压力在对角线，粘性在非对角线</h3>
+          <p>压力是各向同性的法向压应力，所以写成 −pI。粘性应力 τ 是偏应力，只在有速度梯度时出现；它把动量从快层扩散到慢层。</p>
+          <div class="matrix" aria-label="二维应力张量矩阵">
+            <div class="normal">−p + τ<sub>xx</sub></div><div class="shear">τ<sub>xy</sub></div>
+            <div class="shear">τ<sub>yx</sub></div><div class="normal">−p + τ<sub>yy</sub></div>
+          </div>
+          <div class="math-block" style="font-size:.92em">\[
+            \boldsymbol\tau
+            =\mu\left[\nabla\mathbf v+(\nabla\mathbf v)^{\mathsf T}
+            -\frac{2}{3}(\nabla\cdot\mathbf v)\mathbf I\right]
+            +\zeta(\nabla\cdot\mathbf v)\mathbf I
+          \]</div>
+          <p class="note">不可压时 \(\nabla\cdot\mathbf v=0\)，\(\nabla\cdot\boldsymbol\tau=\mu\nabla^2\mathbf v\)。这里取“拉为正”；流体压力是压应力，所以前面有负号。</p>
+        </div>
+      </div>
+
+      <div class="card eq-explorer" id="termExplorer">
+        <div class="eq-panel">
+          <div class="kicker">Tap a term</div>
+          <div class="eq-display" role="group" aria-label="MHD 动量方程，点击各项查看解释">
+            <span class="base">ρ Dv/Dt</span><span class="equals">=</span>
+            <button class="term" type="button" data-term="pressure" aria-pressed="true">−∇p</button>
+            <span class="equals">+</span>
+            <button class="term" type="button" data-term="viscous" aria-pressed="false">∇·τ</button>
+            <span class="equals">+</span>
+            <button class="term" type="button" data-term="lorentz" aria-pressed="false">J×B</button>
+            <span class="equals">+</span>
+            <button class="term" type="button" data-term="gravity" aria-pressed="false">ρg</button>
+          </div>
+          <p class="eq-caption">单位体积的动量平衡。每一项的单位都是 <span class="unit">N m⁻³ = kg m⁻² s⁻²</span>。除以 ρ 后，右边变成加速度（m s⁻²）。</p>
+          <div class="eq-legend">
+            <span class="chip c">表面力</span><span class="chip a">表面力</span><span class="chip m">体积力</span><span class="chip g">体积力</span>
+          </div>
+          <p class="eq-caption" style="margin-top:18px">完整 MHD 还需要连续性方程、感应方程与状态方程：</p>
+          <div class="math-block" style="padding:10px 12px;font-size:.82em">\[
+            \partial_t\rho+\nabla\cdot(\rho\mathbf v)=0,
+            \qquad
+            \partial_t\mathbf B=\nabla\times(\mathbf v\times\mathbf B)+\eta\nabla^2\mathbf B
+          \]</div>
+        </div>
+
+        <div class="term-panel active" data-panel="pressure" style="--tc:var(--cyan)">
+          <div class="tp-top"><h3>热压力</h3><span class="tp-sym">−∇p</span></div>
+          <span class="chip c">表面力 → 力密度</span>
+          <p style="margin-top:13px">压力来自相邻流体在边界上的法向推挤。均匀压力从四面八方同时推，合力为零；只有<strong>压力梯度</strong>留下净力。</p>
+          <p>在理想气体中 \(p=nkT\)；在磁化等离子体中，压强可以沿磁场与垂直磁场不同（\(p_\parallel\)、\(p_\perp\)），那时要写成 \(-\nabla\cdot\mathbf P\)，\(\mathbf P\) 是压强张量。</p>
+          <div class="tp-fact">
+            <div><span>力密度尺度</span><b>Δp / L</b></div>
+            <div><span>无量纲数</span><b>Eu = Δp / ρU²</b></div>
+            <div><span>直觉</span><b>邻居的推搡，从高压指向低压</b></div>
+          </div>
+        </div>
+
+        <div class="term-panel" data-panel="viscous" style="--tc:var(--amber)">
+          <div class="tp-top"><h3>粘滞力</h3><span class="tp-sym">∇·τ</span></div>
+          <span class="chip a">表面力 → 力密度</span>
+          <p style="margin-top:13px">粘性是<strong>动量的扩散</strong>。速度不同的相邻流层通过剪切应力互相拖拽；如果剪切应力在空间上均匀，两个面上的力会抵消，只有梯度留下净力。</p>
+          <p>不可压牛顿流体：\(\nabla\cdot\boldsymbol\tau=\mu\nabla^2\mathbf v\)。它让速度场变光滑，把快层慢下来、慢层带快。无滑移壁面附近因此形成边界层。</p>
+          <div class="tp-fact">
+            <div><span>力密度尺度</span><b>μU / L²</b></div>
+            <div><span>无量纲数</span><b>Re = ρUL/μ</b></div>
+            <div><span>直觉</span><b>流体内部的摩擦与动量交换</b></div>
+          </div>
+        </div>
+
+        <div class="term-panel" data-panel="lorentz" style="--tc:var(--magenta)">
+          <div class="tp-top"><h3>洛伦兹力</h3><span class="tp-sym">J×B</span></div>
+          <span class="chip m">体积力</span>
+          <p style="margin-top:13px">电流元在磁场中受力，作用于流体元内部<strong>每一个电流元</strong>，不需要边界接触。整体电中性时，电场力 \(\rho_e\mathbf E\) 通常远小于 \(\mathbf J\times\mathbf B\)，准静态 MHD 只保留后者。</p>
+          <p>它还可以写成磁压与磁张力两项：\(\mathbf J\times\mathbf B=-\nabla(B^2/2\mu_0)+(\mathbf B\cdot\nabla)\mathbf B/\mu_0\)。这只是同一个体积力的不同记账方式。</p>
+          <div class="tp-fact">
+            <div><span>力密度尺度</span><b>B² / (μ₀L)</b></div>
+            <div><span>无量纲数</span><b>β = 2μ₀p / B²</b></div>
+            <div><span>直觉</span><b>能流动的导线，整根都在受力</b></div>
+          </div>
+        </div>
+
+        <div class="term-panel" data-panel="gravity" style="--tc:var(--green)">
+          <div class="tp-top"><h3>重力</h3><span class="tp-sym">ρg</span></div>
+          <span class="chip g">体积力</span>
+          <p style="margin-top:13px">每个质量元都受到重力，因此力密度正比于密度 ρ。它不需要接触，也不会因为把流体元切小就消失。</p>
+          <p>在磁流体中，重力常与压力梯度、磁力一起形成静力平衡：\(0=-\nabla p+\mathbf J\times\mathbf B+\rho\mathbf g\)。太阳大气、吸积盘与托卡马克边缘的平衡都离不开这种竞争。</p>
+          <div class="tp-fact">
+            <div><span>力密度尺度</span><b>ρg</b></div>
+            <div><span>无量纲数</span><b>Fr = U / √(gL)</b></div>
+            <div><span>直觉</span><b>每个质量元都被地球拉一把</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EM ================= -->
+  <section class="section" id="em">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">06</div>
+        <div>
+          <div class="kicker">Magnetic pressure &amp; tension</div>
+          <h2 class="section-title">电磁力：一个力，<span class="accent-magenta">两本账</span></h2>
+          <p class="section-lede">J×B 是体积力，但它可以拆成“磁压”和“磁张力”。一个像被挤在一起的弹簧，一个像绷紧的橡皮筋——它们帮助我们读懂磁场怎样推、怎样拉，但都不是新的力。</p>
+        </div>
+      </div>
+
+      <div class="em-grid">
+        <article class="card em-card">
+          <h3>磁压 · 磁场拥挤处向外推</h3>
+          <div class="em-sub">MAGNETIC PRESSURE</div>
+          <p>把磁力线想成一组沿磁场方向排列的弹性带。磁场强的地方“带子”更密，会向磁场弱的方向施加<strong>垂直于磁场的侧向压力</strong> p<sub>m</sub> = B²/2μ₀。</p>
+          <div class="em-figure">
+            <svg viewBox="0 0 500 150" aria-hidden="true">
+              <defs><marker id="em-p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#56d9ff"/></marker></defs>
+              <g stroke="#56d9ff" stroke-width="1.2" opacity=".85">
+                <path d="M120 20C108 50 112 100 122 132"/><path d="M158 20C146 50 150 100 160 132"/><path d="M196 20C184 50 188 100 198 132"/><path d="M234 20C222 50 226 100 236 132"/>
+              </g>
+              <g stroke="#56d9ff" stroke-width=".7" opacity=".22">
+                <path d="M268 20C256 50 260 100 270 132"/><path d="M306 20C294 50 298 100 308 132"/><path d="M344 20C332 50 336 100 346 132"/><path d="M382 20C370 50 374 100 384 132"/>
+              </g>
+              <g stroke="#ffc15e" stroke-width="1.7" marker-end="url(#em-p)">
+                <path d="M178 55h62"/><path d="M178 88h62"/><path d="M178 120h62"/>
+              </g>
+              <text x="96" y="146" class="svg-small" fill="#56d9ff">强场</text>
+              <text x="370" y="146" class="svg-small" fill="#6e849b">弱场</text>
+              <text x="246" y="48" class="svg-small" fill="#ffc15e">−∇pₘ</text>
+            </svg>
+          </div>
+          <div class="math-block em-math">\[
+            \mathbf f_{\rm 压}
+            =-\nabla\!\left(\frac{B^2}{2\mu_0}\right),
+            \qquad
+            p_m=\frac{B^2}{2\mu_0}
+          \]</div>
+        </article>
+
+        <article class="card em-card">
+          <h3>磁张力 · 弯曲的力线想变直</h3>
+          <div class="em-sub">MAGNETIC TENSION</div>
+          <p>沿磁力线方向存在张力 <strong>B²/μ₀</strong>。力线弯曲时，张力指向曲率中心，试图把弯曲拉直；就像拨动的琴弦，也像被拉紧的橡皮筋。</p>
+          <div class="em-figure">
+            <svg viewBox="0 0 500 150" aria-hidden="true">
+              <defs><marker id="em-t" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#ff7fb1"/></marker></defs>
+              <path d="M70 118C170 18 330 18 430 118" fill="none" stroke="#ff7fb1" stroke-width="2.2"/>
+              <path d="M250 67v35" stroke="#ff7fb1" stroke-width="1.8" marker-end="url(#em-t)"/>
+              <path d="M250 67l0 1" stroke="#fff" stroke-width="3"/>
+              <circle cx="250" cy="67" r="3" fill="#ffd9e8"/>
+              <text x="259" y="58" class="svg-small" fill="#ff7fb1">张力 → 曲率中心</text>
+              <text x="105" y="38" class="svg-small" fill="#8fa5bd">弯曲的磁力线</text>
+            </svg>
+          </div>
+          <div class="math-block em-math">\[
+            \mathbf f_{\rm 张}
+            =\frac{(\mathbf B\cdot\nabla)\mathbf B}{\mu_0},
+            \qquad
+            \text{曲率半径 }R:\;
+            f_\perp\approx\frac{B^2}{\mu_0R}
+          \]</div>
+        </article>
+      </div>
+
+      <div class="card decomp">
+        <div>
+          <div class="kicker">One force, two accounts</div>
+          <h3>把 J×B 拆开</h3>
+          <p>磁压项与磁张力项各自都有沿磁场方向的分量，但这两个平行分量恰好抵消。因此净的洛伦兹力始终垂直于 B。这个分解是记账技巧，不是两种独立的物理力。</p>
+        </div>
+        <div>
+          <div class="math-block">\[
+            \mathbf J\times\mathbf B
+            =-\nabla\!\left(\frac{B^2}{2\mu_0}\right)
+            +\frac{(\mathbf B\cdot\nabla)\mathbf B}{\mu_0}
+          \]</div>
+          <div style="display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--dim);margin:7px 3px 0">
+            <span>磁压梯度</span><span>磁张力</span>
+          </div>
+          <div class="math-block" style="padding:9px 12px;font-size:.86em;margin-top:9px">\[
+            \text{平行分量：}\;
+            -\frac{\partial p_m}{\partial s}
+            +\frac{B}{\mu_0}\frac{\partial B}{\partial s}=0
+          \]</div>
+        </div>
+      </div>
+
+      <div class="pinch-grid">
+        <div class="card pinch">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="31" fill="none" stroke="#56d9ff" stroke-width="1.2" stroke-dasharray="4 4"/>
+            <circle cx="50" cy="50" r="21" fill="none" stroke="#56d9ff" stroke-width="1.5"/>
+            <circle cx="50" cy="50" r="8" fill="rgba(255,127,177,.12)" stroke="#ff7fb1"/>
+            <g stroke="#ff7fb1" stroke-width="1.5"><path d="M85 50h-9"/><path d="M15 50h9"/><path d="M50 15v9"/><path d="M50 85v-9"/></g>
+            <text x="45" y="54" class="svg-small" fill="#ff7fb1">J</text>
+          </svg>
+          <div>
+            <h4>Z-pinch：轴向电流 → 角向磁场</h4>
+            <p>电流沿轴流动，产生的角向磁场把等离子体向中心箍缩。磁张力提供向内的力，热压力与之平衡。 <code>J_z × B_φ → −r̂</code></p>
+          </div>
+        </div>
+        <div class="card pinch">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="30" fill="none" stroke="#ffc15e" stroke-width="1.2"/>
+            <circle cx="50" cy="50" r="20" fill="none" stroke="#ffc15e" stroke-width="1.5" stroke-dasharray="5 4"/>
+            <path d="M50 12v76" stroke="#56d9ff" stroke-width="1.5"/>
+            <g stroke="#ff7fb1" stroke-width="1.5"><path d="M50 50l21-13"/><path d="M50 50l-21 13"/></g>
+            <text x="42" y="9" class="svg-small" fill="#56d9ff">B</text>
+          </svg>
+          <div>
+            <h4>θ-pinch：角向电流 → 轴向磁场</h4>
+            <p>角向电流与轴向磁场作用，产生径向力。与 Z-pinch 一起构成磁约束装置的基本几何；环向场与极向场的组合则通向托卡马克。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SANDBOX ================= -->
+  <section class="section" id="sandbox">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">07</div>
+        <div>
+          <div class="kicker">Interactive 02 / live MHD</div>
+          <h2 class="section-title">把方程放进<span class="accent-cyan">沙盒</span></h2>
+          <p class="section-lede">一个二维不可压单流体 MHD 求解器：洛伦兹力作为体积力进入动量方程，压力即时调整以维持不可压，磁通量函数保证 ∇·B = 0。切换预设，看磁压、磁张力与压力如何互相博弈。</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding:22px 24px;margin-bottom:19px">
+        <div class="kicker">Model / 2D incompressible MHD</div>
+        <div class="math-block">\[
+          \partial_t\mathbf u+\mathbf u\cdot\nabla\mathbf u
+          =-\nabla p+\nu\nabla^2\mathbf u+\alpha\,\mathbf J\times\mathbf B,
+          \qquad \nabla\cdot\mathbf u=0
+        \]</div>
+        <div class="math-block">\[
+          \partial_t A+\mathbf u\cdot\nabla A=\eta\nabla^2 A,
+          \qquad
+          \mathbf B=\nabla\times(A\hat{\mathbf z}),
+          \qquad
+          J_z=-\nabla^2 A
+        \]</div>
+        <p class="note" style="margin-top:10px">\(A\) 是磁通量函数，因此 \(\nabla\cdot\mathbf B=0\) 自动成立；压力 \(p\) 由投影法即时求解，只作为不可压约束的拉格朗日乘子。\(\alpha\) 是归一化的洛伦兹耦合系数。</p>
+      </div>
+
+      <div class="sim-card">
+        <div class="sim-head">
+          <div class="sim-title"><span class="live-dot" id="simLiveDot"></span><span>MHD SANDBOX</span><small>2D · INCOMPRESSIBLE · N = 128²</small><span class="sim-status" id="simStatus">RUNNING</span></div>
+          <div class="sim-head-right">
+            <button class="btn btn-ghost btn-small" type="button" id="simToggle">
+              <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="5" width="3.4" height="14" rx="1"/><rect x="13.6" y="5" width="3.4" height="14" rx="1"/></svg>
+              <span>暂停</span>
+            </button>
+            <button class="icon-btn" type="button" id="simStep" aria-label="单步推进" title="单步推进">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5l9 7-9 7zM17 5h2v14h-2z"/></svg>
+            </button>
+            <button class="icon-btn" type="button" id="simReset" aria-label="重置模拟" title="重置">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M5.5 15a7 7 0 0 0 11.8 2.1L20 14M4 10l2.7-3.1A7 7 0 0 1 18.5 9"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="sim-toolbar no-print" style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:12px 19px;border-bottom:1px solid var(--line);background:rgba(5,10,18,.25)">
+          <span class="panel-label" style="margin:0 3px 0 0">Preset</span>
+          <button class="preset active" type="button" data-sim-preset="pinch">Z-pinch</button>
+          <button class="preset" type="button" data-sim-preset="ot">Orszag–Tang</button>
+          <button class="preset" type="button" data-sim-preset="island">磁岛</button>
+          <span style="flex:1"></span>
+          <span class="tiny-note">画布点击：注入一个磁通绳</span>
+        </div>
+
+        <div class="sim-body">
+          <div class="sim-stage">
+            <div class="sim-canvas-wrap" id="simCanvasWrap">
+              <canvas id="mhdCanvas" width="800" height="800" aria-label="二维 MHD 实时模拟，显示电流密度、磁场线与示踪粒子。点击画布可注入磁通绳。"></canvas>
+              <div class="sim-overlay">
+                <div class="sim-badge">t = <b id="simTime">0.00</b><br>dt = 0.045</div>
+                <div class="sim-badge" style="text-align:right">E<sub>kin</sub> <b id="simKinBadge">0.000</b><br>E<sub>mag</sub> <b id="simMagBadge">0.000</b></div>
+              </div>
+            </div>
+            <div class="sim-hint"><span><i></i>拖动画布不生效，单击可注入扰动</span><span>磁场线 = A 的等值线 · 颜色 = 所选场</span></div>
+          </div>
+
+          <aside class="sim-side no-print">
+            <div>
+              <div class="panel-label">Display</div>
+              <select class="sim-view" id="simView" aria-label="背景场显示">
+                <option value="current">背景：电流密度 J</option>
+                <option value="vorticity">背景：涡量 ω</option>
+                <option value="pressure">背景：压力 p</option>
+                <option value="speed">背景：速度 |u|</option>
+                <option value="bmag">背景：磁场强度 |B|</option>
+              </select>
+            </div>
+            <div class="chip-toggle">
+              <label class="toggle" style="--tc:var(--cyan)"><input type="checkbox" id="simFieldLines" checked><span class="dot"></span>磁场线</label>
+              <label class="toggle" style="--tc:var(--magenta)"><input type="checkbox" id="simParticles" checked><span class="dot"></span>示踪粒子</label>
+              <label class="toggle" style="--tc:var(--amber)"><input type="checkbox" id="simForce" checked><span class="dot"></span>J×B 箭头</label>
+            </div>
+            <div class="slider-stack">
+              <div>
+                <div class="slider-head"><label for="rngAlpha">洛伦兹耦合 α</label><output id="outAlpha">1.00</output></div>
+                <input class="range" id="rngAlpha" type="range" min="0" max="2" step="0.01" value="1">
+              </div>
+              <div>
+                <div class="slider-head"><label for="rngNu">粘性 ν</label><output id="outNu">0.0020</output></div>
+                <input class="range" id="rngNu" type="range" min="0" max="0.02" step="0.0005" value="0.002">
+              </div>
+              <div>
+                <div class="slider-head"><label for="rngEta">电阻 η</label><output id="outEta">0.0030</output></div>
+                <input class="range" id="rngEta" type="range" min="0" max="0.02" step="0.0005" value="0.003">
+              </div>
+            </div>
+            <div class="legend-row" style="gap:7px 10px">
+              <span><i style="background:var(--cyan)"></i>磁场</span>
+              <span><i style="background:var(--magenta)"></i>体积力</span>
+              <span><i style="background:var(--amber)"></i>电流</span>
+            </div>
+          </aside>
+        </div>
+
+        <div class="sim-readouts">
+          <div class="metric"><div class="m-label"><i style="background:var(--cyan)"></i>时间 t</div><div class="m-value" id="simTime2">0.00</div></div>
+          <div class="metric"><div class="m-label"><i style="background:var(--green)"></i>动能 E<sub>kin</sub></div><div class="m-value" id="simKin">0.000</div></div>
+          <div class="metric"><div class="m-label"><i style="background:var(--magenta)"></i>磁能 E<sub>mag</sub></div><div class="m-value" id="simMag">0.000</div></div>
+          <div class="metric"><div class="m-label"><i style="background:var(--amber)"></i>max |J|</div><div class="m-value" id="simMaxJ">0.000</div></div>
+          <div class="metric"><div class="m-label"><i style="background:var(--violet)"></i>max |u|</div><div class="m-value" id="simMaxU">0.000</div></div>
+        </div>
+        <div class="sim-note"><b>预设说明：</b><span id="simDesc">Z-pinch：初始磁通量函数呈高斯分布，角向磁场向中心箍缩；观察磁张力与压力投影的竞争。</span> &nbsp; <b>模型：</b>∂u/∂t + u·∇u = −∇p + ν∇²u + α J×B，∂A/∂t + u·∇A = η∇²A，B = ∇×(Aẑ)，J = −∇²A。无量纲、定性演示；压力由投影法即时求解，不是独立的热力学演化。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SCALE LAB ================= -->
+  <section class="section" id="scales">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">08</div>
+        <div>
+          <div class="kicker">Interactive 03 / order of magnitude</div>
+          <h2 class="section-title">量级实验室：<span class="accent-amber">谁在主导？</span></h2>
+          <p class="section-lede">把真实物质的数量级代进去，比较五种力密度，并读出 Re、Ha、N、Rm、β。不要只看绝对大小——<strong>比值</strong>才决定哪一项能改写流动。</p>
+        </div>
+      </div>
+
+      <div class="scale-lab">
+        <aside class="card scale-controls no-print">
+          <div>
+            <div class="panel-label">Preset</div>
+            <div class="preset-row" id="scalePresets">
+              <button class="preset" type="button" data-scale-preset="water">水</button>
+              <button class="preset active" type="button" data-scale-preset="metal">液态金属</button>
+              <button class="preset" type="button" data-scale-preset="tokamak">托卡马克边缘</button>
+              <button class="preset" type="button" data-scale-preset="corona">太阳日冕</button>
+            </div>
+          </div>
+          <div class="slider-stack">
+            <div><div class="slider-head"><label for="qU">速度 U</label><output id="outU">0.10 m/s</output></div><input class="range" id="qU" type="range" min="-3" max="6" step="0.01" value="-1"></div>
+            <div><div class="slider-head"><label for="qL">尺度 L</label><output id="outL">0.05 m</output></div><input class="range" id="qL" type="range" min="-4" max="9" step="0.01" value="-1.301"></div>
+            <div><div class="slider-head"><label for="qRho">密度 ρ</label><output id="outRho">6.36×10³ kg/m³</output></div><input class="range" id="qRho" type="range" min="-15" max="4" step="0.01" value="3.803"></div>
+            <div><div class="slider-head"><label for="qMu">动力粘度 μ</label><output id="outMu2">2.40×10⁻³ Pa·s</output></div><input class="range" id="qMu" type="range" min="-12" max="3" step="0.01" value="-2.62"></div>
+            <div><div class="slider-head"><label for="qDp">压力差 Δp</label><output id="outDp">1.00×10⁵ Pa</output></div><input class="range" id="qDp" type="range" min="-6" max="9" step="0.01" value="5"></div>
+            <div><div class="slider-head"><label for="qB">磁场 B</label><output id="outB2">1.00 T</output></div><input class="range" id="qB" type="range" min="0" max="20" step="0.001" value="1"></div>
+            <div><div class="slider-head"><label for="qSigma">电导率 σ</label><output id="outSigma">3.10×10⁶ S/m</output></div><input class="range" id="qSigma" type="range" min="1" max="8" step="0.01" value="6.491"></div>
+          </div>
+          <p class="tiny-note" style="margin-top:2px">滑块按对数刻度；数值用于数量级比较，不代表自洽平衡解。</p>
+        </aside>
+
+        <div class="scale-output">
+          <div class="card bars-card">
+            <div class="bars-head">
+              <div><h3>力密度比较</h3><p>同一场景下的单位体积力。条形长度按 log₁₀ 标度，避免十个数量级压扁小项。</p></div>
+              <div class="dominant">主导项：<b id="dominantForce">电磁</b></div>
+            </div>
+            <div class="bar-chart" id="forceBars">
+              <div class="bar-row inertia" style="--bc:var(--dim)"><div class="bar-name"><i></i>惯性（参考）</div><div class="bar-track"><div class="bar-fill" id="barFi"></div></div><div class="bar-val" id="valFi">—</div></div>
+              <div class="bar-row" style="--bc:var(--cyan)"><div class="bar-name"><i></i>压力 −∇p</div><div class="bar-track"><div class="bar-fill" id="barFp"></div></div><div class="bar-val" id="valFp">—</div></div>
+              <div class="bar-row" style="--bc:var(--amber)"><div class="bar-name"><i></i>粘性 ∇·τ</div><div class="bar-track"><div class="bar-fill" id="barFv"></div></div><div class="bar-val" id="valFv">—</div></div>
+              <div class="bar-row" style="--bc:var(--magenta)"><div class="bar-name"><i></i>磁压梯度</div><div class="bar-track"><div class="bar-fill" id="barFl"></div></div><div class="bar-val" id="valFl">—</div></div>
+              <div class="bar-row" style="--bc:var(--green)"><div class="bar-name"><i></i>重力 ρg</div><div class="bar-track"><div class="bar-fill" id="barFg"></div></div><div class="bar-val" id="valFg">—</div></div>
+            </div>
+            <div class="metrics-grid">
+              <div class="metric-card cool"><div class="mk"><span>Re</span><span>惯性/粘性</span></div><div class="mv" id="mRe">—</div><div class="md" id="dRe">—</div></div>
+              <div class="metric-card hot"><div class="mk"><span>Ha</span><span>磁/粘</span></div><div class="mv" id="mHa">—</div><div class="md" id="dHa">—</div></div>
+              <div class="metric-card hot"><div class="mk"><span>N</span><span>磁/惯性</span></div><div class="mv" id="mN">—</div><div class="md" id="dN">—</div></div>
+              <div class="metric-card hot"><div class="mk"><span>Rm</span><span>感应/扩散</span></div><div class="mv" id="mRm">—</div><div class="md" id="dRm">—</div></div>
+              <div class="metric-card cool"><div class="mk"><span>β</span><span>热压/磁压</span></div><div class="mv" id="mBeta">—</div><div class="md" id="dBeta">—</div></div>
+              <div class="metric-card cool"><div class="mk"><span>v<sub>A</sub></span><span>阿尔芬速度</span></div><div class="mv" id="mVa">—</div><div class="md">B / √(μ₀ρ)</div></div>
+            </div>
+            <div class="math-block" style="padding:10px 12px;font-size:.84em;margin-top:14px">\[
+              f_i=\frac{\rho U^2}{L},\quad
+              f_p=\frac{\Delta p}{L},\quad
+              f_v=\frac{\mu U}{L^2},\quad
+              f_B=\frac{B^2}{\mu_0 L},\quad
+              f_g=\rho g
+            \]</div>
+            <div class="math-block" style="padding:10px 12px;font-size:.84em">\[
+              Re=\frac{\rho UL}{\mu},\quad
+              Ha=BL\sqrt{\frac{\sigma}{\mu}},\quad
+              N=\frac{\sigma B^2L}{\rho U},\quad
+              Rm=\mu_0\sigma UL,\quad
+              \beta\approx\frac{2\mu_0\Delta p}{B^2}
+            \]</div>
+            <p class="scale-foot"><b>注意：</b>磁压梯度与感应制动是两种不同的电磁尺度；\(N\) 对应后者，条形图中的磁压梯度对应前者。数值用于数量级比较，不代表自洽平衡解。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PITFALLS ================= -->
+  <section class="section" id="pitfalls">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">09</div>
+        <div>
+          <div class="kicker">Common traps</div>
+          <h2 class="section-title">五个容易踩的<span class="accent-magenta">坑</span></h2>
+          <p class="section-lede">概念题里最常见的错误，不是算错，而是把“力的传递方式”和“数学上的体积分”混为一谈。</p>
+        </div>
+      </div>
+      <div class="pitfalls">
+        <article class="card pitfall"><div class="pf-label">TRAP 01</div><h4>“压力是体积力，因为 −∇p 出现在体积分里。”</h4><p><b>纠正：</b>压力是表面力。−∇p 是边界牵引力经散度定理后得到的<strong>力密度</strong>。物理来源仍是相邻流体的接触推挤。</p></article>
+        <article class="card pitfall"><div class="pf-label">TRAP 02</div><h4>“J×B 可以写成 ∇·T<sub>M</sub>，所以它是表面力。”</h4><p><b>纠正：</b>数学上任何体积力都可写成某个张量的散度。分类看物理传递：洛伦兹力作用于体积内每个电流元，不需要边界接触，是体积力。</p></article>
+        <article class="card pitfall"><div class="pf-label">TRAP 03</div><h4>“粘性只在壁面附近存在。”</h4><p><b>纠正：</b>只要存在速度梯度，流体内部就有粘性应力。壁面只是最常见的强剪切区；自由剪切层、涡核、激波后也会产生粘性耗散。</p></article>
+        <article class="card pitfall"><div class="pf-label">TRAP 04</div><h4>“均匀压力会让流体元整体加速。”</h4><p><b>纠正：</b>均匀压力从各面同时挤压，合力为零，可能改变形状但不推动质心。只有压力梯度 −∇p 才给出净力。</p></article>
+        <article class="card pitfall"><div class="pf-label">TRAP 05</div><h4>“磁压和磁张力是两种独立的力。”</h4><p><b>纠正：</b>它们只是 J×B 的分解。两项的平行分量相消，净力垂直于 B。用哪本账，取决于你想强调磁场的“压强”还是“张力”。</p></article>
+        <article class="card pitfall"><div class="pf-label">TRAP 06</div><h4>“物体缩小，所有力都等比缩小。”</h4><p><b>纠正：</b>体积力 ∝ L³，表面力 ∝ L²。缩小 10 倍，表面力/体积力放大 10 倍。这是微尺度物理与宏观物理图像不同的根源之一。</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= QUIZ ================= -->
+  <section class="section" id="quiz">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">10</div>
+        <div>
+          <div class="kicker">Check yourself</div>
+          <h2 class="section-title">用四个问题，<span class="accent-green">检验直觉</span></h2>
+          <p class="section-lede">选一个答案，立刻看到解释。答错也没关系——这里的目标是把“体积/表面”的分类真正变成条件反射。</p>
+        </div>
+      </div>
+      <div class="card quiz-card">
+        <div class="quiz-top"><h3>小测 · 力的分类与尺度</h3><div class="quiz-score">得分 <b id="quizScore">0</b> / 4</div></div>
+        <div class="quiz-list" id="quizList">
+          <div class="quiz-item" data-answer="1">
+            <div class="quiz-q"><span class="qn">Q1</span>压力在运动方程中以 −∇p 出现。它本质上属于哪一类力？</div>
+            <div class="quiz-opts">
+              <button class="quiz-opt" type="button" data-i="0">体积力，因为 ∇p 是体积分</button>
+              <button class="quiz-opt" type="button" data-i="1">表面力，−∇p 是边界牵引力经散度定理后的力密度</button>
+              <button class="quiz-opt" type="button" data-i="2">既不是体积力也不是表面力</button>
+            </div>
+            <div class="quiz-explain"><b>答案：表面力。</b>压力通过相邻流体在边界上的接触传递。对边界积分用散度定理后，才写成体积分 −∫∇p dV；这不改变它的物理来源。</div>
+          </div>
+          <div class="quiz-item" data-answer="2">
+            <div class="quiz-q"><span class="qn">Q2</span>为什么 J×B 是体积力？</div>
+            <div class="quiz-opts">
+              <button class="quiz-opt" type="button" data-i="0">因为磁场充满整个空间</button>
+              <button class="quiz-opt" type="button" data-i="1">因为它是方程里唯一带叉乘的项</button>
+              <button class="quiz-opt" type="button" data-i="2">因为它作用于体积内每个电流元，总力 ∝ 体积，不需要边界接触</button>
+            </div>
+            <div class="quiz-explain"><b>答案：作用于每个电流元。</b>即使把流体元切得更小，只要内部还有电流，J×B 仍然存在。它不依赖某个接触面，因此是体积力。</div>
+          </div>
+          <div class="quiz-item" data-answer="0">
+            <div class="quiz-q"><span class="qn">Q3</span>把特征尺寸缩小到原来的 1/10，体积力总量与表面力总量分别变成多少？</div>
+            <div class="quiz-opts">
+              <button class="quiz-opt" type="button" data-i="0">体积力 1/1000，表面力 1/100</button>
+              <button class="quiz-opt" type="button" data-i="1">两者都变成 1/100</button>
+              <button class="quiz-opt" type="button" data-i="2">体积力 1/100，表面力 1/1000</button>
+            </div>
+            <div class="quiz-explain"><b>答案：1/1000 与 1/100。</b>体积力 ∝ L³，表面力 ∝ L²。因此表面力/体积力 ∝ 1/L，缩小 10 倍后相对放大了 10 倍。</div>
+          </div>
+          <div class="quiz-item" data-answer="1">
+            <div class="quiz-q"><span class="qn">Q4</span>关于 J×B = −∇(B²/2μ₀) + (B·∇)B/μ₀，哪句话正确？</div>
+            <div class="quiz-opts">
+              <button class="quiz-opt" type="button" data-i="0">磁压和磁张力是两个独立的新力</button>
+              <button class="quiz-opt" type="button" data-i="1">这是同一个体积力的两种记账方式；两项的平行分量相消，净力垂直于 B</button>
+              <button class="quiz-opt" type="button" data-i="2">磁压项总是沿磁场方向，磁张力总是垂直磁场</button>
+            </div>
+            <div class="quiz-explain"><b>答案：同一个力的两种记账。</b>磁压梯度与磁张力各自都有平行于 B 的分量，但恰好抵消；净洛伦兹力垂直于 B。这个分解便于理解磁约束与磁压平衡。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="brand" style="margin-bottom:15px"><span class="brand-mark" aria-hidden="true"></span><span class="brand-text"><strong>力 · 场 · 流体</strong><span>MHD PRIMER</span></span></div>
+        <p style="max-width:430px">一份关于体积力与表面力的交互讲义，从连续介质力学的控制体出发，走到磁流体力学的动量方程、磁压—磁张力分解与量级分析。</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:15px"><span class="chip">单流体 MHD</span><span class="chip">不可压沙盒</span><span class="chip">离线单文件</span></div>
+      </div>
+      <div>
+        <h4>章节</h4>
+        <ul>
+          <li><a href="#field-momentum">场的动量与 Maxwell 应力</a></li>
+          <li><a href="#fluid-equation">流体元方程与符号</a></li>
+          <li><a href="#concept">体积力 / 表面力</a></li>
+          <li><a href="#equation">动量方程解剖</a></li>
+          <li><a href="#em">磁压与磁张力</a></li>
+          <li><a href="#sandbox">MHD 沙盒</a></li>
+          <li><a href="#scales">量级实验室</a></li>
+          <li><a href="MHD-notes.pdf">完整讲义 PDF</a></li>
+          <li><a href="MHD-notes.md">Markdown 源文件</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>假设与延伸</h4>
+        <ul>
+          <li>准中性、非相对论、单流体</li>
+          <li>牛顿粘性；等离子体可各向异性</li>
+          <li>沙盒为二维不可压定性模拟</li>
+          <li>Landau &amp; Lifshitz, <i>Fluid Mechanics</i></li>
+          <li>Davidson, <i>Introduction to MHD</i></li>
+          <li>Freidberg, <i>Ideal MHD</i></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 · Interactive MHD Primer · 用鼠标和滑块理解连续介质</span>
+      <div class="footer-actions">
+        <button class="footer-share" id="shareBtn" type="button">复制分享链接</button>
+        <span class="mono">STATIC · TEX · NO TRACKING</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]]
+  },
+  svg: { fontCache: "global" },
+  options: {
+    skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+  }
+};
+</script>
+<script defer src="vendor/mathjax/tex-svg-full.js"></script>
+
+<script>
+/* ================================================================
+   0. small utilities
+   ================================================================ */
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+function signed(x, digits = 2) {
+  const v = Math.abs(x) < 0.005 ? 0 : x;
+  return (v < 0 ? "−" : "+") + Math.abs(v).toFixed(digits);
+}
+
+function fixed(x, digits = 2) {
+  if (!Number.isFinite(x)) return "—";
+  const v = Math.abs(x) < 0.005 ? 0 : x;
+  return (v < 0 ? "−" : "") + Math.abs(v).toFixed(digits);
+}
+
+const SUP = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+function sup(n) {
+  return String(n).split("").map(c => SUP[c] || c).join("");
+}
+function sci(x, digits = 2) {
+  if (!Number.isFinite(x)) return "—";
+  const ax = Math.abs(x);
+  if (ax === 0) return "0";
+  if (ax >= 0.01 && ax < 1000) {
+    let s = x.toPrecision(3);
+    if (s.includes(".")) s = s.replace(/0+$/, "").replace(/\.$/, "");
+    return s;
+  }
+  const e = Math.floor(Math.log10(ax));
+  const m = x / Math.pow(10, e);
+  return `${m.toFixed(digits)}×10${sup(e)}`;
+}
+
+/* progress + topbar */
+(function initChrome() {
+  const bar = $("#progress");
+  const top = $("#topbar");
+  const onScroll = () => {
+    const el = document.documentElement;
+    const max = el.scrollHeight - el.clientHeight;
+    const p = max > 0 ? el.scrollTop / max : 0;
+    if (bar) bar.style.width = `${p * 100}%`;
+    if (top) top.classList.toggle("scrolled", el.scrollTop > 24);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+  const print = $("#printBtn");
+  if (print) print.addEventListener("click", () => window.print());
+  const share = $("#shareBtn");
+  if (share) {
+    share.addEventListener("click", async () => {
+      const url = window.location.href;
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(url);
+        copied = true;
+      } catch (err) {
+        window.prompt("复制这个分享链接：", url);
+      }
+      if (copied) {
+        const original = share.textContent;
+        share.textContent = "链接已复制 ✓";
+        share.classList.add("done");
+        window.setTimeout(() => {
+          share.textContent = original;
+          share.classList.remove("done");
+        }, 2200);
+      }
+    });
+  }
+})();
+
+/* ================================================================
+   1. scale-law widget
+   ================================================================ */
+(function initScaleWidget() {
+  const slider = $("#scaleSize");
+  if (!slider) return;
+  const out = $("#scaleSizeOut");
+  const ratio = $("#scaleRatio");
+  const bodyBar = $("#scaleBodyBar");
+  const surfBar = $("#scaleSurfaceBar");
+  const big = $("#scaleSizeBig");
+  const change = $("#scaleChange");
+
+  function update() {
+    const L = parseFloat(slider.value);
+    const body = Math.pow(L, 3);
+    const surf = Math.pow(L, 2);
+    const hBody = clamp(body * 70, 2, 100);
+    const hSurf = clamp(surf * 70, 2, 100);
+    out.textContent = L.toFixed(2);
+    big.textContent = L.toFixed(2);
+    change.textContent = L < .995 ? `缩小 ${(1 / L).toFixed(1)} 倍` : "基准尺度";
+    ratio.textContent = `${(surf / body).toFixed(2)}×`;
+    bodyBar.style.height = `${hBody}%`;
+    surfBar.style.height = `${hSurf}%`;
+  }
+  slider.addEventListener("input", update);
+  update();
+})();
+
+/* ================================================================
+   2. interactive fluid element
+   ================================================================ */
+(function initElementLab() {
+  const canvas = $("#elementCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const W = 800, H = 600;
+  const elem = { x: 232, y: 160, w: 336, h: 296 };
+  const state = {
+    showP: true, showV: true, showEM: true, showG: true,
+    grad: 0.55, angle: 35, current: 0.75, shear: 0.6, curv: 0.35, mu: 0.6
+  };
+
+  const controls = {
+    p: $("#tgPressure"), v: $("#tgViscous"), em: $("#tgEM"), g: $("#tgGravity"),
+    grad: $("#rngGrad"), angle: $("#rngB"), current: $("#rngJ"),
+    shear: $("#rngShear"), curv: $("#rngCurv"), mu: $("#rngMu")
+  };
+  const outs = {
+    grad: $("#outGrad"), angle: $("#outB"), current: $("#outJ"),
+    shear: $("#outShear"), curv: $("#outCurv"), mu: $("#outMu")
+  };
+  const reads = {
+    p: $("#fP"), v: $("#fV"), em: $("#fL"), g: $("#fG"), total: $("#fTot")
+  };
+
+  function setupCanvas() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+  }
+
+  function pathRoundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(x, y, w, h, r);
+    } else {
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+  }
+
+  function arrow(x1, y1, x2, y2, color, width = 1.7, head = 6, alpha = 1, dash = null) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    const a = Math.atan2(dy, dx);
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(a - 0.45), y2 - head * Math.sin(a - 0.45));
+    ctx.lineTo(x2 - head * Math.cos(a + 0.45), y2 - head * Math.sin(a + 0.45));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function currentSymbol(x, y, positive, color, alpha = .65) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(x, y, 4.4, 0, Math.PI * 2);
+    ctx.stroke();
+    if (positive) {
+      ctx.beginPath();
+      ctx.arc(x, y, 1.35, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x - 2.5, y - 2.5); ctx.lineTo(x + 2.5, y + 2.5);
+      ctx.moveTo(x + 2.5, y - 2.5); ctx.lineTo(x - 2.5, y + 2.5);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function vectorText(x, y) {
+    const ax = Math.abs(x) < .005 ? 0 : x;
+    const ay = Math.abs(y) < .005 ? 0 : y;
+    return `${signed(ax)}, ${signed(ay)}`;
+  }
+
+  function computeForces() {
+    const fp = state.showP ? 1.85 * state.grad : 0;
+    const fv = state.showV ? 2.45 * state.mu * state.curv : 0;
+    const th = state.angle * Math.PI / 180;
+    const fl = state.showEM ? {
+      x: 1.55 * state.current * Math.sin(th),
+      y: -1.55 * state.current * Math.cos(th)
+    } : { x: 0, y: 0 };
+    const fg = state.showG ? 1.06 : 0;
+    return {
+      p: { x: fp, y: 0 },
+      v: { x: fv, y: 0 },
+      em: fl,
+      g: { x: 0, y: fg },
+      total: { x: fp + fv + fl.x, y: fl.y + fg }
+    };
+  }
+
+  function drawBackground() {
+    const bg = ctx.createRadialGradient(410, 300, 20, 400, 300, 520);
+    bg.addColorStop(0, "#0b1b2c");
+    bg.addColorStop(.62, "#07111d");
+    bg.addColorStop(1, "#040910");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(115,160,205,.065)";
+    ctx.lineWidth = 1;
+    for (let x = 40; x < W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 30); ctx.lineTo(x, H - 30); ctx.stroke();
+    }
+    for (let y = 30; y < H; y += 40) {
+      ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(W - 30, y); ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.fillStyle = "rgba(143,165,189,.55)";
+    ctx.font = "9px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText("CONTROL VOLUME · FORCE DENSITY", 40, 46);
+    ctx.fillStyle = "rgba(100,122,146,.62)";
+    ctx.fillText("arrows are not to scale · relative units", 40, 61);
+
+    /* faint B field lines behind the volume */
+    if (state.showEM) {
+      const th = state.angle * Math.PI / 180;
+      const dx = Math.cos(th), dy = Math.sin(th);
+      const px = -dy, py = dx;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(40, 76, W - 80, H - 116);
+      ctx.clip();
+      for (let o = -340; o <= 340; o += 52) {
+        const cx = 400 + px * o, cy = 305 + py * o;
+        ctx.strokeStyle = "rgba(86,217,255,.065)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 9]);
+        ctx.beginPath();
+        ctx.moveTo(cx - dx * 430, cy - dy * 430);
+        ctx.lineTo(cx + dx * 430, cy + dy * 430);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawViscousProfile() {
+    if (!state.showV) return;
+    ctx.save();
+    ctx.globalAlpha = .28;
+    for (let i = 0; i < 5; i++) {
+      const t = i / 4;
+      const y = elem.y + 36 + t * (elem.h - 72);
+      const yn = (t * 2 - 1);
+      const vx = state.shear * yn + state.curv * (yn * yn - 1 / 3);
+      const len = 10 + 38 * Math.abs(vx);
+      const x1 = elem.x + 18;
+      if (Math.abs(vx) < .03) {
+        ctx.fillStyle = "#ffc15e";
+        ctx.beginPath(); ctx.arc(x1, y, 1.6, 0, Math.PI * 2); ctx.fill();
+      } else {
+        arrow(x1, y, x1 + Math.sign(vx) * len, y, "#ffc15e", 1, 4, .55);
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawPressure() {
+    if (!state.showP) return;
+    const p0 = 1.25;
+    const pL = p0 + state.grad * .72;
+    const pR = p0 - state.grad * .72;
+    const len = p => clamp(13 + p * 18, 12, 53);
+    const left = elem.x, right = elem.x + elem.w, top = elem.y, bottom = elem.y + elem.h;
+
+    for (const y of [top + 54, top + elem.h / 2, bottom - 54]) {
+      const l1 = len(pL), l2 = len(pR);
+      arrow(left - l1 - 10, y, left - 5, y, "#56d9ff", 1.6, 5, .9);
+      arrow(right + l2 + 10, y, right + 5, y, "#56d9ff", 1.6, 5, .9);
+    }
+    for (const x of [left + 64, left + elem.w / 2, right - 64]) {
+      const l = len(p0);
+      arrow(x, top - l - 8, x, top - 4, "#56d9ff", 1.5, 5, .66);
+      arrow(x, bottom + l + 8, x, bottom + 4, "#56d9ff", 1.5, 5, .66);
+    }
+    ctx.save();
+    ctx.fillStyle = "rgba(86,217,255,.92)";
+    ctx.font = "10px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText("−p n", left - 63, top + 43);
+    ctx.fillText("−p n", right + 20, top + 43);
+    ctx.fillStyle = "rgba(86,217,255,.55)";
+    ctx.font = "9px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText("pressure · normal traction", 64, 558);
+    ctx.restore();
+  }
+
+  function drawViscousTraction() {
+    if (!state.showV) return;
+    const top = elem.y, bottom = elem.y + elem.h;
+    const tauTop = state.mu * (state.shear + state.curv);
+    const tauBottom = state.mu * (state.shear - state.curv);
+    const len = t => clamp(8 + 34 * Math.abs(t), 5, 42);
+    for (const x of [elem.x + 72, elem.x + elem.w / 2, elem.x + elem.w - 72]) {
+      const lt = len(tauTop), lb = len(tauBottom);
+      const st = Math.sign(tauTop) || 1;
+      const sb = Math.sign(tauBottom) || 1;
+      /* top: traction +x; bottom: traction −x for positive tau */
+      arrow(x - st * lt / 2, top - 17, x + st * lt / 2, top - 17, "#ffc15e", 1.7, 5, .9);
+      arrow(x + sb * lb / 2, bottom + 17, x - sb * lb / 2, bottom + 17, "#ffc15e", 1.7, 5, .9);
+    }
+    ctx.save();
+    ctx.fillStyle = "rgba(255,193,94,.9)";
+    ctx.font = "10px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText("τ·n", elem.x + elem.w + 26, top - 21);
+    ctx.fillStyle = "rgba(255,193,94,.5)";
+    ctx.font = "9px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText("viscous · tangential traction", 64, 578);
+    ctx.restore();
+  }
+
+  function drawBodyForces() {
+    /* gravity */
+    if (state.showG) {
+      for (const x of [elem.x + 58, elem.x + elem.w / 2, elem.x + elem.w - 58]) {
+        for (const y of [elem.y + 64, elem.y + elem.h / 2, elem.y + elem.h - 64]) {
+          arrow(x, y - 13, x, y + 8, "#6fe7b5", 1.5, 4.5, .75);
+        }
+      }
+      ctx.save();
+      ctx.fillStyle = "rgba(111,231,181,.82)";
+      ctx.font = "10px 'Cascadia Code', Consolas, monospace";
+      ctx.fillText("ρg", elem.x + elem.w - 16, elem.y + elem.h - 22);
+      ctx.restore();
+    }
+
+    /* electromagnetic */
+    if (state.showEM) {
+      const th = state.angle * Math.PI / 180;
+      const dx = Math.sin(th), dy = -Math.cos(th);
+      const strength = Math.abs(state.current);
+      const len = 12 + 20 * strength;
+      for (const x of [elem.x + 70, elem.x + elem.w / 2, elem.x + elem.w - 70]) {
+        for (const y of [elem.y + 52, elem.y + elem.h / 2, elem.y + elem.h - 52]) {
+          if (strength < .04) {
+            ctx.fillStyle = "rgba(255,127,177,.32)";
+            ctx.beginPath(); ctx.arc(x, y, 1.7, 0, Math.PI * 2); ctx.fill();
+          } else {
+            const s = Math.sign(state.current);
+            arrow(x - dx * s * len / 2, y - dy * s * len / 2,
+                  x + dx * s * len / 2, y + dy * s * len / 2,
+                  "#ff7fb1", 1.7, 5, .84);
+          }
+        }
+      }
+      /* current symbols */
+      for (const x of [elem.x + 102, elem.x + elem.w / 2, elem.x + elem.w - 102]) {
+        for (const y of [elem.y + 32, elem.y + elem.h - 32]) {
+          currentSymbol(x, y, state.current >= 0, "#ff9bc4", .55);
+        }
+      }
+      ctx.save();
+      ctx.fillStyle = "rgba(255,127,177,.88)";
+      ctx.font = "10px 'Cascadia Code', Consolas, monospace";
+      ctx.fillText("J × B", elem.x + elem.w - 62, elem.y + 48);
+      ctx.restore();
+    }
+  }
+
+  function drawCompass() {
+    const cx = 94, cy = 120, r = 31;
+    ctx.save();
+    ctx.strokeStyle = "rgba(154,184,220,.18)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = "rgba(154,184,220,.08)";
+    ctx.beginPath(); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
+    const th = state.angle * Math.PI / 180;
+    const bx = Math.cos(th), by = Math.sin(th);
+    arrow(cx - bx * 19, cy - by * 19, cx + bx * 20, cy + by * 20, "#56d9ff", 2, 6, .95);
+    currentSymbol(cx + 23, cy + 27, state.current >= 0, "#ff9bc4", .8);
+    ctx.fillStyle = "rgba(86,217,255,.95)";
+    ctx.font = "10px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText("B", cx + bx * 26 + 4, cy + by * 26 + 4);
+    ctx.fillStyle = "rgba(255,155,196,.9)";
+    ctx.fillText("Jz", cx + 13, cy + 47);
+    ctx.fillStyle = "rgba(100,122,146,.6)";
+    ctx.font = "8px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText(state.current >= 0 ? "OUT OF PAGE" : "INTO PAGE", cx - 28, cy + 58);
+    ctx.restore();
+  }
+
+  function draw() {
+    drawBackground();
+
+    ctx.save();
+    ctx.fillStyle = "rgba(8,24,40,.5)";
+    ctx.strokeStyle = "rgba(86,217,255,.42)";
+    ctx.lineWidth = 1.15;
+    ctx.setLineDash([6, 6]);
+    pathRoundRect(elem.x, elem.y, elem.w, elem.h, 11);
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    drawViscousProfile();
+    drawBodyForces();
+    drawPressure();
+    drawViscousTraction();
+    drawCompass();
+
+    /* labels on the volume */
+    ctx.save();
+    ctx.fillStyle = "rgba(160,190,215,.56)";
+    ctx.font = "9px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText("∂V", elem.x + elem.w - 25, elem.y + 17);
+    ctx.fillStyle = "rgba(160,190,215,.34)";
+    ctx.font = "8px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText("BODY FORCES", elem.x + 14, elem.y + 18);
+    ctx.fillText("SURFACE TRACTIONS", elem.x - 1, elem.y + elem.h + 39);
+    ctx.restore();
+
+    const F = computeForces();
+    updateReads(F);
+
+    /* net force */
+    const mag = Math.hypot(F.total.x, F.total.y);
+    const cx = elem.x + elem.w / 2, cy = elem.y + elem.h / 2;
+    if (mag < .04) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(244,249,255,.65)";
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "rgba(244,249,255,.8)";
+      ctx.font = "10px 'Cascadia Code', Consolas, monospace";
+      ctx.fillText("Σf ≈ 0", cx + 18, cy + 4);
+      ctx.restore();
+    } else {
+      const ux = F.total.x / mag, uy = F.total.y / mag;
+      const len = Math.min(110, 44 + mag * 32);
+      const ex = cx + ux * len, ey = cy + uy * len;
+      ctx.save();
+      ctx.shadowColor = "rgba(238,249,255,.45)";
+      ctx.shadowBlur = 12;
+      arrow(cx, cy, ex, ey, "#f5faff", 3, 9, .97);
+      ctx.restore();
+      ctx.save();
+      ctx.fillStyle = "rgba(245,250,255,.96)";
+      ctx.font = "11px 'Cascadia Code', Consolas, monospace";
+      ctx.fillText("Σf", ex + ux * 13 - 6, ey + uy * 13 + 4);
+      ctx.restore();
+    }
+
+    /* coordinates + scale note */
+    ctx.save();
+    ctx.strokeStyle = "rgba(154,184,220,.24)";
+    ctx.fillStyle = "rgba(154,184,220,.4)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(682, 540); ctx.lineTo(736, 540); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(682, 540); ctx.lineTo(682, 486); ctx.stroke();
+    ctx.font = "9px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText("x", 741, 544);
+    ctx.fillText("y", 678, 480);
+    ctx.fillStyle = "rgba(100,122,146,.62)";
+    ctx.fillText("ΔV → 0", 682, 565);
+    ctx.restore();
+  }
+
+  function updateReads(F) {
+    /* canvas y points down; displayed components use the conventional y-up frame */
+    const px = F.p.x, py = -F.p.y;
+    const vx = F.v.x, vy = -F.v.y;
+    const ex = F.em.x, ey = -F.em.y;
+    const gx = F.g.x, gy = -F.g.y;
+    const tx = F.total.x, ty = -F.total.y;
+    reads.p.textContent = vectorText(px, py);
+    reads.v.textContent = vectorText(vx, vy);
+    reads.em.textContent = vectorText(ex, ey);
+    reads.g.textContent = vectorText(gx, gy);
+    const mag = Math.hypot(tx, ty);
+    if (mag < .04) {
+      reads.total.textContent = "≈ 0";
+    } else {
+      const ang = (Math.atan2(ty, tx) * 180 / Math.PI + 360) % 360;
+      reads.total.textContent = `${mag.toFixed(2)} ∠${ang.toFixed(0)}°`;
+    }
+  }
+
+  function syncFromUI() {
+    state.showP = controls.p.checked;
+    state.showV = controls.v.checked;
+    state.showEM = controls.em.checked;
+    state.showG = controls.g.checked;
+    state.grad = parseFloat(controls.grad.value);
+    state.angle = parseFloat(controls.angle.value);
+    state.current = parseFloat(controls.current.value);
+    state.shear = parseFloat(controls.shear.value);
+    state.curv = parseFloat(controls.curv.value);
+    state.mu = parseFloat(controls.mu.value);
+
+    outs.grad.textContent = signed(state.grad);
+    outs.angle.textContent = `${Math.round(state.angle)}°`;
+    outs.current.textContent = signed(state.current);
+    outs.shear.textContent = state.shear.toFixed(2);
+    outs.curv.textContent = signed(state.curv);
+    outs.mu.textContent = state.mu.toFixed(2);
+    draw();
+  }
+
+  function setPreset(name) {
+    const presets = {
+      all:    { p: true, v: true, em: true, g: true, grad: .55, angle: 35, current: .75, shear: .6, curv: .35, mu: .6 },
+      static: { p: false, v: false, em: false, g: false, grad: 0, angle: 35, current: 0, shear: 0, curv: 0, mu: 0 },
+      pressure: { p: true, v: false, em: false, g: false, grad: .85, angle: 35, current: 0, shear: 0, curv: 0, mu: 0 },
+      em:     { p: true, v: false, em: true, g: false, grad: 0, angle: 35, current: 1, shear: 0, curv: 0, mu: 0 },
+      shear:  { p: false, v: true, em: false, g: false, grad: 0, angle: 35, current: 0, shear: .8, curv: .72, mu: .85 }
+    };
+    const p = presets[name] || presets.all;
+    controls.p.checked = p.p;
+    controls.v.checked = p.v;
+    controls.em.checked = p.em;
+    controls.g.checked = p.g;
+    controls.grad.value = p.grad;
+    controls.angle.value = p.angle;
+    controls.current.value = p.current;
+    controls.shear.value = p.shear;
+    controls.curv.value = p.curv;
+    controls.mu.value = p.mu;
+    syncFromUI();
+  }
+
+  /* events */
+  Object.values(controls).forEach(el => {
+    if (!el) return;
+    el.addEventListener("input", () => {
+      $$("#elementPresets .preset").forEach(b => b.classList.remove("active"));
+      syncFromUI();
+    });
+    el.addEventListener("change", () => {
+      $$("#elementPresets .preset").forEach(b => b.classList.remove("active"));
+      syncFromUI();
+    });
+  });
+  $$("#elementPresets .preset").forEach(btn => {
+    btn.addEventListener("click", () => {
+      $$("#elementPresets .preset").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      setPreset(btn.dataset.elPreset);
+    });
+  });
+  window.addEventListener("resize", () => { setupCanvas(); draw(); });
+  setupCanvas();
+  syncFromUI();
+})();
+
+/* ================================================================
+   3. equation term explorer
+   ================================================================ */
+(function initTerms() {
+  const buttons = $$(".term");
+  if (!buttons.length) return;
+  const panels = $$(".term-panel");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.term;
+      buttons.forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+      panels.forEach(p => p.classList.toggle("active", p.dataset.panel === key));
+    });
+  });
+})();
+
+/* ================================================================
+   4. quiz
+   ================================================================ */
+(function initQuiz() {
+  const items = $$("#quizList .quiz-item");
+  if (!items.length) return;
+  const scoreEl = $("#quizScore");
+  let score = 0;
+  items.forEach(item => {
+    const answer = parseInt(item.dataset.answer, 10);
+    const opts = $$(".quiz-opt", item);
+    const explain = $(".quiz-explain", item);
+    let answered = false;
+    opts.forEach(opt => {
+      opt.addEventListener("click", () => {
+        if (answered) return;
+        answered = true;
+        const pick = parseInt(opt.dataset.i, 10);
+        opts.forEach(o => { o.disabled = true; });
+        if (pick === answer) {
+          opt.classList.add("correct");
+          score += 1;
+          scoreEl.textContent = String(score);
+        } else {
+          opt.classList.add("wrong");
+          opts[answer].classList.add("correct");
+        }
+        explain.classList.add("show");
+      });
+    });
+  });
+})();
+
+/* ================================================================
+   5. live 2D MHD sandbox
+   ================================================================ */
+(function initMHD() {
+  const canvas = $("#mhdCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d", { alpha: false });
+  const wrap = $("#simCanvasWrap");
+  const N = 128, NN = N * N;
+  const W = 800, H = 800;
+  const plot = { x: 30, y: 30, w: 700, h: 700 };
+
+  let u = new Float32Array(NN), v = new Float32Array(NN), A = new Float32Array(NN);
+  let uTmp = new Float32Array(NN), vTmp = new Float32Array(NN), ATmp = new Float32Array(NN);
+  let bx = new Float32Array(NN), by = new Float32Array(NN), J = new Float32Array(NN), vort = new Float32Array(NN);
+  let p = new Float32Array(NN);
+  const div = new Float32Array(NN);
+  const smoothA = new Float32Array(NN);
+
+  const settings = {
+    alpha: 1, nu: 0.002, eta: 0.003,
+    showLines: true, showParticles: true, showForce: true,
+    view: "current"
+  };
+  let preset = "pinch";
+  let running = true;
+  let t = 0;
+  let fScale = 1;
+  let lastFrame = 0;
+  let accumulator = 0;
+  let raf = 0;
+  let uiTick = 0;
+
+  const SIM_DT = 0.045;
+  const MAX_ACCEL = 18;
+  const MAX_SPEED = 9;
+
+  const wIndex = i => ((i % N) + N) % N;
+  const at = (i, j) => wIndex(j) * N + wIndex(i);
+  const leftI = new Uint32Array(NN), rightI = new Uint32Array(NN);
+  const upI = new Uint32Array(NN), downI = new Uint32Array(NN);
+  const ulI = new Uint32Array(NN), urI = new Uint32Array(NN);
+  const dlI = new Uint32Array(NN), drI = new Uint32Array(NN);
+  for (let j = 0; j < N; j++) {
+    for (let i = 0; i < N; i++) {
+      const k = j * N + i;
+      leftI[k] = j * N + wIndex(i - 1);
+      rightI[k] = j * N + wIndex(i + 1);
+      upI[k] = wIndex(j - 1) * N + i;
+      downI[k] = wIndex(j + 1) * N + i;
+      ulI[k] = wIndex(j - 1) * N + wIndex(i - 1);
+      urI[k] = wIndex(j - 1) * N + wIndex(i + 1);
+      dlI[k] = wIndex(j + 1) * N + wIndex(i - 1);
+      drI[k] = wIndex(j + 1) * N + wIndex(i + 1);
+    }
+  }
+
+  function setupCanvas() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+  }
+
+  function sample(field, x, y) {
+    x = ((x % N) + N) % N;
+    y = ((y % N) + N) % N;
+    const i0 = Math.floor(x), j0 = Math.floor(y);
+    const fx = x - i0, fy = y - j0;
+    const i1 = (i0 + 1) % N, j1 = (j0 + 1) % N;
+    const a = field[j0 * N + i0], b = field[j0 * N + i1];
+    const c = field[j1 * N + i0], d = field[j1 * N + i1];
+    return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy;
+  }
+
+  function advectInto(src, dst, dt) {
+    for (let j = 0; j < N; j++) {
+      for (let i = 0; i < N; i++) {
+        const k = j * N + i;
+        dst[k] = sample(src, i - dt * u[k], j - dt * v[k]);
+      }
+    }
+  }
+
+  function derive() {
+    for (let k = 0; k < NN; k++) {
+      const l = leftI[k], r = rightI[k], uu = upI[k], dd = downI[k];
+      bx[k] = 0.5 * (A[uu] - A[dd]);
+      by[k] = -0.5 * (A[r] - A[l]);
+      J[k] = -(A[r] + A[l] + A[uu] + A[dd] - 4 * A[k]);
+      vort[k] = 0.5 * (v[r] - v[l] - u[uu] + u[dd]);
+    }
+  }
+
+  function project(dt, iterations) {
+    p.fill(0);
+    for (let k = 0; k < NN; k++) {
+      div[k] = 0.5 * (u[rightI[k]] - u[leftI[k]] + v[downI[k]] - v[upI[k]]) / dt;
+    }
+    for (let it = 0; it < iterations; it++) {
+      for (let k = 0; k < NN; k++) {
+        p[k] = 0.25 * (p[rightI[k]] + p[leftI[k]] + p[downI[k]] + p[upI[k]] - div[k]);
+      }
+    }
+    for (let k = 0; k < NN; k++) {
+      u[k] -= dt * 0.5 * (p[rightI[k]] - p[leftI[k]]);
+      v[k] -= dt * 0.5 * (p[downI[k]] - p[upI[k]]);
+    }
+    let mean = 0;
+    for (let k = 0; k < NN; k++) mean += p[k];
+    mean /= NN;
+    for (let k = 0; k < NN; k++) p[k] -= mean;
+  }
+
+  /* ------------- particles ------------- */
+  const PCOUNT = 520;
+  const partX = new Float32Array(PCOUNT), partY = new Float32Array(PCOUNT);
+  const partU = new Float32Array(PCOUNT), partV = new Float32Array(PCOUNT);
+
+  function resetParticles() {
+    for (let k = 0; k < PCOUNT; k++) {
+      partX[k] = Math.random() * N;
+      partY[k] = Math.random() * N;
+      partU[k] = 0;
+      partV[k] = 0;
+    }
+  }
+
+  function updateParticles(dt) {
+    for (let k = 0; k < PCOUNT; k++) {
+      let x = partX[k], y = partY[k];
+      const uu = sample(u, x, y), vv = sample(v, x, y);
+      partU[k] = uu;
+      partV[k] = vv;
+      x += dt * uu;
+      y += dt * vv;
+      partX[k] = ((x % N) + N) % N;
+      partY[k] = ((y % N) + N) % N;
+    }
+  }
+
+  /* ------------- forcing / stepping ------------- */
+  function calibrate(presetName) {
+    derive();
+    let maxF = 0;
+    for (let k = 0; k < NN; k++) {
+      const f = Math.abs(J[k]) * Math.hypot(bx[k], by[k]);
+      if (f > maxF) maxF = f;
+    }
+    const target = presetName === "ot" ? 1.35 : (presetName === "pinch" ? 8.0 : 4.6);
+    fScale = maxF > 1e-12 ? target / maxF : 1;
+  }
+
+  function reset(presetName) {
+    preset = presetName;
+    u.fill(0); v.fill(0); A.fill(0); p.fill(0); bx.fill(0); by.fill(0); J.fill(0); vort.fill(0);
+    if (presetName === "pinch") {
+      for (let j = 0; j < N; j++) {
+        for (let i = 0; i < N; i++) {
+          const x = (i + .5) / N, y = (j + .5) / N;
+          const dx = x - .5, dy = y - .5;
+          const r2 = dx * dx + dy * dy;
+          const theta = Math.atan2(dy, dx);
+          A[j * N + i] = Math.exp(-r2 / (2 * .132 * .132)) * (1 + .065 * Math.cos(3 * theta));
+        }
+      }
+    } else if (presetName === "ot") {
+      for (let j = 0; j < N; j++) {
+        for (let i = 0; i < N; i++) {
+          const x = 2 * Math.PI * (i + .5) / N;
+          const y = 2 * Math.PI * (j + .5) / N;
+          A[j * N + i] = Math.cos(y) + 0.5 * Math.cos(2 * x);
+          u[j * N + i] = -Math.sin(y);
+          v[j * N + i] = Math.sin(x);
+        }
+      }
+    } else {
+      for (let j = 0; j < N; j++) {
+        for (let i = 0; i < N; i++) {
+          const x = 2 * Math.PI * (i + .5) / N;
+          const y = 2 * Math.PI * (j + .5) / N;
+          A[j * N + i] = 0.8 * Math.cos(x) + 0.25 * Math.cos(2 * y) + 0.05 * Math.sin(2 * x) * Math.cos(y);
+        }
+      }
+    }
+    calibrate(presetName);
+    project(SIM_DT, 30);
+    let meanA = 0;
+    for (let k = 0; k < NN; k++) meanA += A[k];
+    meanA /= NN;
+    for (let k = 0; k < NN; k++) A[k] -= meanA;
+    derive();
+    t = 0;
+    accumulator = 0;
+    resetParticles();
+    updatePresetUI(presetName);
+    updateReadouts(true);
+    render();
+  }
+
+  function step(dt) {
+    advectInto(u, uTmp, dt);
+    [u, uTmp] = [uTmp, u];
+    advectInto(v, vTmp, dt);
+    [v, vTmp] = [vTmp, v];
+    derive();
+
+    for (let k = 0; k < NN; k++) {
+      const l = leftI[k], r = rightI[k], uu = upI[k], dd = downI[k];
+      let ax = settings.alpha * fScale * J[k] * (-by[k]) +
+        settings.nu * (u[r] + u[l] + u[uu] + u[dd] - 4 * u[k]);
+      let ay = settings.alpha * fScale * J[k] * (bx[k]) +
+        settings.nu * (v[r] + v[l] + v[uu] + v[dd] - 4 * v[k]);
+      const am = Math.hypot(ax, ay);
+      if (am > MAX_ACCEL) {
+        ax *= MAX_ACCEL / am;
+        ay *= MAX_ACCEL / am;
+      }
+      u[k] += dt * ax;
+      v[k] += dt * ay;
+      const sp = Math.hypot(u[k], v[k]);
+      if (sp > MAX_SPEED) {
+        u[k] *= MAX_SPEED / sp;
+        v[k] *= MAX_SPEED / sp;
+      }
+      if (!Number.isFinite(u[k]) || !Number.isFinite(v[k])) {
+        u[k] = 0;
+        v[k] = 0;
+      }
+    }
+
+    project(dt, 12);
+
+    advectInto(A, ATmp, dt);
+    [A, ATmp] = [ATmp, A];
+    for (let k = 0; k < NN; k++) {
+      A[k] += dt * settings.eta *
+        (A[rightI[k]] + A[leftI[k]] + A[downI[k]] + A[upI[k]] - 4 * A[k]);
+    }
+    let meanA = 0;
+    for (let k = 0; k < NN; k++) meanA += A[k];
+    meanA /= NN;
+    for (let k = 0; k < NN; k++) A[k] -= meanA;
+
+    derive();
+    updateParticles(dt);
+    t += dt;
+  }
+
+  function inject(px, py) {
+    const gx = (px - plot.x) / plot.w * N;
+    const gy = (py - plot.y) / plot.h * N;
+    if (gx < 0 || gx >= N || gy < 0 || gy >= N) return;
+    const sigma = 5.2;
+    const amp = 1.05;
+    const cI = Math.round(gx), cJ = Math.round(gy);
+    const rad = 22;
+    for (let dj = -rad; dj <= rad; dj++) {
+      for (let di = -rad; di <= rad; di++) {
+        const ii = wIndex(cI + di), jj = wIndex(cJ + dj);
+        const dx = di, dy = dj;
+        const g = Math.exp(-(dx * dx + dy * dy) / (2 * sigma * sigma));
+        if (g < .002) continue;
+        A[jj * N + ii] += amp * g;
+        u[jj * N + ii] += -dy * 0.52 * g;
+        v[jj * N + ii] += dx * 0.52 * g;
+      }
+    }
+    derive();
+    if (!running) { render(); updateReadouts(true); }
+  }
+
+  /* ------------- background / field rendering ------------- */
+  const off = document.createElement("canvas");
+  off.width = N; off.height = N;
+  const offCtx = off.getContext("2d");
+  const imageData = offCtx.createImageData(N, N);
+  const img = imageData.data;
+
+  function fieldStats(mode) {
+    let max = 0, mean = 0;
+    const arr = mode === "current" ? J : mode === "vorticity" ? vort :
+      mode === "pressure" ? p : mode === "speed" ? null : null;
+    if (arr) {
+      for (let k = 0; k < NN; k++) mean += arr[k];
+      mean /= NN;
+      for (let k = 0; k < NN; k++) max = Math.max(max, Math.abs(arr[k] - (mode === "pressure" ? mean : 0)));
+    } else if (mode === "speed") {
+      for (let k = 0; k < NN; k++) max = Math.max(max, Math.hypot(u[k], v[k]));
+    } else {
+      for (let k = 0; k < NN; k++) max = Math.max(max, Math.hypot(bx[k], by[k]));
+    }
+    return { max: max || 1, mean };
+  }
+
+  function drawBackground() {
+    const mode = settings.view;
+    const stats = fieldStats(mode);
+    const norm = 1 / (stats.max * .58 + 1e-12);
+    const base = [5, 10, 16];
+
+    for (let j = 0; j < N; j++) {
+      for (let i = 0; i < N; i++) {
+        const k = j * N + i;
+        let val = 0;
+        if (mode === "current") val = J[k];
+        else if (mode === "vorticity") val = vort[k];
+        else if (mode === "pressure") val = p[k] - stats.mean;
+        else if (mode === "speed") val = Math.hypot(u[k], v[k]);
+        else val = Math.hypot(bx[k], by[k]);
+
+        let a = Math.tanh(Math.abs(val) * norm);
+        a = Math.pow(a, .78);
+        let r, g, b;
+        if (mode === "current") {
+          if (val >= 0) { r = base[0] + 238 * a; g = base[1] + 142 * a; b = base[2] + 38 * a; }
+          else { r = base[0] + 24 * a; g = base[1] + 142 * a; b = base[2] + 236 * a; }
+        } else if (mode === "vorticity") {
+          if (val >= 0) { r = base[0] + 244 * a; g = base[1] + 60 * a; b = base[2] + 152 * a; }
+          else { r = base[0] + 32 * a; g = base[1] + 160 * a; b = base[2] + 235 * a; }
+        } else if (mode === "pressure") {
+          if (val >= 0) { r = base[0] + 240 * a; g = base[1] + 120 * a; b = base[2] + 30 * a; }
+          else { r = base[0] + 38 * a; g = base[1] + 112 * a; b = base[2] + 242 * a; }
+        } else if (mode === "speed") {
+          r = base[0] + 150 * a * a; g = base[1] + 214 * a; b = base[2] + 218 * a;
+        } else {
+          r = base[0] + 118 * a * a; g = base[1] + 164 * a; b = base[2] + 232 * a;
+        }
+        const q = (j * N + i) * 4;
+        img[q] = r; img[q + 1] = g; img[q + 2] = b; img[q + 3] = 255;
+      }
+    }
+    offCtx.putImageData(imageData, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(off, plot.x, plot.y, plot.w, plot.h);
+
+    /* vignette */
+    const vg = ctx.createRadialGradient(plot.x + plot.w / 2, plot.y + plot.h / 2, plot.w * .2, plot.x + plot.w / 2, plot.y + plot.h / 2, plot.w * .72);
+    vg.addColorStop(0, "rgba(0,0,0,0)");
+    vg.addColorStop(1, "rgba(0,0,0,.34)");
+    ctx.fillStyle = vg;
+    ctx.fillRect(plot.x, plot.y, plot.w, plot.h);
+  }
+
+  function drawFieldLines() {
+    /* a gentle 3x3 smoothing suppresses grid-scale numerical fuzz in the contours */
+    for (let k = 0; k < NN; k++) {
+      smoothA[k] = (
+        4 * A[k] +
+        A[rightI[k]] + A[leftI[k]] + A[downI[k]] + A[upI[k]] +
+        0.5 * (A[urI[k]] + A[ulI[k]] + A[drI[k]] + A[dlI[k]])
+      ) / 10;
+    }
+    let min = Infinity, max = -Infinity;
+    for (let k = 0; k < NN; k++) {
+      if (smoothA[k] < min) min = smoothA[k];
+      if (smoothA[k] > max) max = smoothA[k];
+    }
+    const range = max - min;
+    if (range < 1e-7) return;
+    const levels = 10;
+    const path = new Path2D();
+    const sx = plot.w / N, sy = plot.h / N;
+
+    for (let li = 1; li < levels; li++) {
+      const lev = min + range * li / levels;
+      for (let j = 0; j < N; j++) {
+        for (let i = 0; i < N; i++) {
+          const k = j * N + i;
+          const v0 = smoothA[k];
+          const v1 = smoothA[rightI[k]];
+          const v2 = smoothA[drI[k]];
+          const v3 = smoothA[downI[k]];
+          let idx = 0;
+          if (v0 > lev) idx |= 1;
+          if (v1 > lev) idx |= 2;
+          if (v2 > lev) idx |= 4;
+          if (v3 > lev) idx |= 8;
+          if (idx === 0 || idx === 15) continue;
+          const t1 = (v1 - v0) !== 0 ? (lev - v0) / (v1 - v0) : 0;
+          const t2 = (v2 - v1) !== 0 ? (lev - v1) / (v2 - v1) : 0;
+          const t3 = (v2 - v3) !== 0 ? (lev - v3) / (v2 - v3) : 0;
+          const t4 = (v3 - v0) !== 0 ? (lev - v0) / (v3 - v0) : 0;
+          const xt = plot.x + (i + t1) * sx, yt = plot.y + j * sy;
+          const xr = plot.x + (i + 1) * sx, yr = plot.y + (j + t2) * sy;
+          const xb = plot.x + (i + t3) * sx, yb = plot.y + (j + 1) * sy;
+          const xl = plot.x + i * sx, yl = plot.y + (j + t4) * sy;
+          const seg = (x1, y1, x2, y2) => {
+            path.moveTo(x1, y1);
+            path.lineTo(x2, y2);
+          };
+          switch (idx) {
+            case 1: case 14: seg(xl, yl, xt, yt); break;
+            case 2: case 13: seg(xt, yt, xr, yr); break;
+            case 3: case 12: seg(xl, yl, xr, yr); break;
+            case 4: case 11: seg(xr, yr, xb, yb); break;
+            case 6: case 9: seg(xt, yt, xb, yb); break;
+            case 7: case 8: seg(xl, yl, xb, yb); break;
+            case 5: seg(xl, yl, xt, yt); seg(xr, yr, xb, yb); break;
+            case 10: seg(xt, yt, xr, yr); seg(xl, yl, xb, yb); break;
+          }
+        }
+      }
+    }
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(plot.x, plot.y, plot.w, plot.h);
+    ctx.clip();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = "rgba(86,217,255,.10)";
+    ctx.lineWidth = 2.4;
+    ctx.stroke(path);
+    ctx.filter = "blur(0.28px)";
+    ctx.strokeStyle = "rgba(180,241,255,.58)";
+    ctx.lineWidth = .72;
+    ctx.stroke(path);
+    ctx.filter = "none";
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(plot.x, plot.y, plot.w, plot.h);
+    ctx.clip();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = "rgba(190,244,255,.42)";
+    ctx.lineWidth = .8;
+    for (let k = 0; k < PCOUNT; k++) {
+      const x = plot.x + partX[k] / N * plot.w;
+      const y = plot.y + partY[k] / N * plot.h;
+      const dx = partU[k] * 2.4 / N * plot.w;
+      const dy = partV[k] * 2.4 / N * plot.h;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - dx, y - dy);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawForceArrows() {
+    let maxF = 0;
+    const cells = [];
+    for (let j = 10; j < N; j += 15) {
+      for (let i = 10; i < N; i += 15) {
+        const k = j * N + i;
+        const fx = J[k] * (-by[k]), fy = J[k] * bx[k];
+        const m = Math.hypot(fx, fy);
+        if (m > maxF) maxF = m;
+        cells.push([i, j, fx, fy, m]);
+      }
+    }
+    if (maxF < 1e-12) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(plot.x, plot.y, plot.w, plot.h);
+    ctx.clip();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = "rgba(255,127,177,.62)";
+    ctx.fillStyle = "rgba(255,127,177,.62)";
+    ctx.lineWidth = 1;
+    for (const [i, j, fx, fy, m] of cells) {
+      if (m < maxF * .07) continue;
+      const x = plot.x + i / N * plot.w;
+      const y = plot.y + j / N * plot.h;
+      const len = 3 + 11 * Math.sqrt(m / maxF);
+      const ux = fx / m, uy = fy / m;
+      ctx.beginPath();
+      ctx.moveTo(x - ux * len / 2, y - uy * len / 2);
+      ctx.lineTo(x + ux * len / 2, y + uy * len / 2);
+      ctx.stroke();
+      const a = Math.atan2(uy, ux);
+      ctx.beginPath();
+      ctx.moveTo(x + ux * len / 2, y + uy * len / 2);
+      ctx.lineTo(x + ux * len / 2 - 3 * Math.cos(a - .5), y + uy * len / 2 - 3 * Math.sin(a - .5));
+      ctx.lineTo(x + ux * len / 2 - 3 * Math.cos(a + .5), y + uy * len / 2 - 3 * Math.sin(a + .5));
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawFrame() {
+    ctx.strokeStyle = "rgba(154,184,220,.22)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(plot.x - .5, plot.y - .5, plot.w + 1, plot.h + 1);
+
+    /* corner brackets */
+    ctx.strokeStyle = "rgba(86,217,255,.45)";
+    ctx.lineWidth = 1.4;
+    const c = 15;
+    const corners = [
+      [plot.x, plot.y, 1, 1], [plot.x + plot.w, plot.y, -1, 1],
+      [plot.x, plot.y + plot.h, 1, -1], [plot.x + plot.w, plot.y + plot.h, -1, -1]
+    ];
+    for (const [x, y, dx, dy] of corners) {
+      ctx.beginPath();
+      ctx.moveTo(x + dx * c, y);
+      ctx.lineTo(x, y);
+      ctx.lineTo(x, y + dy * c);
+      ctx.stroke();
+    }
+
+    /* color bar */
+    const mode = settings.view;
+    const signed = mode === "current" || mode === "vorticity" || mode === "pressure";
+    const bx0 = 748, by0 = 314, bw = 7, bh = 155;
+    const grad = ctx.createLinearGradient(0, by0 + bh, 0, by0);
+    if (mode === "current") {
+      grad.addColorStop(0, "#1aa6e8"); grad.addColorStop(.5, "#08101b"); grad.addColorStop(1, "#ff9b36");
+    } else if (mode === "vorticity") {
+      grad.addColorStop(0, "#4eb6f4"); grad.addColorStop(.5, "#08101b"); grad.addColorStop(1, "#ff58a0");
+    } else if (mode === "pressure") {
+      grad.addColorStop(0, "#4579ff"); grad.addColorStop(.5, "#08101b"); grad.addColorStop(1, "#ff9a36");
+    } else {
+      grad.addColorStop(0, "#08101b"); grad.addColorStop(1, mode === "speed" ? "#8cf0ff" : "#b9d8ff");
+    }
+    ctx.fillStyle = grad;
+    ctx.fillRect(bx0, by0, bw, bh);
+    ctx.strokeStyle = "rgba(154,184,220,.25)";
+    ctx.strokeRect(bx0, by0, bw, bh);
+    ctx.fillStyle = "rgba(154,184,220,.65)";
+    ctx.font = "8px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText(signed ? "+" : "高", bx0 + 12, by0 + 5);
+    ctx.fillText(signed ? "0" : "", bx0 + 12, by0 + bh / 2 + 3);
+    ctx.fillText(signed ? "−" : "低", bx0 + 12, by0 + bh);
+    ctx.save();
+    ctx.translate(bx0 + 10, by0 - 13);
+    ctx.fillStyle = "rgba(143,165,189,.72)";
+    ctx.font = "8.5px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText(mode === "current" ? "J" : mode === "vorticity" ? "ω" : mode === "pressure" ? "p" : mode === "speed" ? "|u|" : "|B|", 0, 0);
+    ctx.restore();
+
+    /* within-canvas tiny legend */
+    ctx.fillStyle = "rgba(154,184,220,.55)";
+    ctx.font = "8px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText("B-LINES = CONTOURS OF A", plot.x + 10, plot.y + plot.h - 11);
+  }
+
+  function render() {
+    ctx.fillStyle = "#040a11";
+    ctx.fillRect(0, 0, W, H);
+    drawBackground();
+    if (settings.showLines) drawFieldLines();
+    if (settings.showParticles) drawParticles();
+    if (settings.showForce) drawForceArrows();
+    drawFrame();
+  }
+
+  /* ------------- UI / loop ------------- */
+  function maxAbs(arr) {
+    let m = 0;
+    for (let k = 0; k < arr.length; k++) {
+      const a = Math.abs(arr[k]);
+      if (a > m) m = a;
+    }
+    return m;
+  }
+
+  function simNum(x) {
+    if (!Number.isFinite(x)) return "—";
+    if (x === 0) return "0";
+    if (Math.abs(x) < .001) {
+      const parts = x.toExponential(1).split("e");
+      return `${parts[0]}×10${sup(parseInt(parts[1], 10))}`;
+    }
+    return x.toFixed(3);
+  }
+
+  function updateReadouts(force = false) {
+    if (!force && (uiTick++ % 4) !== 0) return;
+    let ke = 0, me = 0;
+    for (let k = 0; k < NN; k++) {
+      ke += u[k] * u[k] + v[k] * v[k];
+      me += bx[k] * bx[k] + by[k] * by[k];
+    }
+    ke /= 2 * NN;
+    me /= 2 * NN;
+    const mj = maxAbs(J);
+    const mu = Math.max(maxAbs(u), maxAbs(v));
+    $("#simTime").textContent = t.toFixed(2);
+    $("#simTime2").textContent = t.toFixed(2);
+    $("#simKin").textContent = simNum(ke);
+    $("#simMag").textContent = simNum(me);
+    $("#simMaxJ").textContent = simNum(mj);
+    $("#simMaxU").textContent = simNum(mu);
+    $("#simKinBadge").textContent = simNum(ke);
+    $("#simMagBadge").textContent = simNum(me);
+  }
+
+  function setRunning(next) {
+    running = next;
+    const status = $("#simStatus");
+    const dot = $("#simLiveDot");
+    status.textContent = running ? "RUNNING" : "PAUSED";
+    status.classList.toggle("paused", !running);
+    dot.style.opacity = running ? "1" : ".35";
+    dot.style.animationPlayState = running ? "running" : "paused";
+    const btn = $("#simToggle");
+    btn.innerHTML = running
+      ? '<svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="5" width="3.4" height="14" rx="1"/><rect x="13.6" y="5" width="3.4" height="14" rx="1"/></svg><span>暂停</span>'
+      : '<svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>继续</span>';
+    btn.setAttribute("aria-pressed", String(!running));
+    lastFrame = 0;
+    accumulator = 0;
+  }
+
+  function updatePresetUI(name) {
+    $$("[data-sim-preset]").forEach(b => b.classList.toggle("active", b.dataset.simPreset === name));
+    const desc = {
+      pinch: "Z-pinch：初始磁通量函数呈高斯分布，角向磁场向中心箍缩；观察磁张力与压力投影的竞争。",
+      ot: "Orszag–Tang 涡：初始速度涡与磁场交织，电流片在涡区之间形成；观察磁能向小尺度结构转移。",
+      island: "磁岛：周期磁通量函数形成闭合磁岛与 X 点；洛伦兹力驱动流动，磁力线被逐渐缠绕。"
+    };
+    $("#simDesc").textContent = desc[name] || desc.pinch;
+  }
+
+  function loop(now) {
+    raf = requestAnimationFrame(loop);
+    if (!lastFrame) lastFrame = now;
+    let delta = now - lastFrame;
+    lastFrame = now;
+    if (delta > 100) delta = 100;
+    if (running) {
+      accumulator += delta;
+      const frame = 1000 / 60;
+      let substeps = 0;
+      while (accumulator >= frame && substeps < 1) {
+        step(SIM_DT);
+        accumulator -= frame;
+        substeps++;
+      }
+      if (accumulator > frame * 2) accumulator = 0;
+    }
+    render();
+    updateReadouts();
+  }
+
+  /* events */
+  $("#simToggle").addEventListener("click", () => setRunning(!running));
+  $("#simStep").addEventListener("click", () => {
+    if (running) setRunning(false);
+    step(SIM_DT);
+    render();
+    updateReadouts(true);
+  });
+  $("#simReset").addEventListener("click", () => reset(preset));
+  $$("[data-sim-preset]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      reset(btn.dataset.simPreset);
+      if (!running) render();
+    });
+  });
+  $("#simView").addEventListener("change", e => { settings.view = e.target.value; render(); });
+  $("#simFieldLines").addEventListener("change", e => { settings.showLines = e.target.checked; render(); });
+  $("#simParticles").addEventListener("change", e => { settings.showParticles = e.target.checked; render(); });
+  $("#simForce").addEventListener("change", e => { settings.showForce = e.target.checked; render(); });
+
+  $("#rngAlpha").addEventListener("input", e => {
+    settings.alpha = parseFloat(e.target.value);
+    $("#outAlpha").textContent = settings.alpha.toFixed(2);
+  });
+  $("#rngNu").addEventListener("input", e => {
+    settings.nu = parseFloat(e.target.value);
+    $("#outNu").textContent = settings.nu.toFixed(4);
+  });
+  $("#rngEta").addEventListener("input", e => {
+    settings.eta = parseFloat(e.target.value);
+    $("#outEta").textContent = settings.eta.toFixed(4);
+  });
+
+  canvas.addEventListener("click", e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width * W;
+    const y = (e.clientY - rect.top) / rect.height * H;
+    inject(x, y);
+  });
+
+  window.addEventListener("resize", () => { setupCanvas(); render(); });
+
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setupCanvas();
+  reset("pinch");
+  setRunning(!reduceMotion);
+  updateReadouts(true);
+  raf = requestAnimationFrame(loop);
+})();
+
+/* ================================================================
+   6. order-of-magnitude scale lab
+   ================================================================ */
+(function initScaleLab() {
+  const q = {
+    U: $("#qU"), L: $("#qL"), rho: $("#qRho"), mu: $("#qMu"),
+    dp: $("#qDp"), B: $("#qB"), sigma: $("#qSigma")
+  };
+  if (!q.U) return;
+  const mu0 = 4 * Math.PI * 1e-7;
+  const g = 9.81;
+  const outputs = {
+    U: $("#outU"), L: $("#outL"), rho: $("#outRho"), mu: $("#outMu2"),
+    dp: $("#outDp"), B: $("#outB2"), sigma: $("#outSigma")
+  };
+  const bars = {
+    i: $("#barFi"), p: $("#barFp"), v: $("#barFv"), l: $("#barFl"), g: $("#barFg")
+  };
+  const vals = {
+    i: $("#valFi"), p: $("#valFp"), v: $("#valFv"), l: $("#valFl"), g: $("#valFg")
+  };
+  const presets = {
+    water:   { U: 1, L: .05, rho: 1000, mu: 1e-3, dp: 1e4, B: 0, sigma: 1 },
+    metal:   { U: .1, L: .05, rho: 6360, mu: .0024, dp: 1e5, B: 1, sigma: 3.1e6 },
+    tokamak: { U: 1e4, L: .1, rho: 3.3e-8, mu: 1e-8, dp: 1e3, B: 2, sigma: 1e6 },
+    corona:  { U: 1e5, L: 1e7, rho: 1e-12, mu: 1e-6, dp: 1e-2, B: 1e-3, sigma: 1e4 }
+  };
+
+  function setPreset(name) {
+    const p = presets[name];
+    if (!p) return;
+    q.U.value = Math.log10(p.U);
+    q.L.value = Math.log10(p.L);
+    q.rho.value = Math.log10(p.rho);
+    q.mu.value = Math.log10(p.mu);
+    q.dp.value = Math.log10(p.dp);
+    q.B.value = p.B;
+    q.sigma.value = Math.log10(p.sigma);
+    $$("[data-scale-preset]").forEach(b => b.classList.toggle("active", b.dataset.scalePreset === name));
+    update();
+  }
+
+  function update() {
+    const U = Math.pow(10, parseFloat(q.U.value));
+    const L = Math.pow(10, parseFloat(q.L.value));
+    const rho = Math.pow(10, parseFloat(q.rho.value));
+    const mu = Math.pow(10, parseFloat(q.mu.value));
+    const dp = Math.pow(10, parseFloat(q.dp.value));
+    const B = parseFloat(q.B.value);
+    const sigma = Math.pow(10, parseFloat(q.sigma.value));
+
+    outputs.U.textContent = `${sci(U)} m/s`;
+    outputs.L.textContent = `${sci(L)} m`;
+    outputs.rho.textContent = `${sci(rho)} kg/m³`;
+    outputs.mu.textContent = `${sci(mu)} Pa·s`;
+    outputs.dp.textContent = `${sci(dp)} Pa`;
+    outputs.B.textContent = `${B > 0 && B < .01 ? sci(B) : B.toFixed(2)} T`;
+    outputs.sigma.textContent = `${sci(sigma)} S/m`;
+
+    const fi = rho * U * U / L;
+    const fp = dp / L;
+    const fv = mu * U / (L * L);
+    const fl = B > 1e-12 ? B * B / (mu0 * L) : 0;
+    const fg = rho * g;
+
+    const values = [
+      { key: "i", f: fi, color: "#647a92" },
+      { key: "p", f: fp, color: "#56d9ff" },
+      { key: "v", f: fv, color: "#ffc15e" },
+      { key: "l", f: fl, color: "#ff7fb1" },
+      { key: "g", f: fg, color: "#6fe7b5" }
+    ];
+    const positive = values.map(v => v.f).filter(v => v > 0 && Number.isFinite(v));
+    const min = positive.length ? Math.min(...positive) : 1;
+    const max = positive.length ? Math.max(...positive) : 1;
+    let lo = Math.log10(min) - .6;
+    let hi = Math.log10(max) + .25;
+    if (hi - lo < 1.5) { hi += .75; lo -= .75; }
+    for (const v of values) {
+      const el = bars[v.key];
+      const val = vals[v.key];
+      if (!(v.f > 0) || !Number.isFinite(v.f)) {
+        el.style.width = "0%";
+        val.textContent = "—";
+      } else {
+        const pct = clamp((Math.log10(v.f) - lo) / (hi - lo) * 100, 1.8, 100);
+        el.style.width = `${pct}%`;
+        val.textContent = `${sci(v.f)} N/m³`;
+      }
+    }
+
+    const actual = [
+      { name: "压力", f: fp }, { name: "粘性", f: fv },
+      { name: "电磁", f: fl }, { name: "重力", f: fg }
+    ];
+    const dominant = actual.reduce((a, b) => b.f > a.f ? b : a, actual[0]);
+    $("#dominantForce").textContent = dominant.f > 0 ? dominant.name : "—";
+
+    const Re = rho * U * L / mu;
+    const Ha = B > 0 ? B * L * Math.sqrt(sigma / mu) : 0;
+    const Nn = B > 0 ? sigma * B * B * L / (rho * U) : 0;
+    const Rm = mu0 * sigma * U * L;
+    const beta = B > 0 ? 2 * mu0 * dp / (B * B) : Infinity;
+    const vA = B > 0 ? B / Math.sqrt(mu0 * rho) : 0;
+
+    $("#mRe").textContent = sci(Re);
+    $("#mHa").textContent = B > 0 ? sci(Ha) : "—";
+    $("#mN").textContent = B > 0 ? sci(Nn) : "—";
+    $("#mRm").textContent = B > 0 ? sci(Rm) : "—";
+    $("#mBeta").textContent = B > 0 ? sci(beta) : "∞";
+    $("#mVa").textContent = B > 0 ? `${sci(vA)} m/s` : "—";
+
+    $("#dRe").textContent = Re < 1 ? "粘性主导" : Re < 100 ? "层流" : Re < 1e4 ? "过渡/湍流" : "强惯性/湍流";
+    $("#dHa").textContent = B > 0 ? (Ha < 1 ? "磁制动弱" : Ha < 10 ? "中等磁制动" : "强磁制动") : "无磁场";
+    $("#dN").textContent = B > 0 ? (Nn < 1 ? "惯性主导" : Nn < 10 ? "磁力显著" : "磁力主导") : "无磁场";
+    $("#dRm").textContent = B > 0 ? (Rm < 1 ? "扩散主导" : "感应显著") : "无磁场";
+    $("#dBeta").textContent = B > 0 ? (beta < 1 ? "磁压主导" : "热压主导") : "无磁场";
+  }
+
+  Object.values(q).forEach(el => el.addEventListener("input", () => {
+    $$("[data-scale-preset]").forEach(b => b.classList.remove("active"));
+    update();
+  }));
+  $$("[data-scale-preset]").forEach(btn => {
+    btn.addEventListener("click", () => setPreset(btn.dataset.scalePreset));
+  });
+  setPreset("metal");
+})();
+</script>
+</body>
+</html>
