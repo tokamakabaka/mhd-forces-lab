@@ -2,6 +2,8 @@
 
 一个带 TeX 公式渲染的交互式讲义：从电动力学的场动量守恒与 Maxwell 应力出发，走到连续介质力学的体积力/表面力，再进入磁流体力学（MHD）的流体元运动方程、磁压—磁张力与二维实时沙盒。
 
+![MHD 交互讲义预览](preview-hero.png)
+
 ## 在线访问
 
 公开页面：
@@ -16,7 +18,7 @@ GitHub 仓库：
 
 ## 本地打开
 
-仓库根目录保留完整源码。直接双击 **`mhd-forces-lab.html`** 即可；公式由本地 `vendor/mathjax/tex-svg-full.js` 渲染，因此请保持 `vendor/` 与 HTML 在同一目录。无需安装、无需服务器、无需联网。
+仓库根目录保留完整源码。直接双击 **`index.html`**（本地编辑源文件为 `mhd-forces-lab.html`）即可；公式由本地 `vendor/mathjax/tex-svg-full.js` 渲染，因此请保持 `vendor/` 与 HTML 在同一目录。无需安装、无需服务器、无需联网。
 
 ## 完整讲义
 
