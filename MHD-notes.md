@@ -17,6 +17,22 @@ lang: zh-CN
 3. 图片中的 $mn\,d\mathbf u/dt=n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R$ 与常见的 MHD 动量方程是同一本账，只是按“每粒子/每体积”记法不同；
 4. 在非相对论 MHD 极限下，场的动量与位移电流可以忽略，电磁力主要剩下 $\mathbf J\times\mathbf B$，并可进一步分解为磁压与磁张力。
 
+## 0.1 一条主线：表面力还是体积力？
+
+本文用两条动量方程反复练习同一个判断：
+
+- **表面力**：通过边界接触传递，总力是牵引力对面积的积分，几何相似时 $F_{\rm surface}\propto L^2$。压力与粘性是典型例子。
+- **体积力**：作用在体积内每个质量元/电荷元上，总力是力密度对体积的积分，几何相似时 $F_{\rm body}\propto L^3$。重力与洛伦兹力是典型例子。
+
+| 控制体账本 | 电磁场动量方程 | MHD 动量方程 |
+|---|---|---|
+| 表面通量 | $\displaystyle \oint_{\partial V}\mathbf T\cdot\mathbf n\,dS$（Maxwell 应力） | $\displaystyle \oint_{\partial V}\boldsymbol\sigma\cdot\mathbf n\,dS$（压力 + 粘性） |
+| 体积源 | $\displaystyle \int_V\mathbf f\,dV$，$\mathbf f=\rho_e\mathbf E+\mathbf J\times\mathbf B$ | $\displaystyle \int_V(\mathbf J\times\mathbf B+\rho\mathbf g)\,dV$ |
+| 体积惯性/动量 | $\displaystyle \frac{d}{dt}\int_V\mathbf g\,dV$，$\mathbf g=\varepsilon_0\mathbf E\times\mathbf B$（不是力） | $\displaystyle \frac{d}{dt}\int_V\rho\mathbf v\,dV$（不是力） |
+| 判断 | $\mathbf T$ 是表面场应力，$\mathbf f$ 是体积力 | $p,\boldsymbol\tau$ 是表面力，$\mathbf J\times\mathbf B,\rho\mathbf g$ 是体积力 |
+
+**关键：** 散度定理可以把表面力改写成体积分，但不会改变它的物理身份。判断看两件事——是否需要边界接触，以及总力随 $L^3$ 还是 $L^2$ 标度。
+
 # 1. 场的动量守恒与 Maxwell 应力
 
 ## 1.1 洛伦兹力密度
@@ -607,14 +623,35 @@ $$
 
 注意：$f_B=B^2/(\mu_0L)$ 是磁压梯度尺度；讨论导电流体在磁场中运动时，感应制动尺度是 $\sigma UB^2$，对应 $N$。两者不是同一个量，不能混用。
 
-# 8. 二维不可压 MHD 沙盒的模型
+# 8. 二维不可压 MHD 沙盒：物理图像、模型、推导与代码
 
-网页沙盒求解二维不可压单流体 MHD：
+## 8.1 物理图像
+
+网页沙盒把等离子体近似为一层很薄的导电液体，放在周期性盒子中。它追踪三个基本对象：
+
+- 速度场 $\mathbf u(x,y,t)$：流体往哪里流；
+- 磁通量函数 $A(x,y,t)$：等值线是磁力线，弯曲程度对应电流；
+- 压力 $p(x,y,t)$：由不可压约束即时求解，负责把速度场推回无散状态。
+
+磁场穿过流体，电流 $J_z$ 在平面内产生洛伦兹力 $\mathbf J\times\mathbf B$。这个力驱动流动，流动又携带 $A$ 和磁力线；磁力线被拉弯、挤压，产生新的电流和力。粘性 $\nu$ 让速度场变光滑，电阻 $\eta$ 让磁场扩散、重联。
+
+画面上：
+
+- 背景颜色可选电流密度、涡量、压力、速度或磁场强度；
+- 磁力线是 $A$ 的等值线；
+- 示踪粒子显示流体输运；
+- 箭头抽样显示 $J\times B$ 的方向和相对大小。
+
+这是一个“力 → 流动 → 磁场 → 力”的闭环，而不是一张预设动画。
+
+## 8.2 模型方程
+
+沙盒求解二维不可压单流体 MHD：
 
 $$
 \partial_t\mathbf u+\mathbf u\cdot\nabla\mathbf u
 =
--\nabla p+\nu\nabla^2\mathbf u+\alpha\mathbf J\times\mathbf B,
+-\nabla p+\nu\nabla^2\mathbf u+\alpha\,\mathbf J\times\mathbf B,
 \qquad
 \nabla\cdot\mathbf u=0,
 $$
@@ -627,13 +664,146 @@ $$
 J_z=-\nabla^2A.
 $$
 
-采用磁通量函数 $A$ 的原因是它自动满足
+其中 $\nu$、$\eta$、$\alpha$ 都是无量纲系数；$\alpha$ 是用户可调的洛伦兹耦合。压力 $p$ 是不可压约束的拉格朗日乘子，不是独立的热力学变量。
+
+采用磁通量函数 $A$ 的关键好处是 $\nabla\cdot\mathbf B=0$ 自动成立：
 
 $$
-\nabla\cdot\mathbf B=0.
+B_x=\frac{\partial A}{\partial y},
+\qquad
+B_y=-\frac{\partial A}{\partial x},
+\qquad
+\nabla\cdot\mathbf B
+=\frac{\partial B_x}{\partial x}+\frac{\partial B_y}{\partial y}=0.
 $$
 
-数值上使用投影法维持 $\nabla\cdot\mathbf u\approx0$，用半拉格朗日格式推进速度与 $A$，并加入粘性、电阻和洛伦兹耦合。网页中的压力是机械压力（不可压约束的拉格朗日乘子），不是独立的热力学演化；因此沙盒适合建立直觉，不适合定量预测。
+二维中 $\mathbf B$ 位于平面内，电流只有 $z$ 分量：
+
+$$
+J_z=(\nabla\times\mathbf B)_z
+=\frac{\partial B_y}{\partial x}-\frac{\partial B_x}{\partial y}
+=-\nabla^2A.
+$$
+
+## 8.3 公式推导
+
+### 8.3.1 压力投影
+
+先忽略压力，用平流、粘性和洛伦兹力得到一个预测速度 $\mathbf u^*$。希望校正后的速度满足
+
+$$
+\nabla\cdot\mathbf u^{n+1}=0,
+\qquad
+\mathbf u^{n+1}=\mathbf u^*-\Delta t\,\nabla p.
+$$
+
+两边取散度：
+
+$$
+\nabla^2p=\frac{1}{\Delta t}\nabla\cdot\mathbf u^*.
+$$
+
+代码用中心差分离散散度和梯度，用 12 次 Jacobi 迭代近似求解 $p$，再从 $\mathbf u^*$ 中减去 $\Delta t\nabla p$。这不是精确投影，而是近似投影；迭代次数和网格分辨率都会影响残余散度。
+
+### 8.3.2 磁通量函数的感应方程
+
+理想感应方程
+
+$$
+\partial_t\mathbf B=\nabla\times(\mathbf u\times\mathbf B)
+$$
+
+在二维中化为 $A$ 的随体守恒：
+
+$$
+\partial_t A+\mathbf u\cdot\nabla A=0.
+$$
+
+加上电阻项后：
+
+$$
+\partial_t A+\mathbf u\cdot\nabla A=\eta\nabla^2A.
+$$
+
+离散时先对 $A$ 做半拉格朗日平流，再加 $\eta\nabla^2A$。
+
+### 8.3.3 洛伦兹力
+
+$$
+\mathbf J\times\mathbf B
+=J_z\hat{\mathbf z}\times(B_x\hat{\mathbf x}+B_y\hat{\mathbf y})
+=J_z(-B_y\hat{\mathbf x}+B_x\hat{\mathbf y})
+=J_z\left(\frac{\partial A}{\partial x}\hat{\mathbf x}
++\frac{\partial A}{\partial y}\hat{\mathbf y}\right).
+$$
+
+代码中用 `fx = J * (-by)`、`fy = J * bx`，等价于 $J_z\nabla A$。力指向 $A$ 增大的方向（乘以 $J_z$ 的符号），与磁压/磁张力的图像一致。
+
+### 8.3.4 半拉格朗日平流
+
+对任意标量 $q$：
+
+$$
+q^{n+1}(\mathbf x)=q^n(\mathbf x-\mathbf u\,\Delta t).
+$$
+
+在网格上用双线性插值取 $q^n$。它对较大的时间步较稳定，但会引入数值扩散。
+
+### 8.3.5 力的归一化
+
+重置时先计算初始最大 $|J\times B|$，把 `fScale` 设为让不同预设的初始力落在相近的视觉强度；运行时再乘用户参数 $\alpha$。代码还设置加速度上限 18、速度上限 9，并对非有限值归零。这些是演示保护，不是物理模型的一部分。
+
+## 8.4 数值实现
+
+核心状态是长度 $128^2$ 的 `Float32Array`：`u, v, A, p, bx, by, J`。所有数组用周期性索引访问；物理计算与渲染分离。
+
+| 方程 / 步骤 | 代码位置 | 作用 |
+|---|---|---|
+| $\mathbf B=\nabla\times(A\hat z)$，$J_z=-\nabla^2A$ | `derive()` | 由 A 计算 bx、by、J、涡量 |
+| 半拉格朗日平流 | `advectInto()` | 后向轨迹 + 双线性采样 |
+| $\nabla^2p=(1/\Delta t)\nabla\cdot\mathbf u^*$ | `project(dt, 12)` | 12 次 Jacobi + 压力校正 |
+| $\alpha\mathbf J\times\mathbf B+\nu\nabla^2\mathbf u$ | `step()` 的力循环 | 洛伦兹力 + 粘性 + 限幅 |
+| $\partial_t A+\mathbf u\cdot\nabla A=\eta\nabla^2A$ | `step()` 的 A 更新 | 平流 + 电阻扩散 |
+| $A$ 的等值线 | `drawFieldLines()` | 平滑 + marching squares |
+| 示踪粒子 | `updateParticles()` | $\mathbf x\leftarrow\mathbf x+\mathbf u\Delta t$，周期回绕 |
+
+一帧的计算顺序：
+
+```text
+1. 用半拉格朗日格式平流 u, v
+2. derive() 由 A 计算 B, J
+3. 加速度 = alpha * fScale * (J x B) + nu * laplacian(u)
+4. 对加速度和速度限幅
+5. project(dt, 12) 投影到近似无散速度场
+6. 半拉格朗日平流 A，再加 eta * laplacian(A)
+7. derive()、更新示踪粒子、t += dt
+8. 渲染背景场、磁力线、粒子、J×B 箭头
+```
+
+## 8.5 代码实现要点
+
+- **网格**：$128\times128$，周期边界，中心差分。
+- **时间步**：固定 $\Delta t=0.045$；每帧最多推进一步。
+- **投影**：12 次 Jacobi；近似无散，不是精确解。
+- **平流**：半拉格朗日，稳定但有数值扩散。
+- **粒子**：520 个被动示踪粒子。
+- **磁力线**：对 $A$ 做 $3\times3$ 平滑，再取 9 条等值线（10 级划分）。
+- **注入**：点击画布时，在高斯窗口内给 $A$ 加一个局域扰动，同时加一个涡旋速度。
+
+## 8.6 预设与读图
+
+| 预设 | 初始条件 | 观察重点 |
+|---|---|---|
+| Z-pinch | $A=e^{-r^2/(2\sigma^2)}(1+0.065\cos3\theta)$，$\sigma=0.132$ | 角向磁场向中心箍缩；电流集中、磁力线弯曲；压力与磁张力竞争 |
+| Orszag–Tang | $A=\cos y+\frac12\cos2x$，$u_x=-\sin y$，$u_y=\sin x$ | 涡旋与磁场交织，电流片形成；磁能向小尺度转移 |
+| 磁岛 | $A=0.8\cos x+0.25\cos2y+0.05\sin2x\cos y$ | 闭合磁岛与 X 点；洛伦兹力驱动流动，磁力线被缠绕 |
+| 点击注入 | $A\mathrel{+}=1.05e^{-r^2/(2\cdot5.2^2)}$，并加一个局域涡旋 | 扰动如何被流场拉伸、磁场如何响应 |
+
+**读图顺序：** 先看背景色（电流/涡量/压力）找到活跃区；再看磁力线是否被拉弯、挤压；最后看 $J\times B$ 箭头和示踪粒子，判断力把流体推向哪里。先问：这里的表面力（压力/粘性）和体积力（洛伦兹力）分别在哪里？
+
+## 8.7 适用边界
+
+这是二维、不可压、单流体、无量纲的**定性**演示。压力由投影即时求出，不是独立的热力学变量；没有能量方程、密度演化、可压缩效应、三维不稳定性或动理学效应。阻力/电阻/粘性都是简化系数；不要用画面中的数值做工程预测。它的价值是让你看见“体积力驱动流动、流动改写磁场、磁场再反过来施力”的闭环，以及压力/粘性作为表面力如何维持不可压约束。
 
 # 9. 常见误区
 

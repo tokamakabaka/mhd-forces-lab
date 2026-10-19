@@ -266,6 +266,73 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
 .field-quote a{color:var(--amber);border-bottom:1px solid rgba(255,193,94,.35);padding-bottom:1px}
 .field-quote a:hover{border-color:var(--amber)}
 
+/* ============ core: surface vs body ============ */
+.core-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.core-card{padding:27px;position:relative;overflow:hidden;border-top:2px solid var(--cc,var(--cyan))}
+.core-card.body{--cc:var(--magenta);background:linear-gradient(160deg,rgba(255,127,177,.055),rgba(9,16,28,.72))}
+.core-card.surface{--cc:var(--amber);background:linear-gradient(160deg,rgba(255,193,94,.055),rgba(9,16,28,.72))}
+.core-card h3{font-size:21px;margin:12px 0 9px}
+.core-card p{font-size:13px;line-height:1.82;color:var(--muted);margin-bottom:10px}
+.core-card p b{color:var(--ink-2)}
+.core-eq{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(4,9,16,.4);margin:13px 0 12px;font-size:.92em}
+.core-examples{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.core-compare{margin-top:18px;padding:27px}
+.core-compare h3{font-size:20px;margin-bottom:7px}
+.core-compare > p{font-size:12.5px;color:var(--muted);line-height:1.75;margin-bottom:16px;max-width:850px}
+.ledger-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.ledger-table{width:100%;border-collapse:collapse;min-width:800px;font-size:11.5px}
+.ledger-table th{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03);font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--dim);font-weight:500}
+.ledger-table td{padding:11px 13px;border-bottom:1px solid rgba(154,184,220,.08);color:var(--muted);line-height:1.65;vertical-align:top}
+.ledger-table tr:last-child td{border-bottom:0}
+.ledger-table td:first-child{color:var(--ink-2);font-weight:600;white-space:nowrap}
+.ledger-table .em-col{color:var(--cyan)}
+.ledger-table .mhd-col{color:var(--amber)}
+.ledger-table .tag{display:inline-block;padding:2px 6px;border-radius:5px;font-family:var(--mono);font-size:8px;letter-spacing:.05em;margin-right:4px;border:1px solid var(--line)}
+.ledger-table .tag.s{color:var(--amber);border-color:rgba(255,193,94,.25)}
+.ledger-table .tag.b{color:var(--magenta);border-color:rgba(255,127,177,.25)}
+.core-takeaway{margin-top:18px;padding:19px 22px;border:1px solid rgba(86,217,255,.18);border-radius:14px;background:linear-gradient(135deg,rgba(86,217,255,.055),rgba(255,193,94,.035));font-size:13px;line-height:1.85;color:var(--ink-2)}
+.core-takeaway b{color:var(--cyan)}
+.class-strip{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;margin-bottom:19px}
+.class-strip .chip{font-size:9.5px}
+
+/* ============ sandbox documentation ============ */
+.doc-layout{display:grid;grid-template-columns:235px minmax(0,1fr);gap:19px;align-items:start}
+.doc-toc{position:sticky;top:88px;padding:20px}
+.doc-toc h3{font-size:13px;margin-bottom:10px}
+.doc-toc a{display:block;font-size:10.5px;color:var(--muted);padding:6px 0;border-bottom:1px solid rgba(154,184,220,.07);line-height:1.4}
+.doc-toc a:hover{color:var(--cyan)}
+.doc-toc .doc-note{margin-top:12px;font-size:9.5px;line-height:1.65;color:var(--dim)}
+.doc-content{display:flex;flex-direction:column;gap:11px;min-width:0}
+.doc-block{border:1px solid var(--line);border-radius:14px;background:linear-gradient(160deg,rgba(16,27,45,.7),rgba(9,16,28,.62));overflow:hidden}
+.doc-block summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:11px;padding:17px 20px;font-size:15px;font-weight:650;color:var(--ink-2);transition:.16s}
+.doc-block summary::-webkit-details-marker{display:none}
+.doc-block summary:hover{background:rgba(255,255,255,.03)}
+.doc-block summary .num{font-family:var(--mono);font-size:9px;color:var(--cyan);border:1px solid rgba(86,217,255,.22);border-radius:5px;padding:3px 6px}
+.doc-block summary .arrow{margin-left:auto;color:var(--dim);font-family:var(--mono);font-size:14px;transition:transform .2s}
+.doc-block[open] summary .arrow{transform:rotate(45deg);color:var(--cyan)}
+.doc-body{padding:0 21px 21px;font-size:12px;line-height:1.8;color:var(--muted)}
+.doc-body p{margin:0 0 10px}
+.doc-body p b{color:var(--ink-2)}
+.doc-body ul{margin:7px 0 12px;padding-left:19px}
+.doc-body li{margin:3px 0}
+.doc-body code,.doc-body .code-inline{font-family:var(--mono);font-size:10.5px;color:var(--amber);background:rgba(255,255,255,.035);padding:1px 4px;border-radius:4px}
+.doc-body h4{font-size:13px;color:var(--ink-2);margin:16px 0 7px}
+.doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+.doc-mini{padding:12px 13px;border:1px solid var(--line);border-radius:9px;background:rgba(4,9,16,.28)}
+.doc-mini .k{font-family:var(--mono);font-size:8px;letter-spacing:.08em;color:var(--dim);margin-bottom:4px}
+.doc-mini .v{font-size:11.5px;color:var(--ink-2);line-height:1.6}
+.doc-code{margin:10px 0 14px;padding:13px 14px;border:1px solid var(--line);border-radius:9px;background:rgba(0,0,0,.32);overflow-x:auto;font-family:var(--mono);font-size:9.5px;line-height:1.7;color:#b9d1e5;white-space:pre}
+.doc-code .cm{color:#657f96}
+.doc-code .kw{color:var(--magenta)}
+.doc-code .fn{color:var(--cyan)}
+.doc-table{width:100%;border-collapse:collapse;font-size:10.5px;margin:9px 0 13px}
+.doc-table th{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);color:var(--dim);font-family:var(--mono);font-size:8px;letter-spacing:.06em;font-weight:500}
+.doc-table td{padding:7px 9px;border-bottom:1px solid rgba(154,184,220,.07);vertical-align:top;line-height:1.55}
+.doc-table tr:last-child td{border-bottom:0}
+.doc-table td:first-child{font-family:var(--mono);color:var(--cyan);white-space:nowrap;font-size:9.5px}
+.doc-warning{margin-top:10px;padding:11px 13px;border-left:2px solid var(--amber);background:rgba(255,193,94,.04);font-size:11px;line-height:1.7;color:var(--muted);border-radius:0 8px 8px 0}
+.doc-warning b{color:var(--amber)}
+
 /* ============ concept ============ */
 .concept-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .force-card{padding:29px;position:relative;overflow:hidden;min-height:355px;display:flex;flex-direction:column}
@@ -559,6 +626,9 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
   .section-no{padding-top:0}.section-no::after{display:none}
   .concept-grid,.em-grid,.derivation-grid,.pinch-grid{grid-template-columns:1fr}
   .field-grid,.field-flow,.image-eq-grid,.mhd-limit{grid-template-columns:1fr}
+  .core-grid,.doc-layout{grid-template-columns:1fr}
+  .doc-toc{position:static}
+  .doc-toc a{display:inline-block;margin-right:12px;border-bottom:0;padding:4px 0}
   .mhd-limit .math-block--wide{grid-column:auto;grid-row:auto}
   .bridge,.scaling,.decomp{grid-template-columns:1fr;gap:20px}
   .lab-shell{grid-template-columns:1fr}
@@ -603,8 +673,13 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
   .sim-title small{display:none}
   .sim-head-right{width:100%;justify-content:flex-end}
   .field-card,.image-eq-card,.symbol-card,.mapping-card,.mhd-limit,.field-flow{padding:21px}
+  .core-card,.core-compare,.doc-toc{padding:19px}
+  .doc-block summary{padding:14px 15px;font-size:13px}
+  .doc-body{padding:0 15px 17px}
+  .doc-grid{grid-template-columns:1fr}
   .symbol-row{grid-template-columns:36px 1fr}
   .mapping-table{min-width:620px}
+  .ledger-table{min-width:700px}
   .math-block{padding:13px 12px}
   .math-block--xl{padding:17px 13px}
   .sim-stage{padding:10px}
@@ -647,7 +722,10 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
   .formula-block,.matrix,.em-figure,.scale-bars,.pinch,.metric-card{break-inside:avoid}
   .derivation,.stress-card,.bridge,.scaling,.eq-explorer,.decomp,.em-card,.pinch,.bars-card{break-inside:avoid}
   .math-block{break-inside:avoid;background:#fafafa;border-color:#ddd;overflow:visible!important}
-  .field-grid,.field-flow,.image-eq-grid,.mhd-limit{grid-template-columns:1fr}
+  .field-grid,.field-flow,.image-eq-grid,.mhd-limit,.core-grid,.doc-layout{grid-template-columns:1fr}
+  .doc-toc{display:none!important}
+  .doc-block{break-inside:avoid}
+  .ledger-table{min-width:0;font-size:9px}
   .tex-source{display:none!important}
   #equation{break-before:page}
   .chip{font-size:8px;padding:3px 5px}
@@ -688,12 +766,13 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
       <span class="brand-text"><strong>力 · 场 · 流体</strong><span>MHD PRIMER</span></span>
     </a>
     <nav class="nav-links" aria-label="章节导航">
-      <a href="#field-momentum">场的动量</a>
-      <a href="#fluid-equation">流体元方程</a>
-      <a href="#concept">受力分类</a>
-      <a href="#equation">方程解剖</a>
+      <a href="#core">主线</a>
+      <a href="#field-momentum">电磁场例子</a>
+      <a href="#fluid-equation">MHD 方程</a>
+      <a href="#element-lab">受力实验</a>
       <a href="#sandbox">MHD 沙盒</a>
-      <a href="#scales">量级实验室</a>
+      <a href="#sandbox-doc">模型详解</a>
+      <a href="#scales">量级</a>
     </nav>
     <div class="top-actions">
       <a class="btn btn-ghost btn-small no-print" href="MHD-notes.pdf" target="_blank" rel="noopener">
@@ -714,12 +793,12 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
       <div class="hero-copy">
         <div class="eyebrow"><span class="pulse-dot"></span>连续介质力学 × 磁流体力学 · 交互讲义</div>
         <h1>力，究竟作用在<br><span class="accent-c">体积</span>，还是<span class="accent-a">表面</span>？</h1>
-        <p class="hero-lede">从电动力学的<strong>场动量</strong>与<strong>Maxwell 应力</strong>出发，把 MHD 动量方程拆成一本“力的账本”：<strong>热压力</strong>与<strong>粘滞力</strong>从边界接触中来，<strong>电磁力</strong>则穿透整个流体元。拖动滑块，看它们怎样相加、相消与竞争。</p>
+        <p class="hero-lede">本页只做一件事：分清<strong>表面力</strong>与<strong>体积力</strong>。先用电磁场的 Maxwell 应力示范“边界通量”，再用 MHD 流体元方程示范“边界压力/粘性 + 体积洛伦兹力/重力”。拖动滑块，看两类力怎样相加、相消与竞争。</p>
         <div class="cta-row">
           <a class="btn btn-primary" href="#element-lab">切开一个流体元
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
-          <a class="btn btn-ghost" href="#field-momentum">从场的动量开始</a>
+          <a class="btn btn-ghost" href="#core">先看两本账</a>
         </div>
         <div class="hero-stats">
           <div class="hero-stat"><b>03</b><span>可交互实验</span></div>
@@ -813,16 +892,98 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
     </div>
   </section>
 
-  <!-- ================= FIELD MOMENTUM ================= -->
-  <section class="section" id="field-momentum">
+  <!-- ================= CORE: SURFACE VS BODY ================= -->
+  <section class="section" id="core">
     <div class="wrap">
       <div class="section-head">
         <div class="section-no">01</div>
         <div>
-          <div class="kicker">Field momentum · Maxwell stress</div>
-          <h2 class="section-title">先看场：<span class="accent-cyan">电磁力</span>也有自己的动量账本</h2>
-          <p class="section-lede">在电动力学里，电荷受到的洛伦兹力并不是“凭空超距”的。场本身携带动量，麦克斯韦应力张量描述场动量穿过界面的通量。把这张账本取非相对论极限，就自然得到 MHD 里的 <strong>J×B 体积力</strong>，以及<strong>磁压与磁张力</strong>。</p>
+          <div class="kicker">The core question · surface vs body</div>
+          <h2 class="section-title">先抓主线：力是<span class="accent-amber">穿过边界</span>，还是<span class="accent-magenta">铺满体积</span>？</h2>
+          <p class="section-lede">本页只围绕一个判断：力怎样传到流体元上？下面用两条动量方程各示范一次——<strong>电磁场的 Maxwell 应力</strong>，以及 <strong>MHD 流体元的压力、粘性、洛伦兹力</strong>。先看身份，再看公式。</p>
         </div>
+      </div>
+
+      <div class="core-grid">
+        <article class="card core-card body">
+          <span class="chip m">体积力 · BODY FORCE</span>
+          <h3>作用在每个体积元上，不需要接触</h3>
+          <p>总力是力密度 \(\mathbf f\) 对体积的积分。几何相似时，体积力总量随体积增长：\(F_{\rm body}\propto L^3\)。重力、电磁力都是典型体积力。</p>
+          <div class="core-eq">\[
+            \mathbf F_{\rm body}=\int_V\mathbf f\,dV,
+            \qquad
+            [\mathbf f]=\mathrm{N\,m^{-3}}
+          \]</div>
+          <p>在 MHD 中，\(\mathbf J\times\mathbf B\) 作用在每个电流元上，\(\rho\mathbf g\) 作用在每个质量元上；它们都不需要边界接触。</p>
+          <div class="core-examples"><span class="chip m">洛伦兹力 J×B</span><span class="chip m">重力 ρg</span><span class="chip">电磁力密度 ρeE+J×B</span></div>
+        </article>
+
+        <article class="card core-card surface">
+          <span class="chip a">表面力 · SURFACE FORCE</span>
+          <h3>通过边界接触传递，正比于面积</h3>
+          <p>相邻物质在边界上施加牵引力 \(\mathbf t(\mathbf n)=\boldsymbol\sigma\cdot\mathbf n\)。总力是牵引力对表面积的积分，几何相似时 \(F_{\rm surface}\propto L^2\)。压力与粘性属于这一类。</p>
+          <div class="core-eq">\[
+            \mathbf F_{\rm surface}=\oint_{\partial V}\mathbf t(\mathbf n)\,dS,
+            \qquad
+            [\mathbf t]=\mathrm{N\,m^{-2}}
+          \]</div>
+          <p>压力给出法向推力，粘性还能给出切向拖拽。方程里的 \(-\nabla p\) 和 \(\nabla\cdot\boldsymbol\tau\) 是它们经散度定理后的<strong>力密度</strong>，不是体积力。</p>
+          <div class="core-examples"><span class="chip a">压力 −p n</span><span class="chip a">粘性 τ·n</span><span class="chip">牵引力 t(n)=σ·n</span></div>
+        </article>
+      </div>
+
+      <div class="card core-compare">
+        <h3>同一套控制体语言，两条方程</h3>
+        <p>不要按“式子里有没有积分号”分类。看每一项在控制体里扮演什么角色：是穿过边界，还是分布在体积内；是力，还是惯性/动量。</p>
+        <div class="ledger-scroll">
+          <table class="ledger-table">
+            <thead><tr><th>控制体账本</th><th>电磁场动量方程</th><th>MHD 动量方程</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>表面通量</td>
+                <td class="em-col"><span class="tag s">表面</span>\(\displaystyle \oint_{\partial V}\mathbf T\cdot\mathbf n\,dS\)<br><span style="color:var(--dim)">Maxwell 应力张量</span></td>
+                <td class="mhd-col"><span class="tag s">表面</span>\(\displaystyle \oint_{\partial V}\boldsymbol\sigma\cdot\mathbf n\,dS=\oint_{\partial V}(-p\mathbf n+\boldsymbol\tau\cdot\mathbf n)\,dS\)<br><span style="color:var(--dim)">压力 + 粘性</span></td>
+              </tr>
+              <tr>
+                <td>体积源</td>
+                <td class="em-col"><span class="tag b">体积力</span>\(\displaystyle \int_V\mathbf f\,dV,\quad \mathbf f=\rho_e\mathbf E+\mathbf J\times\mathbf B\)</td>
+                <td class="mhd-col"><span class="tag b">体积力</span>\(\displaystyle \int_V(\mathbf J\times\mathbf B+\rho\mathbf g)\,dV\)</td>
+              </tr>
+              <tr>
+                <td>体积惯性 / 动量</td>
+                <td class="em-col"><span class="tag">体积动量</span>\(\displaystyle \frac{d}{dt}\int_V\mathbf g\,dV,\quad \mathbf g=\varepsilon_0\mathbf E\times\mathbf B\)<br><span style="color:var(--dim)">是场动量，不是力</span></td>
+                <td class="mhd-col"><span class="tag">体积惯性</span>\(\displaystyle \frac{d}{dt}\int_V\rho\mathbf v\,dV\)<br><span style="color:var(--dim)">是机械动量，不是力</span></td>
+              </tr>
+              <tr>
+                <td>一句话判断</td>
+                <td class="em-col">\(\mathbf T\) 是表面场应力；\(\mathbf f\) 是体积力；\(\mathbf g\) 是体积动量。</td>
+                <td class="mhd-col">\(p,\boldsymbol\tau\) 是表面力；\(\mathbf J\times\mathbf B,\rho\mathbf g\) 是体积力；\(\rho\mathbf v\) 是惯性。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="core-takeaway"><b>这就是全页的主线：</b>散度定理可以把表面力改写成体积分，但不会改变它的物理身份。判断时看两件事——<b>是否需要边界接触</b>，以及<b>总力随 \(L^3\) 还是 \(L^2\) 标度</b>。接下来先看电磁场的例子，再看 MHD 如何把同一套语言用在流体元上。</div>
+    </div>
+  </section>
+
+  <!-- ================= FIELD MOMENTUM ================= -->
+  <section class="section" id="field-momentum">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">02</div>
+        <div>
+          <div class="kicker">Example 01 · electromagnetic field momentum</div>
+          <h2 class="section-title">例一：<span class="accent-cyan">电磁场</span>动量方程</h2>
+          <p class="section-lede">在这条方程里，Maxwell 应力是<strong>表面通量</strong>，洛伦兹力密度是<strong>体积力</strong>，场动量是体积内的惯性项。先看清这三者的身份，再看 MHD 如何继承它。</p>
+        </div>
+      </div>
+
+      <div class="class-strip">
+        <span class="chip v">T·n · 表面场应力</span>
+        <span class="chip m">f = ρeE + J×B · 体积力密度</span>
+        <span class="chip c">g = ε₀E×B · 体积动量（不是力）</span>
       </div>
 
       <div class="field-grid">
@@ -916,7 +1077,7 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
             +\frac{d}{dt}\int_V\mathbf g\,dV
             =\oint_{\partial V}\mathbf T\cdot\mathbf n\,dS
           \]</div>
-          <p>左边是体积内的力与场动量变化；右边是应力穿过边界的通量。对静态场，场动量项消失，于是 \(\mathbf f=\nabla\cdot\mathbf T\)：<b>体积力可以完全由边界上的应力通量来解释</b>。</p>
+          <p>左边是体积内的力与场动量变化；右边是应力穿过边界的通量。这里 \(\mathbf g\) 是体积动量（惯性项），不是力；\(\mathbf T\) 是表面场应力；\(\mathbf f\) 是体积力。对静态场，场动量项消失，于是 \(\mathbf f=\nabla\cdot\mathbf T\)：<b>体积力可以完全由边界上的应力通量来解释</b>。</p>
           <div class="flow-labels"><span class="chip c">体积内：f, g</span><span class="chip v">边界上：T·n</span></div>
         </div>
       </div>
@@ -944,12 +1105,20 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
   <section class="section" id="fluid-equation">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">02</div>
+        <div class="section-no">03</div>
         <div>
-          <div class="kicker">From field stress to a fluid element</div>
-          <h2 class="section-title">从场的账本，到<span class="accent-amber">流体元的账本</span></h2>
-          <p class="section-lede">图片中的方程用粒子数密度、单粒子受力和压强张量来记账。它和前面按单位体积写的 MHD 方程是同一本账，只是符号与“每粒子 / 每体积”的单位不同。</p>
+          <div class="kicker">Example 02 · MHD fluid element</div>
+          <h2 class="section-title">例二：<span class="accent-amber">MHD 流体元</span>方程</h2>
+          <p class="section-lede">同一条控制体逻辑换到流体：压力与粘性通过<strong>边界接触</strong>，洛伦兹力与重力<strong>铺满体积</strong>。图片里的 \(n,m,\mathbf u,\mathbf F,p,\overleftrightarrow{\Pi},\mathbf R\) 正好把这两类力写在一起。</p>
         </div>
+      </div>
+
+      <div class="class-strip">
+        <span class="chip a">−∇p · 压力（表面）</span>
+        <span class="chip a">−∇·Π↔ · 粘性（表面）</span>
+        <span class="chip m">nF · 电磁力（体积）</span>
+        <span class="chip m">R · 种间摩擦（体积）</span>
+        <span class="chip c">mn du/dt · 惯性（不是力）</span>
       </div>
 
       <div class="image-eq-grid">
@@ -1009,6 +1178,24 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
         <p class="note" style="margin-top:12px">符号约定很重要：图片里的 \(\overleftrightarrow{\Pi}\) 与 \(\nabla\) 前的负号绑定；若采用 \(\boldsymbol\sigma=-p\mathbf I+\boldsymbol\tau\) 且粘性力写成 \(+\nabla\cdot\boldsymbol\tau\)，则 \(\overleftrightarrow{\Pi}=-\boldsymbol\tau\)。两种写法描述的是同一个偏应力。</p>
       </div>
 
+      <div class="card" style="padding:25px 27px;margin-top:19px">
+        <span class="chip c">同一方程的常见 MHD 形式</span>
+        <div class="math-block" style="margin-top:12px">\[
+          \rho\frac{D\mathbf v}{Dt}
+          =
+          -\nabla p+\nabla\cdot\boldsymbol\tau
+          +\mathbf J\times\mathbf B+\rho\mathbf g
+        \]</div>
+        <div class="class-strip" style="margin:10px 0 0">
+          <span class="chip a">−∇p · 表面力</span>
+          <span class="chip a">∇·τ · 表面力</span>
+          <span class="chip m">J×B · 体积力</span>
+          <span class="chip m">ρg · 体积力</span>
+          <span class="chip c">ρDv/Dt · 惯性</span>
+        </div>
+        <p class="note" style="margin-top:9px">把图片方程对物种求和，并取单流体极限：\(mn\to\rho\)，\(n\mathbf F\to\rho_e\mathbf E+\mathbf J\times\mathbf B\)，\(\overleftrightarrow{\Pi}\to-\boldsymbol\tau\)，\(\mathbf R\) 进入种间摩擦/电阻模型；通常再把准中性 MHD 的 \(\rho_e\mathbf E\) 略去。左边 \(\rho D\mathbf v/Dt\) 仍是<strong>惯性</strong>，不是力。</p>
+      </div>
+
       <div class="field-quote" style="border-left-color:var(--amber);background:rgba(255,193,94,.035)"><b>为什么左边是“动量变化率”而不是“力”？</b>因为 \(mn\) 是单位体积的质量，乘以加速度就是单位体积的惯性项。右边才是单位体积的力；把两边都除以 \(mn\)，就得到熟悉的“加速度 = 比力”形式。完整推导、符号表与所有公式源码见 <a href="MHD-notes.pdf">MHD 完整讲义 PDF</a> 与 <a href="MHD-notes.md">Markdown 源文件</a>。</div>
     </div>
   </section>
@@ -1017,66 +1204,12 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
   <section class="section" id="concept">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">03</div>
+        <div class="section-no">04</div>
         <div>
-          <div class="kicker">The two ledgers of force</div>
-          <h2 class="section-title">先分清：力是<span class="accent-cyan">怎样传到</span>流体元上的？</h2>
-          <p class="section-lede">连续介质力学不按“力出现在哪里”分类，而按<strong>传递方式</strong>分类。一个在体积内、一个在边界上；一个正比于 L³，一个正比于 L²。这个区别决定了方程长什么样，也决定了尺度缩小后谁说了算。</p>
+          <div class="kicker">The bridge & scale</div>
+          <h2 class="section-title">散度定理只是改写，<span class="accent-cyan">尺度</span>才暴露身份</h2>
+          <p class="section-lede">把边界牵引力写成体积分，是数学桥；总力随 \(L^3\) 还是 \(L^2\) 标度，才是物理论断。两者合在一起，才能解释为什么 \(-\nabla p\) 出现在体积分里，压力却仍然是表面力。</p>
         </div>
-      </div>
-
-      <div class="concept-grid">
-        <article class="card force-card body">
-          <div class="fc-head">
-            <div>
-              <div class="fc-title"><span class="fc-dot"></span>体积力</div>
-              <div class="fc-en">BODY FORCE · f&nbsp;[N m⁻³]</div>
-            </div>
-            <span class="chip m">∝ L³</span>
-          </div>
-          <p class="fc-copy">不需要接触。它作用在流体元内部<strong>每一个质量元或电荷元</strong>上，总力与体积（质量）成正比。重力、电场力、磁场力都属于这一类。</p>
-          <svg class="fc-icon" viewBox="0 0 420 118" aria-hidden="true">
-            <rect x="26" y="18" width="368" height="84" rx="10" fill="rgba(255,127,177,.025)" stroke="rgba(255,127,177,.16)" stroke-dasharray="5 5"/>
-            <g fill="#ff7fb1" opacity=".9">
-              <circle cx="70" cy="42" r="2.5"/><circle cx="130" cy="42" r="2.5"/><circle cx="190" cy="42" r="2.5"/><circle cx="250" cy="42" r="2.5"/><circle cx="310" cy="42" r="2.5"/><circle cx="370" cy="42" r="2.5"/>
-              <circle cx="70" cy="76" r="2.5"/><circle cx="130" cy="76" r="2.5"/><circle cx="190" cy="76" r="2.5"/><circle cx="250" cy="76" r="2.5"/><circle cx="310" cy="76" r="2.5"/><circle cx="370" cy="76" r="2.5"/>
-            </g>
-            <g stroke="#ff7fb1" stroke-width="1.5" marker-end="url(#m-pink)" opacity=".95">
-              <path d="M70 45v21"/><path d="M130 45v21"/><path d="M190 45v21"/><path d="M250 45v21"/><path d="M310 45v21"/><path d="M370 45v21"/>
-              <path d="M70 78v16"/><path d="M130 78v16"/><path d="M190 78v16"/><path d="M250 78v16"/><path d="M310 78v16"/><path d="M370 78v16"/>
-            </g>
-            <text x="28" y="112" class="svg-small" fill="#8fa5bd">作用在每个体积元上 · 无接触 · 总力 ∝ 体积</text>
-          </svg>
-          <div class="fc-chips"><span class="chip m">重力 ρg</span><span class="chip m">电磁力 J×B</span><span class="chip">单位质量 b = f/ρ</span></div>
-          <div class="fc-scale">F ∝ L³</div>
-        </article>
-
-        <article class="card force-card surface">
-          <div class="fc-head">
-            <div>
-              <div class="fc-title"><span class="fc-dot"></span>表面力</div>
-              <div class="fc-en">SURFACE FORCE · t(n)&nbsp;[N m⁻²]</div>
-            </div>
-            <span class="chip a">∝ L²</span>
-          </div>
-          <p class="fc-copy">通过边界<strong>接触</strong>传递。相邻物质在每一小片界面上施加牵引力 t(n)，总力与面积成正比。压力是法向推挤，粘性应力还能沿切向拖拽。</p>
-          <svg class="fc-icon" viewBox="0 0 420 118" aria-hidden="true">
-            <rect x="112" y="22" width="196" height="76" rx="8" fill="rgba(255,193,94,.03)" stroke="rgba(255,193,94,.24)"/>
-            <g stroke="#ffc15e" stroke-width="1.5" marker-end="url(#m-amber)">
-              <path d="M68 40h34"/><path d="M68 60h34"/><path d="M68 80h34"/>
-              <path d="M352 40h-34"/><path d="M352 60h-34"/><path d="M352 80h-34"/>
-              <path d="M130 8v13"/><path d="M190 8v13"/><path d="M250 8v13"/><path d="M310 8v13"/>
-              <path d="M130 112v-13"/><path d="M190 112v-13"/><path d="M250 112v-13"/><path d="M310 112v-13"/>
-            </g>
-            <g stroke="#ff7fb1" stroke-width="1.4" opacity=".9" marker-end="url(#m-pink)">
-              <path d="M124 27h28"/><path d="M180 27h28"/><path d="M236 27h28"/><path d="M292 27h18"/>
-              <path d="M124 93h18"/><path d="M166 93h28"/><path d="M222 93h28"/><path d="M278 93h28"/>
-            </g>
-            <text x="28" y="112" class="svg-small" fill="#8fa5bd">作用在边界上 · 需要接触 · 总力 ∝ 面积</text>
-          </svg>
-          <div class="fc-chips"><span class="chip a">压力 −p n</span><span class="chip a">粘性 τ·n</span><span class="chip">牵引力 t(n)=σ·n</span></div>
-          <div class="fc-scale">F ∝ L²</div>
-        </article>
       </div>
 
       <div class="card bridge">
@@ -1094,8 +1227,9 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
           <div class="math-block">\[
             \nabla\cdot\boldsymbol\sigma
             =-\nabla p+\nabla\cdot\boldsymbol\tau
-            \qquad(\text{牛顿流体})
+            \quad(\mathrm{Newtonian})
           \]</div>
+          <div class="math-caption">牛顿流体</div>
         </div>
       </div>
 
@@ -1126,7 +1260,7 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
   <section class="section" id="element-lab">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">04</div>
+        <div class="section-no">05</div>
         <div>
           <div class="kicker">Interactive 01 / fluid element</div>
           <h2 class="section-title">一个流体元的<span class="accent-cyan">受力解剖</span></h2>
@@ -1220,7 +1354,7 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
   <section class="section" id="equation">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">05</div>
+        <div class="section-no">06</div>
         <div>
           <div class="kicker">From boundary traction to force density</div>
           <h2 class="section-title">从边界上的力，到方程里的<span class="accent-amber">每一项</span></h2>
@@ -1368,7 +1502,7 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
   <section class="section" id="em">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">06</div>
+        <div class="section-no">07</div>
         <div>
           <div class="kicker">Magnetic pressure &amp; tension</div>
           <h2 class="section-title">电磁力：一个力，<span class="accent-magenta">两本账</span></h2>
@@ -1425,9 +1559,10 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
             \mathbf f_{\rm 张}
             =\frac{(\mathbf B\cdot\nabla)\mathbf B}{\mu_0},
             \qquad
-            \text{曲率半径 }R:\;
-            f_\perp\approx\frac{B^2}{\mu_0R}
+            \text{curvature radius }R_c:\;
+            f_\perp\approx\frac{B^2}{\mu_0R_c}
           \]</div>
+          <div class="math-caption">曲率半径为 R_c 时的横向张力尺度</div>
         </article>
       </div>
 
@@ -1446,8 +1581,8 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
           <div style="display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--dim);margin:7px 3px 0">
             <span>磁压梯度</span><span>磁张力</span>
           </div>
-          <div class="math-block" style="padding:9px 12px;font-size:.86em;margin-top:9px">\[
-            \text{平行分量：}\;
+          <div class="math-caption">平行分量</div>
+          <div class="math-block" style="padding:9px 12px;font-size:.86em;margin-top:4px">\[
             -\frac{\partial p_m}{\partial s}
             +\frac{B}{\mu_0}\frac{\partial B}{\partial s}=0
           \]</div>
@@ -1489,7 +1624,7 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
   <section class="section" id="sandbox">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">07</div>
+        <div class="section-no">08</div>
         <div>
           <div class="kicker">Interactive 02 / live MHD</div>
           <h2 class="section-title">把方程放进<span class="accent-cyan">沙盒</span></h2>
@@ -1536,6 +1671,7 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
           <button class="preset active" type="button" data-sim-preset="pinch">Z-pinch</button>
           <button class="preset" type="button" data-sim-preset="ot">Orszag–Tang</button>
           <button class="preset" type="button" data-sim-preset="island">磁岛</button>
+          <a class="preset" href="#sandbox-doc" style="text-decoration:none">模型详解 ↓</a>
           <span style="flex:1"></span>
           <span class="tiny-note">画布点击：注入一个磁通绳</span>
         </div>
@@ -1602,11 +1738,215 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
     </div>
   </section>
 
+  <!-- ================= SANDBOX DOCUMENTATION ================= -->
+  <section class="section" id="sandbox-doc">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">09</div>
+        <div>
+          <div class="kicker">Model documentation · sandbox</div>
+          <h2 class="section-title">沙盒里的<span class="accent-cyan">物理、方程与代码</span></h2>
+          <p class="section-lede">这一节把模拟器的物理图像、无量纲模型、公式推导、数值方法和代码实现一次讲清楚。沙盒是定性演示，不是黑箱动画；读完之后，你应该能指出画面里的每个量对应哪一行方程。</p>
+        </div>
+      </div>
+
+      <div class="doc-layout">
+        <aside class="card doc-toc">
+          <div class="kicker" style="margin-bottom:7px">On this page</div>
+          <h3>沙盒文档</h3>
+          <a href="#doc-picture">1. 物理图像</a>
+          <a href="#doc-model">2. 模型方程</a>
+          <a href="#doc-derivation">3. 公式推导</a>
+          <a href="#doc-code">4. 代码实现</a>
+          <a href="#doc-numerics">5. 数值细节与限制</a>
+          <a href="#doc-presets">6. 预设与读图</a>
+          <div class="doc-note">完整推导与 PDF 版见 <a href="MHD-notes.pdf" style="color:var(--amber)">MHD-notes.pdf</a> 第 8 节。</div>
+        </aside>
+
+        <div class="doc-content">
+          <details class="doc-block" id="doc-picture" open>
+            <summary><span class="num">01</span>物理图像：二维不可压等离子体薄片<span class="arrow">+</span></summary>
+            <div class="doc-body">
+              <p>把等离子体想象成一层很薄的导电液体，放在一个<strong>周期性盒子</strong>里。我们只追踪三个东西：</p>
+              <ul>
+                <li><b>速度场 \(\mathbf u\)</b>：流体往哪里流；</li>
+                <li><b>磁通量函数 \(A\)</b>：它的等值线就是磁力线，\(A\) 的弯曲程度对应电流；</li>
+                <li><b>压力 \(p\)</b>：由不可压约束即时求解，负责把速度场“推回”无散状态。</li>
+              </ul>
+              <p>磁场穿过流体，电流 \(J_z\) 在平面内产生洛伦兹力 \(\mathbf J\times\mathbf B\)。这个力会驱动流动；流动又把 \(A\) 和磁力线带着走；磁力线被拉弯、挤压，产生新的电流和力。电阻 \(\eta\) 让磁力线扩散、重联，粘性 \(\nu\) 让速度场变光滑。</p>
+              <div class="doc-grid">
+                <div class="doc-mini"><div class="k">BACKGROUND</div><div class="v">电流密度 / 涡量 / 压力 / 速度 / 磁场强度，可切换。</div></div>
+                <div class="doc-mini"><div class="k">LINES</div><div class="v">\(A\) 的等值线 = 磁力线；密集处电流大。</div></div>
+                <div class="doc-mini"><div class="k">TRACERS</div><div class="v">被动示踪粒子，显示流体输运与涡旋。</div></div>
+                <div class="doc-mini"><div class="k">ARROWS</div><div class="v">抽样显示 \(J\times B\) 的方向与相对大小。</div></div>
+              </div>
+              <p><b>能观察到：</b>箍缩、涡旋、电流片、磁岛、磁能向小尺度结构转移。<b>不能观察到：</b>可压缩性、真实热力学、三维不稳定性、动理学效应。</p>
+            </div>
+          </details>
+
+          <details class="doc-block" id="doc-model">
+            <summary><span class="num">02</span>模型：二维不可压单流体 MHD<span class="arrow">+</span></summary>
+            <div class="doc-body">
+              <p>代码求解的是下面这组<strong>无量纲</strong>方程：</p>
+              <div class="math-block">\[
+                \partial_t\mathbf u+\mathbf u\cdot\nabla\mathbf u
+                =-\nabla p+\nu\nabla^2\mathbf u+\alpha\,\mathbf J\times\mathbf B,
+                \qquad \nabla\cdot\mathbf u=0
+              \]</div>
+              <div class="math-block">\[
+                \partial_t A+\mathbf u\cdot\nabla A=\eta\nabla^2A,
+                \qquad
+                \mathbf B=\nabla\times(A\hat{\mathbf z}),
+                \qquad
+                J_z=-\nabla^2A
+              \]</div>
+              <ul>
+                <li>\(\nu\)：无量纲粘性；\(\eta\)：无量纲磁扩散；\(\alpha\)：可调的洛伦兹耦合；</li>
+                <li>压力 \(p\) 是<strong>不可压约束的拉格朗日乘子</strong>，不是独立演化的热力学压力；</li>
+                <li>周期性边界；长度、时间、速度均以网格/代码单位计，不是 SI 定量预测。</li>
+              </ul>
+              <p>二维中 \(A=A_z(x,y)\)，所以 \(\mathbf B\) 位于平面内；\(J_z\) 垂直纸面。用 \(A\) 而不是直接演化 \(\mathbf B\)，可以让 \(\nabla\cdot\mathbf B=0\) 在离散层面自动成立。</p>
+            </div>
+          </details>
+
+          <details class="doc-block" id="doc-derivation">
+            <summary><span class="num">03</span>公式推导：投影、磁通量函数与洛伦兹力<span class="arrow">+</span></summary>
+            <div class="doc-body">
+              <h4>3.1 压力投影：让速度场无散</h4>
+              <p>先忽略压力，用平流、粘性和洛伦兹力得到一个“预测速度” \(\mathbf u^*\)。我们希望校正后的速度满足 \(\nabla\cdot\mathbf u^{n+1}=0\)，并且校正只来自压力梯度：</p>
+              <div class="math-block">\[
+                \mathbf u^{n+1}=\mathbf u^*-\Delta t\,\nabla p,
+                \qquad
+                \nabla\cdot\mathbf u^{n+1}=0
+              \]</div>
+              <p>两边取散度，得到压力泊松方程：</p>
+              <div class="math-block">\[
+                \nabla^2p=\frac{1}{\Delta t}\nabla\cdot\mathbf u^*
+              \]</div>
+              <p>代码用中心差分离散散度和梯度，用若干次 Jacobi 迭代近似求解 \(p\)，再从 \(\mathbf u^*\) 中减去 \(\Delta t\nabla p\)。这不是精确投影，而是<strong>近似投影</strong>；迭代次数和网格分辨率都会影响残余散度。</p>
+
+              <h4>3.2 磁通量函数：自动满足 ∇·B = 0</h4>
+              <p>令 \(\mathbf B=\nabla\times(A\hat{\mathbf z})\)，在二维中：</p>
+              <div class="math-block">\[
+                B_x=\frac{\partial A}{\partial y},
+                \qquad
+                B_y=-\frac{\partial A}{\partial x},
+                \qquad
+                \nabla\cdot\mathbf B
+                =\frac{\partial B_x}{\partial x}+\frac{\partial B_y}{\partial y}=0
+              \]</div>
+              <p>电流只有 \(z\) 分量：</p>
+              <div class="math-block">\[
+                J_z=(\nabla\times\mathbf B)_z
+                =\frac{\partial B_y}{\partial x}-\frac{\partial B_x}{\partial y}
+                =-\nabla^2A
+              \]</div>
+              <p>理想感应方程 \(\partial_t\mathbf B=\nabla\times(\mathbf u\times\mathbf B)\) 在二维中化为 \(A\) 的随体守恒：</p>
+              <div class="math-block">\[
+                \partial_t A+\mathbf u\cdot\nabla A=0
+                \quad\longrightarrow\quad
+                \partial_t A+\mathbf u\cdot\nabla A=\eta\nabla^2A
+              \]</div>
+              <p>加上电阻项后，\(A\) 既被流体带着走，又会扩散。离散时先对 \(A\) 做半拉格朗日平流，再加 \(\eta\nabla^2A\)。</p>
+
+              <h4>3.3 洛伦兹力在 A 语言中的形式</h4>
+              <div class="math-block">\[
+                \mathbf J\times\mathbf B
+                =J_z\hat{\mathbf z}\times(B_x\hat{\mathbf x}+B_y\hat{\mathbf y})
+                =J_z(-B_y\hat{\mathbf x}+B_x\hat{\mathbf y})
+                =J_z\left(\frac{\partial A}{\partial x}\hat{\mathbf x}
+                +\frac{\partial A}{\partial y}\hat{\mathbf y}\right)
+              \]</div>
+              <p>所以代码里用 <code>fx = J * (-by)</code>、<code>fy = J * bx</code>，等价于 \(J_z\nabla A\)。这意味着力指向 \(A\) 增大的方向（乘以 \(J_z\) 的符号），和磁压/磁张力的图像一致。</p>
+
+              <h4>3.4 半拉格朗日平流</h4>
+              <p>对任意标量 \(q\)，用后向轨迹近似：</p>
+              <div class="math-block">\[
+                q^{n+1}(\mathbf x)=q^n(\mathbf x-\mathbf u\,\Delta t)
+              \]</div>
+              <p>在网格上用双线性插值取 \(q^n\)。它对大时间步较稳定，但会引入数值扩散；这也是沙盒的场看起来偏光滑的原因之一。</p>
+            </div>
+          </details>
+
+          <details class="doc-block" id="doc-code">
+            <summary><span class="num">04</span>代码实现：从数组到一帧画面<span class="arrow">+</span></summary>
+            <div class="doc-body">
+              <p>核心状态是长度 \(128^2\) 的 <code>Float32Array</code>：<code>u, v, A, p, bx, by, J</code>。所有数组用周期性索引访问；渲染和物理计算分离。</p>
+              <table class="doc-table">
+                <thead><tr><th>方程 / 步骤</th><th>代码位置</th><th>作用</th></tr></thead>
+                <tbody>
+                  <tr><td>B = ∇×(Aẑ), J = −∇²A</td><td><code>derive()</code></td><td>由 A 计算 bx, by, J, 涡量</td></tr>
+                  <tr><td>u·∇q 的平流</td><td><code>advectInto()</code></td><td>半拉格朗日 + 双线性采样</td></tr>
+                  <tr><td>∇²p = (1/Δt)∇·u*</td><td><code>project(dt, 12)</code></td><td>12 次 Jacobi + 压力校正</td></tr>
+                  <tr><td>αJ×B + ν∇²u</td><td><code>step()</code> 的力循环</td><td>洛伦兹力 + 粘性 + 限幅</td></tr>
+                  <tr><td>∂tA + u·∇A = η∇²A</td><td><code>step()</code> 的 A 更新</td><td>平流 + 电阻扩散</td></tr>
+                  <tr><td>A 的等值线</td><td><code>drawFieldLines()</code></td><td>平滑 + marching squares</td></tr>
+                  <tr><td>示踪粒子</td><td><code>updateParticles()</code></td><td>x ← x + uΔt，周期回绕</td></tr>
+                </tbody>
+              </table>
+
+              <h4>一帧的计算顺序</h4>
+              <pre class="doc-code"><span class="cm">// 1. 速度平流</span>
+advect u, v with semi-Lagrangian sampling
+<span class="cm">// 2. 由 A 得到 B, J</span>
+derive()
+<span class="cm">// 3. 加速度 = α J×B + ν∇²u</span>
+ax = alpha*fScale*J*(-by) + nu*lap(u)
+ay = alpha*fScale*J*(bx) + nu*lap(v)
+<span class="cm">// 4. 限幅（安全性，不是物理）</span>
+cap |a| and |u|
+<span class="cm">// 5. 投影到无散速度场</span>
+project(dt, 12)
+<span class="cm">// 6. 磁通量函数平流 + 扩散</span>
+A = advect(A); A += dt*eta*lap(A)
+<span class="cm">// 7. 更新派生量与示踪粒子</span>
+derive(); updateParticles(dt); t += dt</pre>
+
+              <p>代码里的 <code>fScale</code> 在重置时按初始最大 \(|J\times B|\) 归一化，使不同预设的力落到相近的视觉强度；<code>alpha</code> 再乘上去。为避免数值爆炸，代码还设置了加速度上限 <code>18</code>、速度上限 <code>9</code>，并对非有限值归零。这些是<strong>演示保护</strong>，不是物理模型的一部分。</p>
+              <p>渲染时，背景颜色由所选标量场映射到 RGB；磁力线是平滑后的 \(A\) 的等值线；示踪粒子用速度场推进；点击画布则在高斯窗口内给 \(A\) 和速度加一个局域扰动。</p>
+            </div>
+          </details>
+
+          <details class="doc-block" id="doc-numerics">
+            <summary><span class="num">05</span>数值细节与适用边界<span class="arrow">+</span></summary>
+            <div class="doc-body">
+              <div class="doc-grid">
+                <div class="doc-mini"><div class="k">GRID</div><div class="v">128 × 128，周期边界；有限差分。</div></div>
+                <div class="doc-mini"><div class="k">TIME STEP</div><div class="v">固定 Δt = 0.045；每帧至多一步。</div></div>
+                <div class="doc-mini"><div class="k">PROJECTION</div><div class="v">12 次 Jacobi；近似无散，不是精确解。</div></div>
+                <div class="doc-mini"><div class="k">ADVECTION</div><div class="v">半拉格朗日；稳定但有数值扩散。</div></div>
+                <div class="doc-mini"><div class="k">PARTICLES</div><div class="v">520 个被动示踪粒子。</div></div>
+                <div class="doc-mini"><div class="k">FIELD LINES</div><div class="v">对 A 做 3×3 平滑，再取 10 级划分（9 条等值线）。</div></div>
+              </div>
+              <div class="doc-warning"><b>关键限制：</b>这是二维、不可压、单流体、无量纲的<strong>定性</strong>演示。压力由投影即时求出，不是独立的热力学变量；没有能量方程、密度演化、可压缩效应、三维不稳定性或动理学效应。阻力/电阻/粘性都是简化系数；不要用画面中的数值做工程预测。它的价值是让你看见“体积力驱动流动、流动改写磁场、磁场再反过来施力”的闭环。</div>
+            </div>
+          </details>
+
+          <details class="doc-block" id="doc-presets">
+            <summary><span class="num">06</span>预设、初值与读图<span class="arrow">+</span></summary>
+            <div class="doc-body">
+              <table class="doc-table">
+                <thead><tr><th>预设</th><th>初始条件</th><th>观察重点</th></tr></thead>
+                <tbody>
+                  <tr><td>Z-pinch</td><td>\(A=e^{-r^2/(2\sigma^2)}(1+0.065\cos3\theta)\)，\(\sigma=0.132\)</td><td>角向磁场向中心箍缩；电流集中、磁力线弯曲；压力与磁张力竞争。</td></tr>
+                  <tr><td>Orszag–Tang</td><td>\(A=\cos y+\tfrac12\cos2x\)，\(u_x=-\sin y\)，\(u_y=\sin x\)</td><td>涡旋与磁场交织，电流片形成；磁能向小尺度转移。</td></tr>
+                  <tr><td>磁岛</td><td>\(A=0.8\cos x+0.25\cos2y+0.05\sin2x\cos y\)</td><td>闭合磁岛与 X 点；洛伦兹力驱动流动，磁力线被缠绕。</td></tr>
+                  <tr><td>点击注入</td><td>\(A\mathrel{+}=1.05e^{-r^2/(2\cdot5.2^2)}\)，并加一个局域涡旋</td><td>观察扰动如何被流场拉伸、磁场如何响应。</td></tr>
+                </tbody>
+              </table>
+              <p><b>读图顺序：</b>先看背景色（电流/涡量/压力）找到“活跃区”；再看磁力线是否被拉弯、挤压；最后看 \(J\times B\) 箭头和示踪粒子，判断力把流体推向哪里。不要只盯颜色，先问：这里的表面力（压力/粘性）和体积力（洛伦兹力）分别在哪里？</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ================= SCALE LAB ================= -->
   <section class="section" id="scales">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">08</div>
+        <div class="section-no">10</div>
         <div>
           <div class="kicker">Interactive 03 / order of magnitude</div>
           <h2 class="section-title">量级实验室：<span class="accent-amber">谁在主导？</span></h2>
@@ -1683,10 +2023,10 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
   <section class="section" id="pitfalls">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">09</div>
+        <div class="section-no">11</div>
         <div>
           <div class="kicker">Common traps</div>
-          <h2 class="section-title">五个容易踩的<span class="accent-magenta">坑</span></h2>
+          <h2 class="section-title">六个容易踩的<span class="accent-magenta">坑</span></h2>
           <p class="section-lede">概念题里最常见的错误，不是算错，而是把“力的传递方式”和“数学上的体积分”混为一谈。</p>
         </div>
       </div>
@@ -1705,7 +2045,7 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
   <section class="section" id="quiz">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">10</div>
+        <div class="section-no">12</div>
         <div>
           <div class="kicker">Check yourself</div>
           <h2 class="section-title">用四个问题，<span class="accent-green">检验直觉</span></h2>
@@ -1713,7 +2053,7 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
         </div>
       </div>
       <div class="card quiz-card">
-        <div class="quiz-top"><h3>小测 · 力的分类与尺度</h3><div class="quiz-score">得分 <b id="quizScore">0</b> / 4</div></div>
+        <div class="quiz-top"><h3>小测 · 力的分类与尺度</h3><div class="quiz-score">得分 <b id="quizScore">0</b> / 5</div></div>
         <div class="quiz-list" id="quizList">
           <div class="quiz-item" data-answer="1">
             <div class="quiz-q"><span class="qn">Q1</span>压力在运动方程中以 −∇p 出现。它本质上属于哪一类力？</div>
@@ -1751,6 +2091,15 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
             </div>
             <div class="quiz-explain"><b>答案：同一个力的两种记账。</b>磁压梯度与磁张力各自都有平行于 B 的分量，但恰好抵消；净洛伦兹力垂直于 B。这个分解便于理解磁约束与磁压平衡。</div>
           </div>
+          <div class="quiz-item" data-answer="2">
+            <div class="quiz-q"><span class="qn">Q5</span>在电磁场动量方程 \(f+\partial g/\partial t=\nabla\cdot T\) 中，哪一项<strong>不是力</strong>？</div>
+            <div class="quiz-opts">
+              <button class="quiz-opt" type="button" data-i="0">\(\oint T\cdot n\,dS\)</button>
+              <button class="quiz-opt" type="button" data-i="1">\(\int f\,dV\)</button>
+              <button class="quiz-opt" type="button" data-i="2">\(\frac{d}{dt}\int g\,dV\)</button>
+            </div>
+            <div class="quiz-explain"><b>答案：场动量的时间变化率。</b>\(g=\varepsilon_0E\times B\) 是场的动量密度，这一项是体积内的惯性/动量项，不是力。\(T\cdot n\) 是表面应力通量，\(f\) 是体积力密度。</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1768,12 +2117,14 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
       <div>
         <h4>章节</h4>
         <ul>
-          <li><a href="#field-momentum">场的动量与 Maxwell 应力</a></li>
-          <li><a href="#fluid-equation">流体元方程与符号</a></li>
-          <li><a href="#concept">体积力 / 表面力</a></li>
+          <li><a href="#core">主线：表面力 / 体积力</a></li>
+          <li><a href="#field-momentum">例一：电磁场动量</a></li>
+          <li><a href="#fluid-equation">例二：MHD 流体元</a></li>
+          <li><a href="#concept">散度定理与尺度</a></li>
           <li><a href="#equation">动量方程解剖</a></li>
           <li><a href="#em">磁压与磁张力</a></li>
           <li><a href="#sandbox">MHD 沙盒</a></li>
+          <li><a href="#sandbox-doc">沙盒模型详解</a></li>
           <li><a href="#scales">量级实验室</a></li>
           <li><a href="MHD-notes.pdf">完整讲义 PDF</a></li>
           <li><a href="MHD-notes.md">Markdown 源文件</a></li>
