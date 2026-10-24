@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="体积力与表面力的理论、直觉与交互实验：用流体元解剖磁流体力学中的热压力、粘滞力和电磁力。">
+<meta name="description" content="从电磁场动量方程与 MHD 方程理解体积力/表面力，附静电波、Alfvén 波交互模拟、完整推导与代码文档。">
 <meta property="og:title" content="体积力 × 表面力 | MHD 流体元实验室">
 <meta property="og:description" content="拖动滑块解剖流体元，实时观察热压力、粘滞力与电磁力如何在 MHD 动量方程中竞争。">
 <meta property="og:type" content="website">
@@ -333,6 +333,27 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
 .doc-warning{margin-top:10px;padding:11px 13px;border-left:2px solid var(--amber);background:rgba(255,193,94,.04);font-size:11px;line-height:1.7;color:var(--muted);border-radius:0 8px 8px 0}
 .doc-warning b{color:var(--amber)}
 
+/* ============ electrostatic wave ============ */
+.es-shell{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:19px;align-items:stretch}
+.es-main{min-width:0;display:flex;flex-direction:column;gap:12px}
+.es-canvas-frame{position:relative;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#0a1929,#040a12 75%)}
+.es-canvas{width:100%;height:auto;aspect-ratio:900/430;display:block}
+.es-overlay{position:absolute;inset:0;pointer-events:none;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.es-controls{padding:23px;display:flex;flex-direction:column;gap:15px}
+.es-controls h3{font-size:19px;margin-bottom:2px}
+.es-controls .lede{font-size:11.5px;line-height:1.7;color:var(--muted)}
+.es-controls .slider-stack{gap:12px}
+.es-controls .slider-head{font-size:11px}
+.es-formula{padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:rgba(4,9,16,.35);font-size:.84em;margin-top:2px}
+.es-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.es-metrics .metric{padding:9px 10px}
+.es-legend{display:flex;flex-wrap:wrap;gap:10px 14px;font-size:10px;color:var(--dim)}
+.es-legend span{display:inline-flex;align-items:center;gap:5px}
+.es-legend i{width:12px;height:2px;border-radius:2px;background:var(--lc);box-shadow:0 0 6px var(--lc)}
+.es-legend span:nth-child(1){--lc:var(--cyan)}.es-legend span:nth-child(2){--lc:var(--amber)}
+.es-note{font-size:10px;line-height:1.65;color:var(--dim);margin-top:auto}
+.es-note b{color:var(--muted);font-weight:500}
+
 /* ============ concept ============ */
 .concept-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .force-card{padding:29px;position:relative;overflow:hidden;min-height:355px;display:flex;flex-direction:column}
@@ -626,7 +647,7 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
   .section-no{padding-top:0}.section-no::after{display:none}
   .concept-grid,.em-grid,.derivation-grid,.pinch-grid{grid-template-columns:1fr}
   .field-grid,.field-flow,.image-eq-grid,.mhd-limit{grid-template-columns:1fr}
-  .core-grid,.doc-layout{grid-template-columns:1fr}
+  .core-grid,.doc-layout,.es-shell{grid-template-columns:1fr}
   .doc-toc{position:static}
   .doc-toc a{display:inline-block;margin-right:12px;border-bottom:0;padding:4px 0}
   .mhd-limit .math-block--wide{grid-column:auto;grid-row:auto}
@@ -770,7 +791,8 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
       <a href="#field-momentum">电磁场例子</a>
       <a href="#fluid-equation">MHD 方程</a>
       <a href="#element-lab">受力实验</a>
-      <a href="#sandbox">MHD 沙盒</a>
+      <a href="#electrostatic">静电波</a>
+      <a href="#sandbox">Alfvén 波</a>
       <a href="#sandbox-doc">模型详解</a>
       <a href="#scales">量级</a>
     </nav>
@@ -801,7 +823,7 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
           <a class="btn btn-ghost" href="#core">先看两本账</a>
         </div>
         <div class="hero-stats">
-          <div class="hero-stat"><b>03</b><span>可交互实验</span></div>
+          <div class="hero-stat"><b>04</b><span>可交互实验</span></div>
           <div class="hero-stat"><b>2D</b><span>实时 MHD 求解</span></div>
           <div class="hero-stat"><b>TeX</b><span>公式 · 离线可用</span></div>
         </div>
@@ -1617,6 +1639,92 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
           </div>
         </div>
       </div>
+      <p class="note" style="margin-top:12px">以上是磁约束几何的静态例子；本页的交互示例已换为静电波与 Alfvén 波，见下方波实验室。</p>
+    </div>
+  </section>
+
+  <!-- ================= ELECTROSTATIC WAVE ================= -->
+  <section class="section" id="electrostatic">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-no">08</div>
+        <div>
+          <div class="kicker">Example 03 · electrostatic wave</div>
+          <h2 class="section-title">静电波：<span class="accent-cyan">Langmuir 振荡</span></h2>
+          <p class="section-lede">静电近似下，磁场扰动可以忽略；电子密度扰动与电场互相驱动，离子作为固定背景。这是等离子体中最基本的静电波，也是理解“恢复力来自电场而非磁张力”的入口。</p>
+        </div>
+      </div>
+
+      <div class="class-strip">
+        <span class="chip c">无磁场扰动 · 静电近似</span>
+        <span class="chip a">E 提供恢复力</span>
+        <span class="chip">ω ≈ ωpe = 1（归一化）</span>
+        <span class="chip">固定离子 · 冷电子流体</span>
+      </div>
+
+      <div class="es-shell">
+        <div class="es-main">
+          <div class="es-canvas-frame">
+            <canvas id="esCanvas" width="900" height="430" aria-label="一维静电 Langmuir 波模拟：电子密度与电场的时空演化"></canvas>
+            <div class="es-overlay">
+              <div class="sim-badge">t = <b id="esTime2">0.00</b><br>ωpe = 1</div>
+              <div class="sim-badge" style="text-align:right">1D electron fluid<br>periodic box</div>
+            </div>
+          </div>
+          <div class="es-legend">
+            <span><i></i>电子密度 n(x)</span>
+            <span><i></i>电场 E(x)</span>
+            <span style="color:var(--dim)">离子固定 · B ≈ 0</span>
+          </div>
+          <div class="es-metrics">
+            <div class="metric"><div class="m-label"><i style="background:var(--amber)"></i>max |E|</div><div class="m-value" id="esMaxE">—</div></div>
+            <div class="metric"><div class="m-label"><i style="background:var(--cyan)"></i>max |δn|</div><div class="m-value" id="esMaxN">—</div></div>
+            <div class="metric"><div class="m-label"><i style="background:var(--violet)"></i>时间 t</div><div class="m-value" id="esTime">0.00</div></div>
+          </div>
+        </div>
+
+        <aside class="card es-controls">
+          <div>
+            <div class="kicker" style="margin-bottom:6px">Controls</div>
+            <h3>控制静电波</h3>
+            <p class="lede">振幅越大，非线性越明显；波数 m 改变密度条纹数；阻尼 ν 是唯象碰撞项，不是 Landau 阻尼。</p>
+          </div>
+
+          <div class="slider-stack">
+            <div>
+              <div class="slider-head"><label for="esAmp">初始振幅 δ</label><output id="esAmpOut">0.120</output></div>
+              <input class="range" id="esAmp" type="range" min="0.02" max="0.25" step="0.005" value="0.12">
+            </div>
+            <div>
+              <div class="slider-head"><label for="esMode">波数 m（条纹数）</label><output id="esModeOut">1</output></div>
+              <input class="range" id="esMode" type="range" min="1" max="4" step="1" value="1">
+            </div>
+            <div>
+              <div class="slider-head"><label for="esDamp">阻尼 ν</label><output id="esDampOut">0.0020</output></div>
+              <input class="range" id="esDamp" type="range" min="0" max="0.02" step="0.0005" value="0.002">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-small" type="button" id="esToggle">暂停</button>
+            <button class="btn btn-ghost btn-small" type="button" id="esReset">重置</button>
+            <span class="sim-status" id="esStatus">RUNNING</span>
+          </div>
+
+          <div class="es-formula math-block">\[
+            \partial_t n+\partial_x(nu)=0
+          \]</div>
+          <div class="es-formula math-block">\[
+            \partial_t u+u\,\partial_xu=-E-\nu u
+          \]</div>
+          <div class="es-formula math-block">\[
+            \partial_xE=1-n
+          \]</div>
+
+          <p class="es-note"><b>模型边界：</b>冷电子流体 + 固定离子，静电近似（忽略 B 扰动）；没有 Landau 阻尼、没有电子热压、没有离子运动。它展示的是 Langmuir 振荡的“密度—电场”反馈，不是完整动理学。</p>
+          <a class="tiny-note" href="#sandbox-doc" style="color:var(--amber)">波与沙盒的完整模型说明 ↓</a>
+        </aside>
+      </div>
     </div>
   </section>
 
@@ -1624,34 +1732,34 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
   <section class="section" id="sandbox">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">08</div>
+        <div class="section-no">09</div>
         <div>
-          <div class="kicker">Interactive 02 / live MHD</div>
-          <h2 class="section-title">把方程放进<span class="accent-cyan">沙盒</span></h2>
-          <p class="section-lede">一个二维不可压单流体 MHD 求解器：洛伦兹力作为体积力进入动量方程，压力即时调整以维持不可压，磁通量函数保证 ∇·B = 0。切换预设，看磁压、磁张力与压力如何互相博弈。</p>
+          <div class="kicker">Example 04 / Alfvén wave</div>
+          <h2 class="section-title">Alfvén 波：<span class="accent-cyan">磁张力</span>驱动的横波</h2>
+          <p class="section-lede">在均匀引导场 \(B_0\hat x\) 上叠加一个横向速度/磁扰动。流体会被磁张力拉回，扰动沿 \(B_0\) 传播；这是 MHD 中最有代表性的“磁力线像绷紧琴弦”的波。</p>
         </div>
       </div>
 
       <div class="card" style="padding:22px 24px;margin-bottom:19px">
-        <div class="kicker">Model / 2D incompressible MHD</div>
+        <div class="kicker">Model / 2D incompressible MHD + guide field</div>
         <div class="math-block">\[
           \partial_t\mathbf u+\mathbf u\cdot\nabla\mathbf u
           =-\nabla p+\nu\nabla^2\mathbf u+\alpha\,\mathbf J\times\mathbf B,
           \qquad \nabla\cdot\mathbf u=0
         \]</div>
         <div class="math-block">\[
-          \partial_t A+\mathbf u\cdot\nabla A=\eta\nabla^2 A,
+          \mathbf B=B_0\hat{\mathbf x}+\nabla\times(A\hat{\mathbf z}),
           \qquad
-          \mathbf B=\nabla\times(A\hat{\mathbf z}),
+          \partial_t A+\mathbf u\cdot\nabla A=-B_0u_y+\eta\nabla^2A,
           \qquad
-          J_z=-\nabla^2 A
+          J_z=-\nabla^2A
         \]</div>
-        <p class="note" style="margin-top:10px">\(A\) 是磁通量函数，因此 \(\nabla\cdot\mathbf B=0\) 自动成立；压力 \(p\) 由投影法即时求解，只作为不可压约束的拉格朗日乘子。\(\alpha\) 是归一化的洛伦兹耦合系数。</p>
+        <p class="note" style="margin-top:10px">\(A\) 是<strong>扰动</strong>磁通量函数，均匀引导场单独保留；因此磁力线不再是 \(A\) 的闭合等值线，而是总场 \(\mathbf B\) 的积分曲线。压力 \(p\) 由投影法即时求解，只作为不可压约束的拉格朗日乘子。</p>
       </div>
 
       <div class="sim-card">
         <div class="sim-head">
-          <div class="sim-title"><span class="live-dot" id="simLiveDot"></span><span>MHD SANDBOX</span><small>2D · INCOMPRESSIBLE · N = 128²</small><span class="sim-status" id="simStatus">RUNNING</span></div>
+          <div class="sim-title"><span class="live-dot" id="simLiveDot"></span><span>ALFVÉN WAVE</span><small>2D · INCOMPRESSIBLE · N = 128²</small><span class="sim-status" id="simStatus">RUNNING</span></div>
           <div class="sim-head-right">
             <button class="btn btn-ghost btn-small" type="button" id="simToggle">
               <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="5" width="3.4" height="14" rx="1"/><rect x="13.6" y="5" width="3.4" height="14" rx="1"/></svg>
@@ -1667,25 +1775,23 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
         </div>
 
         <div class="sim-toolbar no-print" style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:12px 19px;border-bottom:1px solid var(--line);background:rgba(5,10,18,.25)">
-          <span class="panel-label" style="margin:0 3px 0 0">Preset</span>
-          <button class="preset active" type="button" data-sim-preset="pinch">Z-pinch</button>
-          <button class="preset" type="button" data-sim-preset="ot">Orszag–Tang</button>
-          <button class="preset" type="button" data-sim-preset="island">磁岛</button>
+          <span class="panel-label" style="margin:0 3px 0 0">Example</span>
+          <button class="preset active" type="button" data-sim-preset="alfven">Alfvén 波</button>
           <a class="preset" href="#sandbox-doc" style="text-decoration:none">模型详解 ↓</a>
           <span style="flex:1"></span>
-          <span class="tiny-note">画布点击：注入一个磁通绳</span>
+          <span class="tiny-note">点击画布：注入局域扰动</span>
         </div>
 
         <div class="sim-body">
           <div class="sim-stage">
             <div class="sim-canvas-wrap" id="simCanvasWrap">
-              <canvas id="mhdCanvas" width="800" height="800" aria-label="二维 MHD 实时模拟，显示电流密度、磁场线与示踪粒子。点击画布可注入磁通绳。"></canvas>
+              <canvas id="mhdCanvas" width="800" height="800" aria-label="二维不可压 MHD Alfvén 波模拟，显示电流密度、总磁场线与示踪粒子。点击画布可注入局域扰动。"></canvas>
               <div class="sim-overlay">
-                <div class="sim-badge">t = <b id="simTime">0.00</b><br>dt = 0.045</div>
+                <div class="sim-badge">t = <b id="simTime">0.00</b><br>dt = 0.03</div>
                 <div class="sim-badge" style="text-align:right">E<sub>kin</sub> <b id="simKinBadge">0.000</b><br>E<sub>mag</sub> <b id="simMagBadge">0.000</b></div>
               </div>
             </div>
-            <div class="sim-hint"><span><i></i>拖动画布不生效，单击可注入扰动</span><span>磁场线 = A 的等值线 · 颜色 = 所选场</span></div>
+            <div class="sim-hint"><span><i></i>单击画布可注入局域扰动</span><span>磁场线 = 总场 B 的积分曲线 · 颜色 = 所选场</span></div>
           </div>
 
           <aside class="sim-side no-print">
@@ -1733,208 +1839,212 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
           <div class="metric"><div class="m-label"><i style="background:var(--amber)"></i>max |J|</div><div class="m-value" id="simMaxJ">0.000</div></div>
           <div class="metric"><div class="m-label"><i style="background:var(--violet)"></i>max |u|</div><div class="m-value" id="simMaxU">0.000</div></div>
         </div>
-        <div class="sim-note"><b>预设说明：</b><span id="simDesc">Z-pinch：初始磁通量函数呈高斯分布，角向磁场向中心箍缩；观察磁张力与压力投影的竞争。</span> &nbsp; <b>模型：</b>∂u/∂t + u·∇u = −∇p + ν∇²u + α J×B，∂A/∂t + u·∇A = η∇²A，B = ∇×(Aẑ)，J = −∇²A。无量纲、定性演示；压力由投影法即时求解，不是独立的热力学演化。</div>
+        <div class="sim-note"><b>例子说明：</b><span id="simDesc">Alfvén 波：在均匀引导场 B0 上叠加横向速度/磁扰动，磁张力驱动横波沿 B0 传播；观察磁力线摆动、电流密度与粒子横向运动。</span> &nbsp; <b>模型：</b>∂u/∂t + u·∇u = −∇p + ν∇²u + α J×B，B = B0x̂ + ∇×(Aẑ)，∂A/∂t + u·∇A = −B0uy + η∇²A，Jz = −∇²A。二维不可压、无量纲、定性演示；压力由投影法即时求解，不是独立的热力学演化。</div>
       </div>
     </div>
   </section>
 
-  <!-- ================= SANDBOX DOCUMENTATION ================= -->
+  <!-- ================= WAVE & SANDBOX DOCUMENTATION ================= -->
   <section class="section" id="sandbox-doc">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">09</div>
+        <div class="section-no">10</div>
         <div>
-          <div class="kicker">Model documentation · sandbox</div>
-          <h2 class="section-title">沙盒里的<span class="accent-cyan">物理、方程与代码</span></h2>
-          <p class="section-lede">这一节把模拟器的物理图像、无量纲模型、公式推导、数值方法和代码实现一次讲清楚。沙盒是定性演示，不是黑箱动画；读完之后，你应该能指出画面里的每个量对应哪一行方程。</p>
+          <div class="kicker">Wave models · equations · code</div>
+          <h2 class="section-title">波与沙盒：<span class="accent-cyan">物理、方程与代码</span></h2>
+          <p class="section-lede">两个波例，两种恢复力：静电波靠电场，Alfvén 波靠磁张力。这一节把两个模型的物理图像、方程推导、数值方法和代码实现讲清楚。</p>
         </div>
       </div>
 
       <div class="doc-layout">
         <aside class="card doc-toc">
           <div class="kicker" style="margin-bottom:7px">On this page</div>
-          <h3>沙盒文档</h3>
-          <a href="#doc-picture">1. 物理图像</a>
-          <a href="#doc-model">2. 模型方程</a>
-          <a href="#doc-derivation">3. 公式推导</a>
+          <h3>波模型文档</h3>
+          <a href="#doc-compare">1. 两种波对照</a>
+          <a href="#doc-es">2. 静电波模型</a>
+          <a href="#doc-alfven">3. Alfvén 波模型</a>
           <a href="#doc-code">4. 代码实现</a>
           <a href="#doc-numerics">5. 数值细节与限制</a>
-          <a href="#doc-presets">6. 预设与读图</a>
+          <a href="#doc-read">6. 读图与观察</a>
           <div class="doc-note">完整推导与 PDF 版见 <a href="MHD-notes.pdf" style="color:var(--amber)">MHD-notes.pdf</a> 第 8 节。</div>
         </aside>
 
         <div class="doc-content">
-          <details class="doc-block" id="doc-picture" open>
-            <summary><span class="num">01</span>物理图像：二维不可压等离子体薄片<span class="arrow">+</span></summary>
+          <details class="doc-block" id="doc-compare" open>
+            <summary><span class="num">01</span>两种波：同是波，恢复力不同<span class="arrow">+</span></summary>
             <div class="doc-body">
-              <p>把等离子体想象成一层很薄的导电液体，放在一个<strong>周期性盒子</strong>里。我们只追踪三个东西：</p>
-              <ul>
-                <li><b>速度场 \(\mathbf u\)</b>：流体往哪里流；</li>
-                <li><b>磁通量函数 \(A\)</b>：它的等值线就是磁力线，\(A\) 的弯曲程度对应电流；</li>
-                <li><b>压力 \(p\)</b>：由不可压约束即时求解，负责把速度场“推回”无散状态。</li>
-              </ul>
-              <p>磁场穿过流体，电流 \(J_z\) 在平面内产生洛伦兹力 \(\mathbf J\times\mathbf B\)。这个力会驱动流动；流动又把 \(A\) 和磁力线带着走；磁力线被拉弯、挤压，产生新的电流和力。电阻 \(\eta\) 让磁力线扩散、重联，粘性 \(\nu\) 让速度场变光滑。</p>
-              <div class="doc-grid">
-                <div class="doc-mini"><div class="k">BACKGROUND</div><div class="v">电流密度 / 涡量 / 压力 / 速度 / 磁场强度，可切换。</div></div>
-                <div class="doc-mini"><div class="k">LINES</div><div class="v">\(A\) 的等值线 = 磁力线；密集处电流大。</div></div>
-                <div class="doc-mini"><div class="k">TRACERS</div><div class="v">被动示踪粒子，显示流体输运与涡旋。</div></div>
-                <div class="doc-mini"><div class="k">ARROWS</div><div class="v">抽样显示 \(J\times B\) 的方向与相对大小。</div></div>
-              </div>
-              <p><b>能观察到：</b>箍缩、涡旋、电流片、磁岛、磁能向小尺度结构转移。<b>不能观察到：</b>可压缩性、真实热力学、三维不稳定性、动理学效应。</p>
+              <p><b>静电波：</b>电子密度扰动造成电荷分离，产生电场；电场把电子拉回，形成 Langmuir 振荡。磁场扰动可忽略，恢复力是电场力。模型是一维电子流体，离子固定。</p>
+              <p><b>Alfvén 波：</b>在均匀引导场 \(B_0\) 上施加横向速度/磁扰动；弯曲的磁力线像绷紧的弦，磁张力把流体拉回。它是横波，扰动沿 \(B_0\) 传播。</p>
+              <table class="doc-table">
+                <thead><tr><th></th><th>静电波（Langmuir）</th><th>Alfvén 波</th></tr></thead>
+                <tbody>
+                  <tr><td>恢复力</td><td>电场力 \(E\)</td><td>磁张力 / 洛伦兹力</td></tr>
+                  <tr><td>维数</td><td>1D 电子流体</td><td>2D 不可压 MHD</td></tr>
+                  <tr><td>关键量</td><td>\(n,u,E\)</td><td>\(u,A,B_0,J\)</td></tr>
+                  <tr><td>典型频率/速度</td><td>\(\omega\approx\omega_{pe}=1\)</td><td>\(v_A=B_0/\sqrt{\mu_0\rho}\)</td></tr>
+                  <tr><td>磁场扰动</td><td>忽略（静电近似）</td><td>核心（横向 \(b_y\)）</td></tr>
+                </tbody>
+              </table>
+              <div class="doc-warning"><b>不要混用：</b>静电波不是 MHD 波；它的恢复力来自电场和电荷分离。Alfvén 波才是 MHD 的典型横波。两者放在一起，是为了对比“电场恢复”与“磁张力恢复”。</div>
             </div>
           </details>
 
-          <details class="doc-block" id="doc-model">
-            <summary><span class="num">02</span>模型：二维不可压单流体 MHD<span class="arrow">+</span></summary>
+          <details class="doc-block" id="doc-es">
+            <summary><span class="num">02</span>静电波：模型、线性推导与初值<span class="arrow">+</span></summary>
             <div class="doc-body">
-              <p>代码求解的是下面这组<strong>无量纲</strong>方程：</p>
+              <h4>2.1 归一化方程</h4>
+              <p>取 \(\omega_{pe}=1\)，固定离子，冷电子流体：</p>
+              <div class="math-block">\[
+                \partial_t n+\partial_x(nu)=0,
+                \qquad
+                \partial_t u+u\,\partial_xu=-E-\nu u,
+                \qquad
+                \partial_xE=1-n.
+              \]</div>
+              <p>\(n\) 是电子密度，\(u\) 是电子速度，\(E\) 是电场；\(\nu\) 是唯象阻尼。压力、离子运动、磁场扰动都略去。</p>
+
+              <h4>2.2 线性化与色散</h4>
+              <p>令 \(n=1+\delta n\)，保留一阶项：</p>
+              <div class="math-block">\[
+                \partial_t\delta n=-\partial_xu,
+                \qquad
+                \partial_tu=-E,
+                \qquad
+                \partial_xE=-\delta n.
+              \]</div>
+              <p>消去 \(u,E\)：</p>
+              <div class="math-block">\[
+                \partial_t^2\delta n+\delta n=0
+                \quad\Longrightarrow\quad
+                \omega^2=1=\omega_{pe}^2.
+              \]</div>
+              <p>这就是冷等离子体的 Langmuir 振荡：频率近似与波数无关。密度与电场有 90° 相位差；初始密度为余弦时，电场为正弦。</p>
+
+              <h4>2.3 初值与观察量</h4>
+              <p>初始条件：</p>
+              <div class="math-block">\[
+                n(x,0)=1+\delta\cos(kx),
+                \qquad
+                u(x,0)=0,
+                \qquad
+                E(x,0)=-\frac{\delta}{k}\sin(kx).
+              \]</div>
+              <p>画面上：上图是 \(n(x,t)\)，下图是 \(E(x,t)\)。增加振幅会看到非线性陡化；增加阻尼会看到衰减。模型没有 Landau 阻尼。</p>
+            </div>
+          </details>
+
+          <details class="doc-block" id="doc-alfven">
+            <summary><span class="num">03</span>Alfvén 波：引导场、磁张力与初值<span class="arrow">+</span></summary>
+            <div class="doc-body">
+              <h4>3.1 方程</h4>
               <div class="math-block">\[
                 \partial_t\mathbf u+\mathbf u\cdot\nabla\mathbf u
-                =-\nabla p+\nu\nabla^2\mathbf u+\alpha\,\mathbf J\times\mathbf B,
-                \qquad \nabla\cdot\mathbf u=0
+                =-\nabla p+\nu\nabla^2\mathbf u+\alpha\mathbf J\times\mathbf B,
+                \qquad
+                \nabla\cdot\mathbf u=0,
               \]</div>
               <div class="math-block">\[
-                \partial_t A+\mathbf u\cdot\nabla A=\eta\nabla^2A,
+                \mathbf B=B_0\hat{\mathbf x}+\nabla\times(A\hat{\mathbf z}),
                 \qquad
-                \mathbf B=\nabla\times(A\hat{\mathbf z}),
+                \partial_tA+\mathbf u\cdot\nabla A=-B_0u_y+\eta\nabla^2A,
                 \qquad
-                J_z=-\nabla^2A
+                J_z=-\nabla^2A.
               \]</div>
-              <ul>
-                <li>\(\nu\)：无量纲粘性；\(\eta\)：无量纲磁扩散；\(\alpha\)：可调的洛伦兹耦合；</li>
-                <li>压力 \(p\) 是<strong>不可压约束的拉格朗日乘子</strong>，不是独立演化的热力学压力；</li>
-                <li>周期性边界；长度、时间、速度均以网格/代码单位计，不是 SI 定量预测。</li>
-              </ul>
-              <p>二维中 \(A=A_z(x,y)\)，所以 \(\mathbf B\) 位于平面内；\(J_z\) 垂直纸面。用 \(A\) 而不是直接演化 \(\mathbf B\)，可以让 \(\nabla\cdot\mathbf B=0\) 在离散层面自动成立。</p>
-            </div>
-          </details>
+              <p>\(A\) 是扰动磁通量函数；均匀引导场 \(B_0\hat x\) 单独保留。因此 \(\nabla\cdot\mathbf B=0\) 仍自动成立，但磁力线是总场 \(\mathbf B\) 的积分曲线，不是 \(A\) 的闭合等值线。</p>
 
-          <details class="doc-block" id="doc-derivation">
-            <summary><span class="num">03</span>公式推导：投影、磁通量函数与洛伦兹力<span class="arrow">+</span></summary>
-            <div class="doc-body">
-              <h4>3.1 压力投影：让速度场无散</h4>
-              <p>先忽略压力，用平流、粘性和洛伦兹力得到一个“预测速度” \(\mathbf u^*\)。我们希望校正后的速度满足 \(\nabla\cdot\mathbf u^{n+1}=0\)，并且校正只来自压力梯度：</p>
+              <h4>3.2 线性 Alfvén 波</h4>
+              <p>只保留 \(u_y\) 和 \(A\) 的一阶项：</p>
               <div class="math-block">\[
-                \mathbf u^{n+1}=\mathbf u^*-\Delta t\,\nabla p,
+                \partial_tA=-B_0u_y,
                 \qquad
-                \nabla\cdot\mathbf u^{n+1}=0
+                \partial_tu_y=\frac{B_0}{\rho}J_z
+                =-\frac{B_0}{\rho}\nabla^2A.
               \]</div>
-              <p>两边取散度，得到压力泊松方程：</p>
+              <p>消去 \(u_y\)：</p>
               <div class="math-block">\[
-                \nabla^2p=\frac{1}{\Delta t}\nabla\cdot\mathbf u^*
+                \partial_t^2A
+                =\frac{B_0^2}{\rho}\nabla^2A
+                \quad\Longrightarrow\quad
+                \omega^2=\frac{B_0^2}{\rho}k^2
+                =v_A^2k^2.
               \]</div>
-              <p>代码用中心差分离散散度和梯度，用若干次 Jacobi 迭代近似求解 \(p\)，再从 \(\mathbf u^*\) 中减去 \(\Delta t\nabla p\)。这不是精确投影，而是<strong>近似投影</strong>；迭代次数和网格分辨率都会影响残余散度。</p>
+              <p>代码取 \(\rho=1,\mu_0=1\)，所以 \(v_A=B_0\)。横向速度与磁场扰动同相/反相，流体元做横向摆动，波沿 \(B_0\) 传播。</p>
 
-              <h4>3.2 磁通量函数：自动满足 ∇·B = 0</h4>
-              <p>令 \(\mathbf B=\nabla\times(A\hat{\mathbf z})\)，在二维中：</p>
+              <h4>3.3 初值与数值</h4>
+              <p>取 \(k=2\pi\)，\(A_0=0.06\)，\(B_0=0.55\)：</p>
               <div class="math-block">\[
-                B_x=\frac{\partial A}{\partial y},
+                A(x,0)=A_0\cos(kx),
                 \qquad
-                B_y=-\frac{\partial A}{\partial x},
+                u_y(x,0)=-kA_0\sin(kx),
                 \qquad
-                \nabla\cdot\mathbf B
-                =\frac{\partial B_x}{\partial x}+\frac{\partial B_y}{\partial y}=0
+                u_x=0.
               \]</div>
-              <p>电流只有 \(z\) 分量：</p>
-              <div class="math-block">\[
-                J_z=(\nabla\times\mathbf B)_z
-                =\frac{\partial B_y}{\partial x}-\frac{\partial B_x}{\partial y}
-                =-\nabla^2A
-              \]</div>
-              <p>理想感应方程 \(\partial_t\mathbf B=\nabla\times(\mathbf u\times\mathbf B)\) 在二维中化为 \(A\) 的随体守恒：</p>
-              <div class="math-block">\[
-                \partial_t A+\mathbf u\cdot\nabla A=0
-                \quad\longrightarrow\quad
-                \partial_t A+\mathbf u\cdot\nabla A=\eta\nabla^2A
-              \]</div>
-              <p>加上电阻项后，\(A\) 既被流体带着走，又会扩散。离散时先对 \(A\) 做半拉格朗日平流，再加 \(\eta\nabla^2A\)。</p>
-
-              <h4>3.3 洛伦兹力在 A 语言中的形式</h4>
-              <div class="math-block">\[
-                \mathbf J\times\mathbf B
-                =J_z\hat{\mathbf z}\times(B_x\hat{\mathbf x}+B_y\hat{\mathbf y})
-                =J_z(-B_y\hat{\mathbf x}+B_x\hat{\mathbf y})
-                =J_z\left(\frac{\partial A}{\partial x}\hat{\mathbf x}
-                +\frac{\partial A}{\partial y}\hat{\mathbf y}\right)
-              \]</div>
-              <p>所以代码里用 <code>fx = J * (-by)</code>、<code>fy = J * bx</code>，等价于 \(J_z\nabla A\)。这意味着力指向 \(A\) 增大的方向（乘以 \(J_z\) 的符号），和磁压/磁张力的图像一致。</p>
-
-              <h4>3.4 半拉格朗日平流</h4>
-              <p>对任意标量 \(q\)，用后向轨迹近似：</p>
-              <div class="math-block">\[
-                q^{n+1}(\mathbf x)=q^n(\mathbf x-\mathbf u\,\Delta t)
-              \]</div>
-              <p>在网格上用双线性插值取 \(q^n\)。它对大时间步较稳定，但会引入数值扩散；这也是沙盒的场看起来偏光滑的原因之一。</p>
+              <p>这是向右传播的 Alfvén 波初值。二维网格 \(128^2\)，周期边界，\(\Delta t=0.03\)；洛伦兹力不做归一化（\(fScale=1\)），因此 \(\alpha=1\) 对应物理耦合。</p>
             </div>
           </details>
 
           <details class="doc-block" id="doc-code">
-            <summary><span class="num">04</span>代码实现：从数组到一帧画面<span class="arrow">+</span></summary>
+            <summary><span class="num">04</span>代码实现：两个求解器各自在做什么<span class="arrow">+</span></summary>
             <div class="doc-body">
-              <p>核心状态是长度 \(128^2\) 的 <code>Float32Array</code>：<code>u, v, A, p, bx, by, J</code>。所有数组用周期性索引访问；渲染和物理计算分离。</p>
               <table class="doc-table">
-                <thead><tr><th>方程 / 步骤</th><th>代码位置</th><th>作用</th></tr></thead>
+                <thead><tr><th>模型 / 步骤</th><th>代码位置</th><th>作用</th></tr></thead>
                 <tbody>
-                  <tr><td>B = ∇×(Aẑ), J = −∇²A</td><td><code>derive()</code></td><td>由 A 计算 bx, by, J, 涡量</td></tr>
-                  <tr><td>u·∇q 的平流</td><td><code>advectInto()</code></td><td>半拉格朗日 + 双线性采样</td></tr>
-                  <tr><td>∇²p = (1/Δt)∇·u*</td><td><code>project(dt, 12)</code></td><td>12 次 Jacobi + 压力校正</td></tr>
-                  <tr><td>αJ×B + ν∇²u</td><td><code>step()</code> 的力循环</td><td>洛伦兹力 + 粘性 + 限幅</td></tr>
-                  <tr><td>∂tA + u·∇A = η∇²A</td><td><code>step()</code> 的 A 更新</td><td>平流 + 电阻扩散</td></tr>
-                  <tr><td>A 的等值线</td><td><code>drawFieldLines()</code></td><td>平滑 + marching squares</td></tr>
-                  <tr><td>示踪粒子</td><td><code>updateParticles()</code></td><td>x ← x + uΔt，周期回绕</td></tr>
+                  <tr><td>ES: 通量形式的连续性</td><td><code>initESWave()</code> 的 <code>step()</code></td><td>迎风面通量 + 密度更新</td></tr>
+                  <tr><td>ES: 电子动量</td><td><code>step()</code></td><td>迎风平流 − E − νu</td></tr>
+                  <tr><td>ES: 电场</td><td><code>solveE()</code></td><td>积分 ∂xE = 1−n，减均值</td></tr>
+                  <tr><td>Alfvén: B, J</td><td><code>derive()</code></td><td>B0 + ∂yA, −∂xA；J = −∇²A</td></tr>
+                  <tr><td>Alfvén: 投影</td><td><code>project(dt, 12)</code></td><td>12 次 Jacobi + 压力校正</td></tr>
+                  <tr><td>Alfvén: A 演化</td><td><code>step()</code></td><td>平流 − B0uy + 电阻扩散</td></tr>
+                  <tr><td>Alfvén: 磁力线</td><td><code>drawGuideFieldLines()</code></td><td>RK2 追踪总场 B 的积分曲线</td></tr>
                 </tbody>
               </table>
 
-              <h4>一帧的计算顺序</h4>
-              <pre class="doc-code"><span class="cm">// 1. 速度平流</span>
-advect u, v with semi-Lagrangian sampling
-<span class="cm">// 2. 由 A 得到 B, J</span>
-derive()
-<span class="cm">// 3. 加速度 = α J×B + ν∇²u</span>
-ax = alpha*fScale*J*(-by) + nu*lap(u)
-ay = alpha*fScale*J*(bx) + nu*lap(v)
-<span class="cm">// 4. 限幅（安全性，不是物理）</span>
-cap |a| and |u|
-<span class="cm">// 5. 投影到无散速度场</span>
-project(dt, 12)
-<span class="cm">// 6. 磁通量函数平流 + 扩散</span>
-A = advect(A); A += dt*eta*lap(A)
-<span class="cm">// 7. 更新派生量与示踪粒子</span>
-derive(); updateParticles(dt); t += dt</pre>
+              <h4>ES 的一步（伪代码）</h4>
+              <pre class="doc-code"><span class="cm">// face flux at i+1/2</span>
+uf = 0.5*(u[i] + u[i+1])
+flux[i] = uf &gt; 0 ? n[i]*uf : n[i+1]*uf
+<span class="cm">// continuity</span>
+n_new[i] = n[i] - dt/dx*(flux[i] - flux[i-1])
+<span class="cm">// momentum + Poisson</span>
+u_new[i] = u[i] + dt*(-u[i]*du_dx - E[i] - damp*u[i])
+solveE()</pre>
 
-              <p>代码里的 <code>fScale</code> 在重置时按初始最大 \(|J\times B|\) 归一化，使不同预设的力落到相近的视觉强度；<code>alpha</code> 再乘上去。为避免数值爆炸，代码还设置了加速度上限 <code>18</code>、速度上限 <code>9</code>，并对非有限值归零。这些是<strong>演示保护</strong>，不是物理模型的一部分。</p>
-              <p>渲染时，背景颜色由所选标量场映射到 RGB；磁力线是平滑后的 \(A\) 的等值线；示踪粒子用速度场推进；点击画布则在高斯窗口内给 \(A\) 和速度加一个局域扰动。</p>
+              <h4>Alfvén 的一步（伪代码）</h4>
+              <pre class="doc-code"><span class="cm">// velocity advection + force</span>
+u = advect(u); v = advect(v)
+derive()                  <span class="cm">// bx = B0 + dA/dy; by = -dA/dx; J = -lap(A)</span>
+ax = alpha*J*(-by) + nu*lap(u)
+ay = alpha*J*( bx) + nu*lap(v)
+project(dt, 12)
+<span class="cm">// magnetic flux function</span>
+A = advect(A) + dt*(-B0*v + eta*lap(A))
+derive(); updateParticles(dt)</pre>
+
+              <p>ES 的 <code>n,u,E</code> 是一维 <code>Float64Array</code>，Alfvén 的 <code>u,v,A,p,bx,by,J</code> 是 \(128^2\) 的 <code>Float32Array</code>。两个求解器都采用周期边界，渲染与物理步进分离。</p>
             </div>
           </details>
 
           <details class="doc-block" id="doc-numerics">
-            <summary><span class="num">05</span>数值细节与适用边界<span class="arrow">+</span></summary>
+            <summary><span class="num">05</span>数值细节、稳定性与适用边界<span class="arrow">+</span></summary>
             <div class="doc-body">
               <div class="doc-grid">
-                <div class="doc-mini"><div class="k">GRID</div><div class="v">128 × 128，周期边界；有限差分。</div></div>
-                <div class="doc-mini"><div class="k">TIME STEP</div><div class="v">固定 Δt = 0.045；每帧至多一步。</div></div>
-                <div class="doc-mini"><div class="k">PROJECTION</div><div class="v">12 次 Jacobi；近似无散，不是精确解。</div></div>
-                <div class="doc-mini"><div class="k">ADVECTION</div><div class="v">半拉格朗日；稳定但有数值扩散。</div></div>
-                <div class="doc-mini"><div class="k">PARTICLES</div><div class="v">520 个被动示踪粒子。</div></div>
-                <div class="doc-mini"><div class="k">FIELD LINES</div><div class="v">对 A 做 3×3 平滑，再取 10 级划分（9 条等值线）。</div></div>
+                <div class="doc-mini"><div class="k">ES GRID</div><div class="v">256 cells，1D 周期；迎风通量。</div></div>
+                <div class="doc-mini"><div class="k">ES TIME</div><div class="v">Δt = 0.006；每帧最多 3 步。</div></div>
+                <div class="doc-mini"><div class="k">ALFVÉN GRID</div><div class="v">128²，2D 周期；中心差分。</div></div>
+                <div class="doc-mini"><div class="k">ALFVÉN TIME</div><div class="v">Δt = 0.03；每帧最多 1 步。</div></div>
+                <div class="doc-mini"><div class="k">ALFVÉN PROJECTION</div><div class="v">12 次 Jacobi；近似无散。</div></div>
+                <div class="doc-mini"><div class="k">ALFVÉN ADVECTION</div><div class="v">半拉格朗日；有数值扩散。</div></div>
               </div>
-              <div class="doc-warning"><b>关键限制：</b>这是二维、不可压、单流体、无量纲的<strong>定性</strong>演示。压力由投影即时求出，不是独立的热力学变量；没有能量方程、密度演化、可压缩效应、三维不稳定性或动理学效应。阻力/电阻/粘性都是简化系数；不要用画面中的数值做工程预测。它的价值是让你看见“体积力驱动流动、流动改写磁场、磁场再反过来施力”的闭环。</div>
+              <div class="doc-warning"><b>边界：</b>ES 是冷电子、固定离子、静电近似，没有 Landau 阻尼、电子热压、离子运动；Alfvén 是二维不可压单流体，压力只是投影乘子，没有密度/热力学/三维不稳定性。两者都是定性演示，不是定量预测。ES 的一阶迎风会带来数值扩散；Alfvén 的近似投影和半拉格朗日也有数值误差。</div>
             </div>
           </details>
 
-          <details class="doc-block" id="doc-presets">
-            <summary><span class="num">06</span>预设、初值与读图<span class="arrow">+</span></summary>
+          <details class="doc-block" id="doc-read">
+            <summary><span class="num">06</span>读图：先问恢复力从哪里来<span class="arrow">+</span></summary>
             <div class="doc-body">
-              <table class="doc-table">
-                <thead><tr><th>预设</th><th>初始条件</th><th>观察重点</th></tr></thead>
-                <tbody>
-                  <tr><td>Z-pinch</td><td>\(A=e^{-r^2/(2\sigma^2)}(1+0.065\cos3\theta)\)，\(\sigma=0.132\)</td><td>角向磁场向中心箍缩；电流集中、磁力线弯曲；压力与磁张力竞争。</td></tr>
-                  <tr><td>Orszag–Tang</td><td>\(A=\cos y+\tfrac12\cos2x\)，\(u_x=-\sin y\)，\(u_y=\sin x\)</td><td>涡旋与磁场交织，电流片形成；磁能向小尺度转移。</td></tr>
-                  <tr><td>磁岛</td><td>\(A=0.8\cos x+0.25\cos2y+0.05\sin2x\cos y\)</td><td>闭合磁岛与 X 点；洛伦兹力驱动流动，磁力线被缠绕。</td></tr>
-                  <tr><td>点击注入</td><td>\(A\mathrel{+}=1.05e^{-r^2/(2\cdot5.2^2)}\)，并加一个局域涡旋</td><td>观察扰动如何被流场拉伸、磁场如何响应。</td></tr>
-                </tbody>
-              </table>
-              <p><b>读图顺序：</b>先看背景色（电流/涡量/压力）找到“活跃区”；再看磁力线是否被拉弯、挤压；最后看 \(J\times B\) 箭头和示踪粒子，判断力把流体推向哪里。不要只盯颜色，先问：这里的表面力（压力/粘性）和体积力（洛伦兹力）分别在哪里？</p>
+              <p><b>静电波：</b>看 <span style="color:var(--cyan)">密度条纹</span>与 <span style="color:var(--amber)">电场曲线</span>。密度条纹在原地振荡，电场与密度约有 90° 相位差；增加 \(\delta\) 看非线性，增加 \(\nu\) 看衰减。没有磁力线参与。</p>
+              <p><b>Alfvén 波：</b>先看横向速度/背景电流形成的条纹，再看磁力线是否像琴弦一样上下摆动。扰动沿 \(B_0\) 传播；磁张力是恢复力。切换背景到电流密度，可以看波峰处的电流片；看示踪粒子，可以看到横向摆动。</p>
+              <p>一句话：<b>静电波是“电场把电子拉回”，Alfvén 波是“磁张力把磁力线拉直”。</b></p>
             </div>
           </details>
         </div>
@@ -1942,11 +2052,12 @@ derive(); updateParticles(dt); t += dt</pre>
     </div>
   </section>
 
+
   <!-- ================= SCALE LAB ================= -->
   <section class="section" id="scales">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">10</div>
+        <div class="section-no">11</div>
         <div>
           <div class="kicker">Interactive 03 / order of magnitude</div>
           <h2 class="section-title">量级实验室：<span class="accent-amber">谁在主导？</span></h2>
@@ -2023,7 +2134,7 @@ derive(); updateParticles(dt); t += dt</pre>
   <section class="section" id="pitfalls">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">11</div>
+        <div class="section-no">12</div>
         <div>
           <div class="kicker">Common traps</div>
           <h2 class="section-title">六个容易踩的<span class="accent-magenta">坑</span></h2>
@@ -2045,7 +2156,7 @@ derive(); updateParticles(dt); t += dt</pre>
   <section class="section" id="quiz">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">12</div>
+        <div class="section-no">13</div>
         <div>
           <div class="kicker">Check yourself</div>
           <h2 class="section-title">用四个问题，<span class="accent-green">检验直觉</span></h2>
@@ -2123,8 +2234,9 @@ derive(); updateParticles(dt); t += dt</pre>
           <li><a href="#concept">散度定理与尺度</a></li>
           <li><a href="#equation">动量方程解剖</a></li>
           <li><a href="#em">磁压与磁张力</a></li>
-          <li><a href="#sandbox">MHD 沙盒</a></li>
-          <li><a href="#sandbox-doc">沙盒模型详解</a></li>
+          <li><a href="#electrostatic">静电波（Langmuir）</a></li>
+          <li><a href="#sandbox">Alfvén 波沙盒</a></li>
+          <li><a href="#sandbox-doc">波与沙盒模型详解</a></li>
           <li><a href="#scales">量级实验室</a></li>
           <li><a href="MHD-notes.pdf">完整讲义 PDF</a></li>
           <li><a href="MHD-notes.md">Markdown 源文件</a></li>
@@ -2826,16 +2938,17 @@ function sci(x, digits = 2) {
     showLines: true, showParticles: true, showForce: true,
     view: "current"
   };
-  let preset = "pinch";
+  let preset = "alfven";
   let running = true;
   let t = 0;
   let fScale = 1;
+  let guideB0 = 0.55;
   let lastFrame = 0;
   let accumulator = 0;
   let raf = 0;
   let uiTick = 0;
 
-  const SIM_DT = 0.045;
+  const SIM_DT = 0.03;
   const MAX_ACCEL = 18;
   const MAX_SPEED = 9;
 
@@ -2891,7 +3004,7 @@ function sci(x, digits = 2) {
   function derive() {
     for (let k = 0; k < NN; k++) {
       const l = leftI[k], r = rightI[k], uu = upI[k], dd = downI[k];
-      bx[k] = 0.5 * (A[uu] - A[dd]);
+      bx[k] = guideB0 + 0.5 * (A[uu] - A[dd]);
       by[k] = -0.5 * (A[r] - A[l]);
       J[k] = -(A[r] + A[l] + A[uu] + A[dd] - 4 * A[k]);
       vort[k] = 0.5 * (v[r] - v[l] - u[uu] + u[dd]);
@@ -2948,48 +3061,35 @@ function sci(x, digits = 2) {
   /* ------------- forcing / stepping ------------- */
   function calibrate(presetName) {
     derive();
+    if (presetName === "alfven") {
+      fScale = 1;
+      return;
+    }
     let maxF = 0;
     for (let k = 0; k < NN; k++) {
       const f = Math.abs(J[k]) * Math.hypot(bx[k], by[k]);
       if (f > maxF) maxF = f;
     }
-    const target = presetName === "ot" ? 1.35 : (presetName === "pinch" ? 8.0 : 4.6);
-    fScale = maxF > 1e-12 ? target / maxF : 1;
+    fScale = maxF > 1e-12 ? 4.6 / maxF : 1;
   }
 
   function reset(presetName) {
-    preset = presetName;
+    preset = presetName || "alfven";
     u.fill(0); v.fill(0); A.fill(0); p.fill(0); bx.fill(0); by.fill(0); J.fill(0); vort.fill(0);
-    if (presetName === "pinch") {
+    guideB0 = 0.55;
+    if (preset === "alfven") {
+      const k = 2 * Math.PI;
+      const A0 = 0.06;
       for (let j = 0; j < N; j++) {
         for (let i = 0; i < N; i++) {
-          const x = (i + .5) / N, y = (j + .5) / N;
-          const dx = x - .5, dy = y - .5;
-          const r2 = dx * dx + dy * dy;
-          const theta = Math.atan2(dy, dx);
-          A[j * N + i] = Math.exp(-r2 / (2 * .132 * .132)) * (1 + .065 * Math.cos(3 * theta));
-        }
-      }
-    } else if (presetName === "ot") {
-      for (let j = 0; j < N; j++) {
-        for (let i = 0; i < N; i++) {
-          const x = 2 * Math.PI * (i + .5) / N;
-          const y = 2 * Math.PI * (j + .5) / N;
-          A[j * N + i] = Math.cos(y) + 0.5 * Math.cos(2 * x);
-          u[j * N + i] = -Math.sin(y);
-          v[j * N + i] = Math.sin(x);
-        }
-      }
-    } else {
-      for (let j = 0; j < N; j++) {
-        for (let i = 0; i < N; i++) {
-          const x = 2 * Math.PI * (i + .5) / N;
-          const y = 2 * Math.PI * (j + .5) / N;
-          A[j * N + i] = 0.8 * Math.cos(x) + 0.25 * Math.cos(2 * y) + 0.05 * Math.sin(2 * x) * Math.cos(y);
+          const x = (i + .5) / N;
+          A[j * N + i] = A0 * Math.cos(k * x);
+          u[j * N + i] = 0;
+          v[j * N + i] = -k * A0 * Math.sin(k * x);
         }
       }
     }
-    calibrate(presetName);
+    calibrate(preset);
     project(SIM_DT, 30);
     let meanA = 0;
     for (let k = 0; k < NN; k++) meanA += A[k];
@@ -2999,7 +3099,7 @@ function sci(x, digits = 2) {
     t = 0;
     accumulator = 0;
     resetParticles();
-    updatePresetUI(presetName);
+    updatePresetUI(preset);
     updateReadouts(true);
     render();
   }
@@ -3040,8 +3140,10 @@ function sci(x, digits = 2) {
     advectInto(A, ATmp, dt);
     [A, ATmp] = [ATmp, A];
     for (let k = 0; k < NN; k++) {
-      A[k] += dt * settings.eta *
-        (A[rightI[k]] + A[leftI[k]] + A[downI[k]] + A[upI[k]] - 4 * A[k]);
+      A[k] += dt * (
+        -guideB0 * v[k] +
+        settings.eta * (A[rightI[k]] + A[leftI[k]] + A[downI[k]] + A[upI[k]] - 4 * A[k])
+      );
     }
     let meanA = 0;
     for (let k = 0; k < NN; k++) meanA += A[k];
@@ -3148,7 +3250,60 @@ function sci(x, digits = 2) {
     ctx.fillRect(plot.x, plot.y, plot.w, plot.h);
   }
 
+  function drawGuideFieldLines() {
+    const path = new Path2D();
+    const lines = 14, steps = 190, h = 0.82;
+    const px = x => plot.x + x / N * plot.w;
+    const py = y => plot.y + y / N * plot.h;
+    for (let s = 0; s < lines; s++) {
+      let x = 0, y = (s + .5) * N / lines;
+      let started = false;
+      for (let step = 0; step < steps; step++) {
+        const b1x = sample(bx, x, y), b1y = sample(by, x, y);
+        const m1 = Math.hypot(b1x, b1y);
+        if (m1 < 1e-7) break;
+        const xm = x + 0.5 * h * b1x / m1, ym = y + 0.5 * h * b1y / m1;
+        const b2x = sample(bx, xm, ym), b2y = sample(by, xm, ym);
+        const m2 = Math.hypot(b2x, b2y);
+        if (m2 < 1e-7) break;
+        let nx = x + h * b2x / m2, ny = y + h * b2y / m2;
+        let wrapped = false;
+        if (nx >= N) { nx -= N; wrapped = true; }
+        else if (nx < 0) { nx += N; wrapped = true; }
+        if (ny >= N) ny -= N;
+        else if (ny < 0) ny += N;
+        if (!started) {
+          path.moveTo(px(x), py(y));
+          started = true;
+        } else if (wrapped) {
+          path.moveTo(px(x), py(y));
+        } else {
+          path.lineTo(px(x), py(y));
+        }
+        x = nx; y = ny;
+      }
+    }
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(plot.x, plot.y, plot.w, plot.h);
+    ctx.clip();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = "rgba(86,217,255,.10)";
+    ctx.lineWidth = 2.4;
+    ctx.stroke(path);
+    ctx.filter = "blur(0.22px)";
+    ctx.strokeStyle = "rgba(180,241,255,.58)";
+    ctx.lineWidth = .72;
+    ctx.stroke(path);
+    ctx.filter = "none";
+    ctx.restore();
+  }
+
   function drawFieldLines() {
+    if (Math.abs(guideB0) > 1e-6) {
+      drawGuideFieldLines();
+      return;
+    }
     /* a gentle 3x3 smoothing suppresses grid-scale numerical fuzz in the contours */
     for (let k = 0; k < NN; k++) {
       smoothA[k] = (
@@ -3342,7 +3497,7 @@ function sci(x, digits = 2) {
     /* within-canvas tiny legend */
     ctx.fillStyle = "rgba(154,184,220,.55)";
     ctx.font = "8px 'Cascadia Code', Consolas, monospace";
-    ctx.fillText("B-LINES = CONTOURS OF A", plot.x + 10, plot.y + plot.h - 11);
+    ctx.fillText(guideB0 > 1e-6 ? "B-LINES = STREAMLINES OF B" : "B-LINES = CONTOURS OF A", plot.x + 10, plot.y + plot.h - 11);
   }
 
   function render() {
@@ -3416,11 +3571,9 @@ function sci(x, digits = 2) {
   function updatePresetUI(name) {
     $$("[data-sim-preset]").forEach(b => b.classList.toggle("active", b.dataset.simPreset === name));
     const desc = {
-      pinch: "Z-pinch：初始磁通量函数呈高斯分布，角向磁场向中心箍缩；观察磁张力与压力投影的竞争。",
-      ot: "Orszag–Tang 涡：初始速度涡与磁场交织，电流片在涡区之间形成；观察磁能向小尺度结构转移。",
-      island: "磁岛：周期磁通量函数形成闭合磁岛与 X 点；洛伦兹力驱动流动，磁力线被逐渐缠绕。"
+      alfven: "Alfvén 波：在均匀引导场 B0 上叠加横向速度/磁扰动；磁张力驱动横波沿 B0 传播，观察磁力线摆动、电流密度与粒子横向运动。"
     };
-    $("#simDesc").textContent = desc[name] || desc.pinch;
+    $("#simDesc").textContent = desc[name] || desc.alfven;
   }
 
   function loop(now) {
@@ -3488,8 +3641,255 @@ function sci(x, digits = 2) {
 
   const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   setupCanvas();
-  reset("pinch");
+  reset("alfven");
   setRunning(!reduceMotion);
+  updateReadouts(true);
+  raf = requestAnimationFrame(loop);
+})();
+
+/* ================================================================
+   5.5 electrostatic Langmuir wave (1D electron fluid)
+   ================================================================ */
+(function initESWave() {
+  const canvas = $("#esCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const W = 900, H = 430;
+  const N = 256, dx = 1 / N;
+  let n = new Float64Array(N), u = new Float64Array(N), E = new Float64Array(N);
+  let nTmp = new Float64Array(N), uTmp = new Float64Array(N), flux = new Float64Array(N);
+  const state = {
+    amp: 0.12,
+    mode: 1,
+    damp: 0.002,
+    running: !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches),
+    t: 0
+  };
+  const ES_DT = 0.006;
+  const plot = { x: 66, yTop: 72, yBot: 258, w: 792, hTop: 124, hBot: 124 };
+  const ui = {
+    amp: $("#esAmp"), mode: $("#esMode"), damp: $("#esDamp"),
+    ampOut: $("#esAmpOut"), modeOut: $("#esModeOut"), dampOut: $("#esDampOut"),
+    toggle: $("#esToggle"), reset: $("#esReset"), status: $("#esStatus"),
+    maxE: $("#esMaxE"), maxN: $("#esMaxN"), time: $("#esTime"), time2: $("#esTime2")
+  };
+  let last = 0, acc = 0, raf = 0, uiTick = 0;
+
+  function setupCanvas() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+  }
+
+  function solveE() {
+    let accE = 0, mean = 0;
+    for (let i = 0; i < N; i++) {
+      E[i] = accE;
+      accE += dx * (1 - n[i]);
+    }
+    for (let i = 0; i < N; i++) mean += E[i];
+    mean /= N;
+    for (let i = 0; i < N; i++) E[i] -= mean;
+  }
+
+  function reset() {
+    state.amp = parseFloat(ui.amp.value);
+    state.mode = parseInt(ui.mode.value, 10);
+    state.damp = parseFloat(ui.damp.value);
+    ui.ampOut.textContent = state.amp.toFixed(3);
+    ui.modeOut.textContent = String(state.mode);
+    ui.dampOut.textContent = state.damp.toFixed(4);
+    for (let i = 0; i < N; i++) {
+      const x = (i + .5) / N;
+      n[i] = 1 + state.amp * Math.cos(2 * Math.PI * state.mode * x);
+      u[i] = 0;
+    }
+    solveE();
+    state.t = 0;
+    acc = 0;
+    render();
+    updateReadouts(true);
+  }
+
+  function step(dt) {
+    /* continuity: finite-volume upwind flux */
+    for (let i = 0; i < N; i++) {
+      const ip = (i + 1) % N;
+      const uf = 0.5 * (u[i] + u[ip]);
+      flux[i] = uf > 0 ? n[i] * uf : n[ip] * uf;
+    }
+    for (let i = 0; i < N; i++) {
+      const im = (i - 1 + N) % N;
+      nTmp[i] = Math.max(0.02, n[i] - dt / dx * (flux[i] - flux[im]));
+    }
+    /* electron momentum: upwind advection - E - damping */
+    for (let i = 0; i < N; i++) {
+      const im = (i - 1 + N) % N, ip = (i + 1) % N;
+      const du = u[i] > 0 ? (u[i] - u[im]) / dx : (u[ip] - u[i]) / dx;
+      uTmp[i] = u[i] + dt * (-u[i] * du - E[i] - state.damp * u[i]);
+      if (uTmp[i] > 1.5) uTmp[i] = 1.5;
+      if (uTmp[i] < -1.5) uTmp[i] = -1.5;
+    }
+    [n, nTmp] = [nTmp, n];
+    [u, uTmp] = [uTmp, u];
+    solveE();
+    state.t += dt;
+  }
+
+  function render() {
+    ctx.fillStyle = "#050b13";
+    ctx.fillRect(0, 0, W, H);
+    const bg = ctx.createRadialGradient(W * .5, H * .45, 40, W * .5, H * .45, 520);
+    bg.addColorStop(0, "rgba(13,34,55,.55)");
+    bg.addColorStop(1, "rgba(4,9,16,0)");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    /* grid */
+    ctx.save();
+    ctx.strokeStyle = "rgba(154,184,220,.07)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const x = plot.x + plot.w * i / 4;
+      ctx.beginPath(); ctx.moveTo(x, plot.yTop - 12); ctx.lineTo(x, plot.yBot + plot.hBot + 10); ctx.stroke();
+    }
+    for (const y of [plot.yTop, plot.yTop + plot.hTop / 2, plot.yTop + plot.hTop, plot.yBot, plot.yBot + plot.hBot / 2, plot.yBot + plot.hBot]) {
+      ctx.beginPath(); ctx.moveTo(plot.x, y); ctx.lineTo(plot.x + plot.w, y); ctx.stroke();
+    }
+    ctx.restore();
+
+    const toX = i => plot.x + (i + .5) / N * plot.w;
+
+    /* density panel */
+    const nBase = 1;
+    const nLo = 0.6, nHi = 1.4;
+    const yN = v => plot.yTop + plot.hTop * (1 - (v - nLo) / (nHi - nLo));
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(plot.x, plot.yTop - 10, plot.w, plot.hTop + 20);
+    ctx.clip();
+    const fill = ctx.createLinearGradient(0, plot.yTop, 0, plot.yTop + plot.hTop);
+    fill.addColorStop(0, "rgba(86,217,255,.20)");
+    fill.addColorStop(1, "rgba(86,217,255,.01)");
+    ctx.beginPath();
+    ctx.moveTo(toX(0), yN(n[0]));
+    for (let i = 1; i < N; i++) ctx.lineTo(toX(i), yN(n[i]));
+    ctx.lineTo(plot.x + plot.w, yN(nLo));
+    ctx.lineTo(plot.x, yN(nLo));
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(toX(0), yN(n[0]));
+    for (let i = 1; i < N; i++) ctx.lineTo(toX(i), yN(n[i]));
+    ctx.strokeStyle = "#56d9ff";
+    ctx.lineWidth = 2;
+    ctx.shadowColor = "rgba(86,217,255,.6)";
+    ctx.shadowBlur = 12;
+    ctx.stroke();
+    ctx.restore();
+
+    /* E panel */
+    let maxE = 0.02;
+    for (let i = 0; i < N; i++) maxE = Math.max(maxE, Math.abs(E[i]));
+    const yE = v => plot.yBot + plot.hBot * .5 - v / maxE * plot.hBot * .46;
+    ctx.save();
+    ctx.strokeStyle = "rgba(154,184,220,.18)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(plot.x, yE(0)); ctx.lineTo(plot.x + plot.w, yE(0)); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(toX(0), yE(E[0]));
+    for (let i = 1; i < N; i++) ctx.lineTo(toX(i), yE(E[i]));
+    ctx.strokeStyle = "#ffc15e";
+    ctx.lineWidth = 2;
+    ctx.shadowColor = "rgba(255,193,94,.6)";
+    ctx.shadowBlur = 12;
+    ctx.stroke();
+    ctx.restore();
+
+    /* axes and labels */
+    ctx.save();
+    ctx.fillStyle = "rgba(154,184,220,.65)";
+    ctx.font = "10px 'Cascadia Code', Consolas, monospace";
+    ctx.fillText("n_e(x)", plot.x + 8, plot.yTop - 8);
+    ctx.fillStyle = "rgba(86,217,255,.8)";
+    ctx.fillText("electron density", plot.x + 66, plot.yTop - 8);
+    ctx.fillStyle = "rgba(255,193,94,.85)";
+    ctx.fillText("E_x(x)", plot.x + 8, plot.yBot - 10);
+    ctx.fillStyle = "rgba(154,184,220,.5)";
+    ctx.fillText("electric field", plot.x + 66, plot.yBot - 10);
+    ctx.fillStyle = "rgba(154,184,220,.45)";
+    ctx.font = "9px 'Cascadia Code', Consolas, monospace";
+    for (let i = 0; i <= 4; i++) {
+      const x = plot.x + plot.w * i / 4;
+      ctx.fillText((i / 4).toFixed(2), x - 9, plot.yBot + plot.hBot + 28);
+    }
+    ctx.fillText("x / L", plot.x + plot.w - 32, plot.yBot + plot.hBot + 40);
+    ctx.restore();
+  }
+
+  function updateReadouts(force = false) {
+    if (!force && (uiTick++ % 4) !== 0) return;
+    let mE = 0, mN = 0;
+    for (let i = 0; i < N; i++) {
+      mE = Math.max(mE, Math.abs(E[i]));
+      mN = Math.max(mN, Math.abs(n[i] - 1));
+    }
+    ui.maxE.textContent = mE.toFixed(3);
+    ui.maxN.textContent = mN.toFixed(3);
+    ui.time.textContent = state.t.toFixed(2);
+    ui.time2.textContent = state.t.toFixed(2);
+  }
+
+  function setRunning(next) {
+    state.running = next;
+    ui.status.textContent = next ? "RUNNING" : "PAUSED";
+    ui.status.classList.toggle("paused", !next);
+    ui.toggle.textContent = next ? "暂停" : "继续";
+    last = 0;
+    acc = 0;
+  }
+
+  function loop(now) {
+    raf = requestAnimationFrame(loop);
+    if (!last) last = now;
+    let delta = now - last;
+    last = now;
+    if (delta > 100) delta = 100;
+    if (state.running) {
+      acc += delta;
+      const frame = 1000 / 60;
+      let steps = 0;
+      while (acc >= frame && steps < 3) {
+        step(ES_DT);
+        acc -= frame;
+        steps++;
+      }
+      if (acc > frame * 4) acc = 0;
+    }
+    render();
+    updateReadouts();
+  }
+
+  ["esAmp", "esMode"].forEach(id => {
+    $("#" + id).addEventListener("input", () => {
+      reset();
+    });
+  });
+  ui.damp.addEventListener("input", () => {
+    state.damp = parseFloat(ui.damp.value);
+    ui.dampOut.textContent = state.damp.toFixed(4);
+  });
+  ui.toggle.addEventListener("click", () => setRunning(!state.running));
+  ui.reset.addEventListener("click", () => reset());
+  window.addEventListener("resize", () => { setupCanvas(); render(); });
+
+  setupCanvas();
+  reset();
+  setRunning(state.running);
   updateReadouts(true);
   raf = requestAnimationFrame(loop);
 })();

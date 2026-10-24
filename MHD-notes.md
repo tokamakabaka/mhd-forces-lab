@@ -623,187 +623,182 @@ $$
 
 注意：$f_B=B^2/(\mu_0L)$ 是磁压梯度尺度；讨论导电流体在磁场中运动时，感应制动尺度是 $\sigma UB^2$，对应 $N$。两者不是同一个量，不能混用。
 
-# 8. 二维不可压 MHD 沙盒：物理图像、模型、推导与代码
+# 8. 等离子体波与沙盒：静电波与 Alfvén 波
 
-## 8.1 物理图像
+## 8.1 两种波对照
 
-网页沙盒把等离子体近似为一层很薄的导电液体，放在周期性盒子中。它追踪三个基本对象：
+| | 静电波（Langmuir） | Alfvén 波 |
+|---|---|---|
+| 恢复力 | 电场力 | 磁张力 / 洛伦兹力 |
+| 模型 | 1D 电子流体，固定离子 | 2D 不可压 MHD + 均匀引导场 |
+| 关键量 | $n,u,E$ | $\mathbf u,A,B_0,J_z$ |
+| 频率/速度 | $\omega\approx\omega_{pe}=1$（归一化） | $v_A=B_0/\sqrt{\mu_0\rho}$ |
+| 磁场扰动 | 忽略（静电近似） | 核心：横向 $b_y$ |
 
-- 速度场 $\mathbf u(x,y,t)$：流体往哪里流；
-- 磁通量函数 $A(x,y,t)$：等值线是磁力线，弯曲程度对应电流；
-- 压力 $p(x,y,t)$：由不可压约束即时求解，负责把速度场推回无散状态。
+两者都是“波”，但恢复力不同：静电波靠电荷分离产生的电场，Alfvén 波靠弯曲磁力线的张力。
 
-磁场穿过流体，电流 $J_z$ 在平面内产生洛伦兹力 $\mathbf J\times\mathbf B$。这个力驱动流动，流动又携带 $A$ 和磁力线；磁力线被拉弯、挤压，产生新的电流和力。粘性 $\nu$ 让速度场变光滑，电阻 $\eta$ 让磁场扩散、重联。
+## 8.2 静电波：一维电子流体
 
-画面上：
+### 8.2.1 归一化方程
 
-- 背景颜色可选电流密度、涡量、压力、速度或磁场强度；
-- 磁力线是 $A$ 的等值线；
-- 示踪粒子显示流体输运；
-- 箭头抽样显示 $J\times B$ 的方向和相对大小。
+取 $\omega_{pe}=1$，固定离子，冷电子流体：
 
-这是一个“力 → 流动 → 磁场 → 力”的闭环，而不是一张预设动画。
+$$
+\partial_t n+\partial_x(nu)=0,
+\qquad
+\partial_t u+u\,\partial_xu=-E-\nu u,
+\qquad
+\partial_xE=1-n.
+$$
 
-## 8.2 模型方程
+$n$ 是电子密度，$u$ 是电子速度，$E$ 是电场，$\nu$ 是唯象阻尼。压力、离子运动、磁场扰动都略去。
 
-沙盒求解二维不可压单流体 MHD：
+### 8.2.2 线性化与色散
+
+令 $n=1+\delta n$，保留一阶项：
+
+$$
+\partial_t\delta n=-\partial_xu,
+\qquad
+\partial_tu=-E,
+\qquad
+\partial_xE=-\delta n.
+$$
+
+消去 $u,E$：
+
+$$
+\partial_t^2\delta n+\delta n=0
+\quad\Longrightarrow\quad
+\omega^2=1=\omega_{pe}^2.
+$$
+
+这是冷等离子体的 Langmuir 振荡：频率近似与波数无关。密度与电场有 90° 相位差。
+
+### 8.2.3 初值与数值
+
+初始条件：
+
+$$
+n(x,0)=1+\delta\cos(kx),
+\qquad
+u(x,0)=0,
+\qquad
+E(x,0)=-\frac{\delta}{k}\sin(kx).
+$$
+
+代码用 256 个周期网格点；连续性方程用迎风面通量，动量方程用迎风平流，电场由 $\partial_xE=1-n$ 累加并减去均值。时间步 $\Delta t=0.006$，每帧最多 3 步。增加振幅会看到非线性陡化；增加 $\nu$ 会看到衰减。模型没有 Landau 阻尼、电子热压或离子运动。
+
+## 8.3 Alfvén 波：二维不可压 MHD + 引导场
+
+### 8.3.1 方程
 
 $$
 \partial_t\mathbf u+\mathbf u\cdot\nabla\mathbf u
-=
--\nabla p+\nu\nabla^2\mathbf u+\alpha\,\mathbf J\times\mathbf B,
+=-\nabla p+\nu\nabla^2\mathbf u+\alpha\mathbf J\times\mathbf B,
 \qquad
 \nabla\cdot\mathbf u=0,
 $$
 
 $$
-\partial_t A+\mathbf u\cdot\nabla A=\eta\nabla^2A,
+\mathbf B=B_0\hat{\mathbf x}+\nabla\times(A\hat{\mathbf z}),
 \qquad
-\mathbf B=\nabla\times(A\hat{\mathbf z}),
+\partial_tA+\mathbf u\cdot\nabla A=-B_0u_y+\eta\nabla^2A,
 \qquad
 J_z=-\nabla^2A.
 $$
 
-其中 $\nu$、$\eta$、$\alpha$ 都是无量纲系数；$\alpha$ 是用户可调的洛伦兹耦合。压力 $p$ 是不可压约束的拉格朗日乘子，不是独立的热力学变量。
+$A$ 是**扰动**磁通量函数；$B_0\hat x$ 是单独保留的均匀引导场。因此 $\nabla\cdot\mathbf B=0$ 自动成立，但磁力线是总场 $\mathbf B$ 的积分曲线，不是 $A$ 的闭合等值线。
 
-采用磁通量函数 $A$ 的关键好处是 $\nabla\cdot\mathbf B=0$ 自动成立：
+### 8.3.2 线性 Alfvén 波
+
+只保留 $u_y$ 和 $A$ 的一阶项：
 
 $$
-B_x=\frac{\partial A}{\partial y},
+\partial_tA=-B_0u_y,
 \qquad
-B_y=-\frac{\partial A}{\partial x},
+\partial_tu_y=\frac{B_0}{\rho}J_z
+=-\frac{B_0}{\rho}\nabla^2A.
+$$
+
+消去 $u_y$：
+
+$$
+\partial_t^2A
+=\frac{B_0^2}{\rho}\nabla^2A
+\quad\Longrightarrow\quad
+\omega^2=\frac{B_0^2}{\rho}k^2
+=v_A^2k^2.
+$$
+
+代码取 $\rho=1,\mu_0=1$，所以 $v_A=B_0$。横向速度与磁场扰动同相/反相，流体元做横向摆动，波沿 $B_0$ 传播。
+
+### 8.3.3 初值与数值
+
+取 $k=2\pi$、$A_0=0.06$、$B_0=0.55$：
+
+$$
+A(x,0)=A_0\cos(kx),
 \qquad
-\nabla\cdot\mathbf B
-=\frac{\partial B_x}{\partial x}+\frac{\partial B_y}{\partial y}=0.
-$$
-
-二维中 $\mathbf B$ 位于平面内，电流只有 $z$ 分量：
-
-$$
-J_z=(\nabla\times\mathbf B)_z
-=\frac{\partial B_y}{\partial x}-\frac{\partial B_x}{\partial y}
-=-\nabla^2A.
-$$
-
-## 8.3 公式推导
-
-### 8.3.1 压力投影
-
-先忽略压力，用平流、粘性和洛伦兹力得到一个预测速度 $\mathbf u^*$。希望校正后的速度满足
-
-$$
-\nabla\cdot\mathbf u^{n+1}=0,
+u_y(x,0)=-kA_0\sin(kx),
 \qquad
-\mathbf u^{n+1}=\mathbf u^*-\Delta t\,\nabla p.
+u_x=0.
 $$
 
-两边取散度：
+这是向右传播的 Alfvén 波初值。二维网格 $128^2$，周期边界，$\Delta t=0.03$；洛伦兹力不做归一化（`fScale=1`），因此 $\alpha=1$ 对应物理耦合。磁力线用总场 $\mathbf B$ 的 RK2 积分曲线绘制，而不是 $A$ 的等值线。
 
-$$
-\nabla^2p=\frac{1}{\Delta t}\nabla\cdot\mathbf u^*.
-$$
+## 8.4 代码实现
 
-代码用中心差分离散散度和梯度，用 12 次 Jacobi 迭代近似求解 $p$，再从 $\mathbf u^*$ 中减去 $\Delta t\nabla p$。这不是精确投影，而是近似投影；迭代次数和网格分辨率都会影响残余散度。
-
-### 8.3.2 磁通量函数的感应方程
-
-理想感应方程
-
-$$
-\partial_t\mathbf B=\nabla\times(\mathbf u\times\mathbf B)
-$$
-
-在二维中化为 $A$ 的随体守恒：
-
-$$
-\partial_t A+\mathbf u\cdot\nabla A=0.
-$$
-
-加上电阻项后：
-
-$$
-\partial_t A+\mathbf u\cdot\nabla A=\eta\nabla^2A.
-$$
-
-离散时先对 $A$ 做半拉格朗日平流，再加 $\eta\nabla^2A$。
-
-### 8.3.3 洛伦兹力
-
-$$
-\mathbf J\times\mathbf B
-=J_z\hat{\mathbf z}\times(B_x\hat{\mathbf x}+B_y\hat{\mathbf y})
-=J_z(-B_y\hat{\mathbf x}+B_x\hat{\mathbf y})
-=J_z\left(\frac{\partial A}{\partial x}\hat{\mathbf x}
-+\frac{\partial A}{\partial y}\hat{\mathbf y}\right).
-$$
-
-代码中用 `fx = J * (-by)`、`fy = J * bx`，等价于 $J_z\nabla A$。力指向 $A$ 增大的方向（乘以 $J_z$ 的符号），与磁压/磁张力的图像一致。
-
-### 8.3.4 半拉格朗日平流
-
-对任意标量 $q$：
-
-$$
-q^{n+1}(\mathbf x)=q^n(\mathbf x-\mathbf u\,\Delta t).
-$$
-
-在网格上用双线性插值取 $q^n$。它对较大的时间步较稳定，但会引入数值扩散。
-
-### 8.3.5 力的归一化
-
-重置时先计算初始最大 $|J\times B|$，把 `fScale` 设为让不同预设的初始力落在相近的视觉强度；运行时再乘用户参数 $\alpha$。代码还设置加速度上限 18、速度上限 9，并对非有限值归零。这些是演示保护，不是物理模型的一部分。
-
-## 8.4 数值实现
-
-核心状态是长度 $128^2$ 的 `Float32Array`：`u, v, A, p, bx, by, J`。所有数组用周期性索引访问；物理计算与渲染分离。
-
-| 方程 / 步骤 | 代码位置 | 作用 |
+| 模型 / 步骤 | 代码位置 | 作用 |
 |---|---|---|
-| $\mathbf B=\nabla\times(A\hat z)$，$J_z=-\nabla^2A$ | `derive()` | 由 A 计算 bx、by、J、涡量 |
-| 半拉格朗日平流 | `advectInto()` | 后向轨迹 + 双线性采样 |
-| $\nabla^2p=(1/\Delta t)\nabla\cdot\mathbf u^*$ | `project(dt, 12)` | 12 次 Jacobi + 压力校正 |
-| $\alpha\mathbf J\times\mathbf B+\nu\nabla^2\mathbf u$ | `step()` 的力循环 | 洛伦兹力 + 粘性 + 限幅 |
-| $\partial_t A+\mathbf u\cdot\nabla A=\eta\nabla^2A$ | `step()` 的 A 更新 | 平流 + 电阻扩散 |
-| $A$ 的等值线 | `drawFieldLines()` | 平滑 + marching squares |
-| 示踪粒子 | `updateParticles()` | $\mathbf x\leftarrow\mathbf x+\mathbf u\Delta t$，周期回绕 |
+| 静电波：连续性 | `initESWave()` 的 `step()` | 迎风面通量 + 密度更新 |
+| 静电波：动量 | `step()` | 迎风平流 $-E-\nu u$ |
+| 静电波：电场 | `solveE()` | 积分 $\partial_xE=1-n$，减均值 |
+| Alfvén：B, J | `derive()` | $B_x=B_0+\partial_yA$，$B_y=-\partial_xA$，$J_z=-\nabla^2A$ |
+| Alfvén：投影 | `project(dt, 12)` | 12 次 Jacobi + 压力校正 |
+| Alfvén：A 演化 | `step()` | 平流 $-B_0u_y$ + 电阻扩散 |
+| Alfvén：磁力线 | `drawGuideFieldLines()` | RK2 追踪总场 B 的积分曲线 |
 
-一帧的计算顺序：
+静电波的一步：
 
 ```text
-1. 用半拉格朗日格式平流 u, v
-2. derive() 由 A 计算 B, J
-3. 加速度 = alpha * fScale * (J x B) + nu * laplacian(u)
-4. 对加速度和速度限幅
-5. project(dt, 12) 投影到近似无散速度场
-6. 半拉格朗日平流 A，再加 eta * laplacian(A)
-7. derive()、更新示踪粒子、t += dt
-8. 渲染背景场、磁力线、粒子、J×B 箭头
+uf = 0.5*(u[i] + u[i+1])
+flux[i] = uf > 0 ? n[i]*uf : n[i+1]*uf
+n_new[i] = n[i] - dt/dx*(flux[i] - flux[i-1])
+u_new[i] = u[i] + dt*(-u[i]*du_dx - E[i] - damp*u[i])
+solveE()
 ```
 
-## 8.5 代码实现要点
+Alfvén 的一步：
 
-- **网格**：$128\times128$，周期边界，中心差分。
-- **时间步**：固定 $\Delta t=0.045$；每帧最多推进一步。
-- **投影**：12 次 Jacobi；近似无散，不是精确解。
-- **平流**：半拉格朗日，稳定但有数值扩散。
-- **粒子**：520 个被动示踪粒子。
-- **磁力线**：对 $A$ 做 $3\times3$ 平滑，再取 9 条等值线（10 级划分）。
-- **注入**：点击画布时，在高斯窗口内给 $A$ 加一个局域扰动，同时加一个涡旋速度。
+```text
+u = advect(u); v = advect(v)
+derive()                    // bx = B0 + dA/dy; by = -dA/dx; J = -lap(A)
+ax = alpha*J*(-by) + nu*lap(u)
+ay = alpha*J*( bx) + nu*lap(v)
+project(dt, 12)
+A = advect(A) + dt*(-B0*v + eta*lap(A))
+derive(); updateParticles(dt)
+```
 
-## 8.6 预设与读图
+静电波的状态是 256 点的一维数组 `n,u,E`；Alfvén 的状态是 $128^2$ 的 `u,v,A,p,bx,by,J`。两个求解器都用周期边界，物理步进与渲染分离。
 
-| 预设 | 初始条件 | 观察重点 |
-|---|---|---|
-| Z-pinch | $A=e^{-r^2/(2\sigma^2)}(1+0.065\cos3\theta)$，$\sigma=0.132$ | 角向磁场向中心箍缩；电流集中、磁力线弯曲；压力与磁张力竞争 |
-| Orszag–Tang | $A=\cos y+\frac12\cos2x$，$u_x=-\sin y$，$u_y=\sin x$ | 涡旋与磁场交织，电流片形成；磁能向小尺度转移 |
-| 磁岛 | $A=0.8\cos x+0.25\cos2y+0.05\sin2x\cos y$ | 闭合磁岛与 X 点；洛伦兹力驱动流动，磁力线被缠绕 |
-| 点击注入 | $A\mathrel{+}=1.05e^{-r^2/(2\cdot5.2^2)}$，并加一个局域涡旋 | 扰动如何被流场拉伸、磁场如何响应 |
+## 8.5 数值细节与限制
 
-**读图顺序：** 先看背景色（电流/涡量/压力）找到活跃区；再看磁力线是否被拉弯、挤压；最后看 $J\times B$ 箭头和示踪粒子，判断力把流体推向哪里。先问：这里的表面力（压力/粘性）和体积力（洛伦兹力）分别在哪里？
+- 静电波：一阶迎风，256 点，$\Delta t=0.006$，每帧最多 3 步；有数值扩散。
+- Alfvén：128²，$\Delta t=0.03$，12 次 Jacobi 近似投影，半拉格朗日平流有数值扩散。
+- 静电波是冷电子、固定离子、静电近似；没有 Landau 阻尼、电子热压、离子运动。
+- Alfvén 是二维不可压单流体；压力只是投影乘子，没有密度/热力学/三维不稳定性。
+- 两者都是定性演示，不是定量预测。
 
-## 8.7 适用边界
+## 8.6 读图
 
-这是二维、不可压、单流体、无量纲的**定性**演示。压力由投影即时求出，不是独立的热力学变量；没有能量方程、密度演化、可压缩效应、三维不稳定性或动理学效应。阻力/电阻/粘性都是简化系数；不要用画面中的数值做工程预测。它的价值是让你看见“体积力驱动流动、流动改写磁场、磁场再反过来施力”的闭环，以及压力/粘性作为表面力如何维持不可压约束。
+**静电波：** 看密度条纹与电场曲线。密度条纹在原地振荡，电场与密度约有 90° 相位差；增加 $\delta$ 看非线性，增加 $\nu$ 看衰减。没有磁力线参与。
+
+**Alfvén 波：** 先看横向速度/背景电流形成的条纹，再看磁力线是否像琴弦一样上下摆动。扰动沿 $B_0$ 传播；磁张力是恢复力。切换背景到电流密度，可以看波峰处的电流片；看示踪粒子，可以看到横向摆动。
+
+一句话：**静电波是“电场把电子拉回”，Alfvén 波是“磁张力把磁力线拉直”。**
+
 
 # 9. 常见误区
 
