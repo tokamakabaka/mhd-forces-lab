@@ -623,181 +623,233 @@ $$
 
 注意：$f_B=B^2/(\mu_0L)$ 是磁压梯度尺度；讨论导电流体在磁场中运动时，感应制动尺度是 $\sigma UB^2$，对应 $N$。两者不是同一个量，不能混用。
 
-# 8. 等离子体波与沙盒：静电波与 Alfvén 波
+# 8. 等离子体波与可压缩 MHD 沙盒
 
-## 8.1 两种波对照
+这一章把三个交互模型放在同一条主线上：**先让压力/电场可见，再让磁压可见，最后让动量方程的每一项在二维探针处可见。**
 
-| | 静电波（Langmuir） | Alfvén 波 |
-|---|---|---|
-| 恢复力 | 电场力 | 磁张力 / 洛伦兹力 |
-| 模型 | 1D 电子流体，固定离子 | 2D 不可压 MHD + 均匀引导场 |
-| 关键量 | $n,u,E$ | $\mathbf u,A,B_0,J_z$ |
-| 频率/速度 | $\omega\approx\omega_{pe}=1$（归一化） | $v_A=B_0/\sqrt{\mu_0\rho}$ |
-| 磁场扰动 | 忽略（静电近似） | 核心：横向 $b_y$ |
+| | 离子声波 | 1D 磁声波 | 2D 可压缩 MHD |
+|---|---|---|---|
+| 恢复力 | 电子压力 / ambipolar E | 压力 + 磁压 | 压力 + 洛伦兹力 |
+| 维数 | 1D | 1D | 2D |
+| 可压缩 | 是 | 是 | 是 |
+| 磁场 | 无（静电极限） | 垂直背景场 | \(B_0\hat{\mathbf x}+\nabla\times(A\hat{\mathbf z})\) |
+| 数值 | 迎风有限体积 | HLL 有限体积 | 半拉格朗日 + 源项 |
+| 诊断 | 密度、E | 剖面 + 力预算 | 力探针 + 流线 |
 
-两者都是“波”，但恢复力不同：静电波靠电荷分离产生的电场，Alfvén 波靠弯曲磁力线的张力。
+## 8.1 离子声波：准中性、长波极限
 
-## 8.2 静电波：一维电子流体
+### 8.1.1 方程
 
-### 8.2.1 归一化方程
-
-取 $\omega_{pe}=1$，固定离子，冷电子流体：
+取 \(c_s=1\)，离子有惯性，电子无惯性：
 
 $$
 \partial_t n+\partial_x(nu)=0,
 \qquad
-\partial_t u+u\,\partial_xu=-E-\nu u,
+\partial_t u+u\,\partial_xu
+=-\frac{1}{n}\partial_xn-\nu u,
 \qquad
-\partial_xE=1-n.
+E=-\frac{1}{n}\partial_xn.
 $$
 
-$n$ 是电子密度，$u$ 是电子速度，$E$ 是电场，$\nu$ 是唯象阻尼。压力、离子运动、磁场扰动都略去。
+\(n\) 是离子密度，\(u\) 是离子速度，\(E\) 是由电子压力平衡反推的 ambipolar 电场。电子动量方程在无惯性极限下给出 \(enE=-\partial_xp_e\)。
 
-### 8.2.2 线性化与色散
+### 8.1.2 色散
 
-令 $n=1+\delta n$，保留一阶项：
+线性化：
 
 $$
 \partial_t\delta n=-\partial_xu,
 \qquad
-\partial_tu=-E,
-\qquad
-\partial_xE=-\delta n.
-$$
-
-消去 $u,E$：
-
-$$
-\partial_t^2\delta n+\delta n=0
+\partial_tu=-\partial_x\delta n
 \quad\Longrightarrow\quad
-\omega^2=1=\omega_{pe}^2.
+\omega^2=k^2c_s^2.
 $$
 
-这是冷等离子体的 Langmuir 振荡：频率近似与波数无关。密度与电场有 90° 相位差。
+若解析 Debye 长度，低阶修正为
 
-### 8.2.3 初值与数值
+$$
+\omega^2=\frac{k^2c_s^2}{1+k^2\lambda_D^2}.
+$$
 
-初始条件：
+本演示不求解 Poisson 方程，因此画面里的 \(E\) 是 ambipolar 场，不是独立的静电势解。
+
+### 8.1.3 初值与数值
+
+右行波初值：
 
 $$
 n(x,0)=1+\delta\cos(kx),
 \qquad
-u(x,0)=0,
-\qquad
-E(x,0)=-\frac{\delta}{k}\sin(kx).
+u(x,0)=\delta\cos(kx).
 $$
 
-代码用 256 个周期网格点；连续性方程用迎风面通量，动量方程用迎风平流，电场由 $\partial_xE=1-n$ 累加并减去均值。时间步 $\Delta t=0.006$，每帧最多 3 步。增加振幅会看到非线性陡化；增加 $\nu$ 会看到衰减。模型没有 Landau 阻尼、电子热压或离子运动。
+256 个周期网格点；连续性用迎风面通量，动量用迎风平流；\(\Delta t=0.0018\)，每帧最多 3 步；另加少量数值扩散以抑制陡化后的网格噪声。\(\nu\) 是唯象离子—中性碰撞阻尼。
 
-## 8.3 Alfvén 波：二维不可压 MHD + 引导场
+## 8.2 1D 磁声波：可压缩理想 MHD
+
+### 8.2.1 方程
+
+磁场垂直于传播方向 \(x\)，变量为 \(\rho,u,B,E_{\rm tot}\)：
+
+$$
+\partial_t\rho+\partial_x(\rho u)=0,
+\qquad
+\partial_t(\rho u)+\partial_x\!\left(\rho u^2+p+\frac{B^2}{2}\right)=0,
+$$
+
+$$
+\partial_tB+\partial_x(uB)=0,
+\qquad
+\partial_tE_{\rm tot}
++\partial_x\!\left[\left(E_{\rm tot}+p+\frac{B^2}{2}\right)u\right]=0,
+$$
+
+$$
+E_{\rm tot}=\frac12\rho u^2+\frac{p}{\gamma-1}+\frac{B^2}{2},
+\qquad
+c_f^2=c_s^2+v_A^2.
+$$
+
+磁场垂直于 \(x\)，所以磁力只表现为磁压梯度，没有磁张力弯曲项。
+
+### 8.2.2 力预算
+
+$$
+\rho\frac{Du}{Dt}
+=-\partial_xp-\partial_x\!\left(\frac{B^2}{2}\right).
+$$
+
+画面下半部分同时画 \(\rho a\)、\(-\partial_xp\)、\(-\partial_x(B^2/2)\)，探针处给出三项数值。这样可以直接看到“惯性 = 压力梯度 + 磁压梯度”。
+
+### 8.2.3 HLL 与初值
+
+每个界面用 HLL 通量：
+
+$$
+\mathbf F_{\rm HLL}
+=\frac{S_R\mathbf F_L-S_L\mathbf F_R
++S_LS_R(\mathbf U_R-\mathbf U_L)}{S_R-S_L},
+$$
+
+其中 \(S_L=\min(u_L-c_{fL},u_R-c_{fR})\)，\(S_R=\max(u_L+c_{fL},u_R+c_{fR})\)。初始为均匀背景 + 中心压力脉冲：
+
+$$
+p=1+\delta e^{-((x-1/2)/\sigma)^2},
+\qquad
+\rho=1+0.15\,\delta e^{-((x-1/2)/\sigma)^2},
+\qquad
+B=B_0.
+$$
+
+256 格点；\(\Delta t=0.0008\)，每帧最多 3 步。
+
+## 8.3 2D 可压缩 MHD：磁化爆炸波与力探针
 
 ### 8.3.1 方程
 
 $$
-\partial_t\mathbf u+\mathbf u\cdot\nabla\mathbf u
-=-\nabla p+\nu\nabla^2\mathbf u+\alpha\mathbf J\times\mathbf B,
+\partial_t\rho+\nabla\cdot(\rho\mathbf u)=0,
 \qquad
-\nabla\cdot\mathbf u=0,
+\rho\left(\partial_t\mathbf u+\mathbf u\cdot\nabla\mathbf u\right)
+=-\nabla p+\mathbf J\times\mathbf B+\nu\nabla^2\mathbf u,
 $$
 
 $$
-\mathbf B=B_0\hat{\mathbf x}+\nabla\times(A\hat{\mathbf z}),
+\partial_tp+\mathbf u\cdot\nabla p=-\gamma p\,\nabla\cdot\mathbf u,
 \qquad
+\mathbf B=B_0\hat{\mathbf x}+\nabla\times(A\hat{\mathbf z}),
+$$
+
+$$
 \partial_tA+\mathbf u\cdot\nabla A=-B_0u_y+\eta\nabla^2A,
 \qquad
 J_z=-\nabla^2A.
 $$
 
-$A$ 是**扰动**磁通量函数；$B_0\hat x$ 是单独保留的均匀引导场。因此 $\nabla\cdot\mathbf B=0$ 自动成立，但磁力线是总场 $\mathbf B$ 的积分曲线，不是 $A$ 的闭合等值线。
+压力独立演化，不再由投影法充当拉格朗日乘子；\(A\) 保证 \(\nabla\cdot\mathbf B=0\)。\(B_0\hat{\mathbf x}\) 是均匀背景场，\(A\) 是扰动磁通量函数。
 
-### 8.3.2 线性 Alfvén 波
+### 8.3.2 初值
 
-只保留 $u_y$ 和 $A$ 的一阶项：
+中心压力脉冲 + 一个较宽的磁扰动：
 
 $$
-\partial_tA=-B_0u_y,
+p=1+0.90e^{-r^2/(2\sigma_p^2)},
 \qquad
-\partial_tu_y=\frac{B_0}{\rho}J_z
-=-\frac{B_0}{\rho}\nabla^2A.
-$$
-
-消去 $u_y$：
-
-$$
-\partial_t^2A
-=\frac{B_0^2}{\rho}\nabla^2A
-\quad\Longrightarrow\quad
-\omega^2=\frac{B_0^2}{\rho}k^2
-=v_A^2k^2.
-$$
-
-代码取 $\rho=1,\mu_0=1$，所以 $v_A=B_0$。横向速度与磁场扰动同相/反相，流体元做横向摆动，波沿 $B_0$ 传播。
-
-### 8.3.3 初值与数值
-
-取 $k=2\pi$、$A_0=0.06$、$B_0=0.55$：
-
-$$
-A(x,0)=A_0\cos(kx),
+A=0.25e^{-r^2/(2\sigma_A^2)},
 \qquad
-u_y(x,0)=-kA_0\sin(kx),
-\qquad
-u_x=0.
+\rho=1+0.12e^{-r^2/(2\sigma_\rho^2)}.
 $$
 
-这是向右传播的 Alfvén 波初值。二维网格 $128^2$，周期边界，$\Delta t=0.03$；洛伦兹力不做归一化（`fScale=1`），因此 $\alpha=1$ 对应物理耦合。磁力线用总场 $\mathbf B$ 的 RK2 积分曲线绘制，而不是 $A$ 的等值线。
+其中 \(\sigma_p=0.085\)，\(\sigma_A=0.25\)，\(\sigma_\rho=0.11\)。压力把流体向外推，磁张力/磁压向内拉。
+
+### 8.3.3 力探针
+
+在探针点计算：
+
+$$
+\mathbf f_p=-\nabla p,
+\qquad
+\mathbf f_L=\mathbf J\times\mathbf B,
+\qquad
+\rho\mathbf a=\mathbf f_p+\mathbf f_L.
+$$
+
+画面上的箭头分别是压力力、洛伦兹力和合力；侧栏显示 \(|\rho a|\)、\(|-\nabla p|\)、\(|\mathbf J\times\mathbf B|\)。点击画布可以移动探针。
+
+### 8.3.4 数值
+
+\(128^2\) 网格、周期边界、\(\Delta t=0.005\)。速度、密度和压力用半拉格朗日平流；源项用中心差分。压力扩散系数 \(5\times10^{-6}\)，粘性/电阻由滑块控制；\(A\) 每步做一次轻度低通以抑制网格噪声。半拉格朗日平流有数值扩散，不适合定量研究激波和湍流。
 
 ## 8.4 代码实现
 
 | 模型 / 步骤 | 代码位置 | 作用 |
 |---|---|---|
-| 静电波：连续性 | `initESWave()` 的 `step()` | 迎风面通量 + 密度更新 |
-| 静电波：动量 | `step()` | 迎风平流 $-E-\nu u$ |
-| 静电波：电场 | `solveE()` | 积分 $\partial_xE=1-n$，减均值 |
-| Alfvén：B, J | `derive()` | $B_x=B_0+\partial_yA$，$B_y=-\partial_xA$，$J_z=-\nabla^2A$ |
-| Alfvén：投影 | `project(dt, 12)` | 12 次 Jacobi + 压力校正 |
-| Alfvén：A 演化 | `step()` | 平流 $-B_0u_y$ + 电阻扩散 |
-| Alfvén：磁力线 | `drawGuideFieldLines()` | RK2 追踪总场 B 的积分曲线 |
+| 离子声波：连续性 | `initIonAcoustic()` 的 `step()` | 迎风面通量 + 密度更新 |
+| 离子声波：动量 | `step()` | 迎风平流 + \(E-\nu u\) |
+| 离子声波：电场 | `solveE()` | \(E=-(1/n)\partial_xn\) |
+| 磁声波：HLL 通量 | `hllFace()` | 快磁声波 Riemann 通量 |
+| 磁声波：一步 | `step()` | 守恒更新 + 正性限制 |
+| 磁声波：力预算 | `probeForce()` | \(-\partial_xp\) 与 \(-\partial_x(B^2/2)\) |
+| 2D MHD：B, J | `derive()` | \(B_x=B_0+\partial_yA\)，\(B_y=-\partial_xA\)，\(J_z=-\nabla^2A\) |
+| 2D MHD：一步 | `step()` | 平流 + 连续性/压力/动量源项 |
+| 2D MHD：力探针 | `probeValues()` / `drawProbe()` | 压力力、洛伦兹力、合力 |
 
-静电波的一步：
-
-```text
-uf = 0.5*(u[i] + u[i+1])
-flux[i] = uf > 0 ? n[i]*uf : n[i+1]*uf
-n_new[i] = n[i] - dt/dx*(flux[i] - flux[i-1])
-u_new[i] = u[i] + dt*(-u[i]*du_dx - E[i] - damp*u[i])
-solveE()
-```
-
-Alfvén 的一步：
+磁声波的 HLL 更新：
 
 ```text
-u = advect(u); v = advect(v)
-derive()                    // bx = B0 + dA/dy; by = -dA/dx; J = -lap(A)
-ax = alpha*J*(-by) + nu*lap(u)
-ay = alpha*J*( bx) + nu*lap(v)
-project(dt, 12)
-A = advect(A) + dt*(-B0*v + eta*lap(A))
-derive(); updateParticles(dt)
+SL = min(uL - cfL, uR - cfR)
+SR = max(uL + cfL, uR + cfR)
+F = (SR*FL - SL*FR + SL*SR*(UR - UL)) / (SR - SL)
+U[i] -= dt/dx*(F[i+1] - F[i])
 ```
 
-静电波的状态是 256 点的一维数组 `n,u,E`；Alfvén 的状态是 $128^2$ 的 `u,v,A,p,bx,by,J`。两个求解器都用周期边界，物理步进与渲染分离。
+2D MHD 的一步：
 
-## 8.5 数值细节与限制
+```text
+u = advect(u); v = advect(v); rho = advect(rho); p = advect(p)
+derive()                    // B = B0*xhat + curl(A), J = -lap(A)
+divu = d(u)/dx + d(v)/dy
+rho += -dt*rho*divu
+p   += -dt*gamma*p*divu + dt*kappa*lap(p)
+u   += dt*(-dp/dx + J*By + nu*lap(u))/rho
+v   += dt*(-dp/dy - J*Bx + nu*lap(v))/rho
+A   = advect(A) + dt*(-B0*v + eta*lap(A))
+```
 
-- 静电波：一阶迎风，256 点，$\Delta t=0.006$，每帧最多 3 步；有数值扩散。
-- Alfvén：128²，$\Delta t=0.03$，12 次 Jacobi 近似投影，半拉格朗日平流有数值扩散。
-- 静电波是冷电子、固定离子、静电近似；没有 Landau 阻尼、电子热压、离子运动。
-- Alfvén 是二维不可压单流体；压力只是投影乘子，没有密度/热力学/三维不稳定性。
-- 两者都是定性演示，不是定量预测。
+## 8.5 边界与读图
 
-## 8.6 读图
+- 离子声波：准中性、长波；无 Debye/Poisson、电子惯性、Landau 阻尼。
+- 1D 磁声波：理想 MHD；磁场垂直于 x，只有磁压，没有磁张力弯曲。
+- 2D MHD：半拉格朗日、可压缩、定性演示；不是激波捕捉。
+- 力探针：中心差分，探针值随网格尺度变化。
 
-**静电波：** 看密度条纹与电场曲线。密度条纹在原地振荡，电场与密度约有 90° 相位差；增加 $\delta$ 看非线性，增加 $\nu$ 看衰减。没有磁力线参与。
+**离子声波：** 看密度条纹与 E 的同相/反相关系；增加 \(\delta\) 看非线性，增加 \(\nu\) 看衰减。
 
-**Alfvén 波：** 先看横向速度/背景电流形成的条纹，再看磁力线是否像琴弦一样上下摆动。扰动沿 $B_0$ 传播；磁张力是恢复力。切换背景到电流密度，可以看波峰处的电流片；看示踪粒子，可以看到横向摆动。
+**磁声波：** 看三条剖面是否一起传播；看下方力预算中 \(\rho a\) 是否等于两条力曲线之和；改变 \(B_0\) 看法向速度 \(c_f\) 的变化。
 
-一句话：**静电波是“电场把电子拉回”，Alfvén 波是“磁张力把磁力线拉直”。**
+**2D MHD：** 先看压力背景的爆炸波前，再看探针箭头。压力力向外、洛伦兹力向内时，净加速度变小；这就是磁压/磁张力对动量方程的贡献。
+
+一句话：**离子声波让“压力 + 电场”可见，磁声波让“压力 + 磁压”可见，2D 探针让“\(-\nabla p+\mathbf J\times\mathbf B\)”可见。**
 
 
 # 9. 常见误区
