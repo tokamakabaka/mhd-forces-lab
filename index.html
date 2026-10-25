@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="从电磁场动量方程与 MHD 方程理解体积力/表面力，附离子声波、1D 磁声波、2D 可压缩 MHD 交互模拟、力预算探针与完整推导。">
+<meta name="description" content="从电磁场动量方程与 MHD 方程理解体积力/表面力，附二维磁声波、磁岛交互模拟、力探针与完整推导。">
 <meta property="og:title" content="体积力 × 表面力 | MHD 流体元实验室">
 <meta property="og:description" content="拖动滑块解剖流体元，实时观察热压力、粘滞力与电磁力如何在 MHD 动量方程中竞争。">
 <meta property="og:type" content="website">
@@ -799,9 +799,7 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
       <a href="#field-momentum">电磁场例子</a>
       <a href="#fluid-equation">MHD 方程</a>
       <a href="#element-lab">受力实验</a>
-      <a href="#ion-acoustic">离子声波</a>
-      <a href="#magnetosonic">磁声波</a>
-      <a href="#mhd2d">2D MHD</a>
+      <a href="#mhd2d">2D 沙盒</a>
       <a href="#sandbox-doc">模型详解</a>
       <a href="#scales">量级</a>
     </nav>
@@ -832,7 +830,7 @@ mjx-container[jax="SVG"] > svg{max-width:100%;height:auto}
           <a class="btn btn-ghost" href="#core">先看两本账</a>
         </div>
         <div class="hero-stats">
-          <div class="hero-stat"><b>05</b><span>可交互实验</span></div>
+          <div class="hero-stat"><b>03</b><span>可交互实验</span></div>
           <div class="hero-stat"><b>2D</b><span>实时 MHD 求解</span></div>
           <div class="hero-stat"><b>TeX</b><span>公式 · 离线可用</span></div>
         </div>
@@ -1648,181 +1646,7 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
           </div>
         </div>
       </div>
-      <p class="note" style="margin-top:12px">以上是磁约束几何的静态例子；本页的交互示例是离子声波、1D 磁声波与 2D 可压缩 MHD，见下方。</p>
-    </div>
-  </section>
-
-  <!-- ================= ION ACOUSTIC WAVE ================= -->
-  <section class="section" id="ion-acoustic">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="section-no">08</div>
-        <div>
-          <div class="kicker">Example 03 · ion acoustic wave</div>
-          <h2 class="section-title">离子声波：<span class="accent-cyan">电子压力驱动</span></h2>
-          <p class="section-lede">长波、准中性极限下，电子压力通过 ambipolar 电场把离子拉回；离子的惯性让扰动以声速传播。它比 Langmuir 波更接近“有质量的流体在压力下振动”的图像。</p>
-        </div>
-      </div>
-
-      <div class="class-strip">
-        <span class="chip c">准中性 · 长波极限</span>
-        <span class="chip a">电子压力 → 电场</span>
-        <span class="chip">ω ≈ k c_s（归一化 c_s = 1）</span>
-        <span class="chip">离子惯性 · 电子无惯性</span>
-      </div>
-
-      <div class="es-shell">
-        <div class="es-main">
-          <div class="es-canvas-frame">
-            <canvas id="esCanvas" width="900" height="430" aria-label="一维离子声波模拟：离子密度与 ambipolar 电场的时空演化"></canvas>
-            <div class="es-overlay">
-              <div class="sim-badge">t = <b id="esTime2">0.00</b><br>c_s = 1</div>
-              <div class="sim-badge" style="text-align:right">1D ion fluid<br>quasineutral</div>
-            </div>
-          </div>
-          <div class="es-legend">
-            <span><i></i>离子密度 n_i(x)</span>
-            <span><i></i>ambipolar 电场 E(x)</span>
-            <span style="color:var(--dim)">电子无惯性 · B ≈ 0</span>
-          </div>
-          <div class="es-metrics">
-            <div class="metric"><div class="m-label"><i style="background:var(--amber)"></i>max |E|</div><div class="m-value" id="esMaxE">—</div></div>
-            <div class="metric"><div class="m-label"><i style="background:var(--cyan)"></i>max |δn|</div><div class="m-value" id="esMaxN">—</div></div>
-            <div class="metric"><div class="m-label"><i style="background:var(--violet)"></i>时间 t</div><div class="m-value" id="esTime">0.00</div></div>
-          </div>
-        </div>
-
-        <aside class="card es-controls">
-          <div>
-            <div class="kicker" style="margin-bottom:6px">Controls</div>
-            <h3>控制离子声波</h3>
-            <p class="lede">振幅越大，非线性越明显；波数 m 改变密度条纹数；阻尼 ν 是唯象离子—中性碰撞项。长波极限下 ω ≈ k c_s。</p>
-          </div>
-
-          <div class="slider-stack">
-            <div>
-              <div class="slider-head"><label for="esAmp">初始振幅 δ</label><output id="esAmpOut">0.060</output></div>
-              <input class="range" id="esAmp" type="range" min="0.02" max="0.20" step="0.005" value="0.06">
-            </div>
-            <div>
-              <div class="slider-head"><label for="esMode">波数 m（条纹数）</label><output id="esModeOut">1</output></div>
-              <input class="range" id="esMode" type="range" min="1" max="4" step="1" value="1">
-            </div>
-            <div>
-              <div class="slider-head"><label for="esDamp">阻尼 ν</label><output id="esDampOut">0.0020</output></div>
-              <input class="range" id="esDamp" type="range" min="0" max="0.02" step="0.0005" value="0.002">
-            </div>
-          </div>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-ghost btn-small" type="button" id="esToggle">暂停</button>
-            <button class="btn btn-ghost btn-small" type="button" id="esReset">重置</button>
-            <span class="sim-status" id="esStatus">RUNNING</span>
-          </div>
-
-          <div class="es-formula math-block">\[
-            \partial_t n+\partial_x(nu)=0
-          \]</div>
-          <div class="es-formula math-block">\[
-            \partial_t u+u\,\partial_xu
-            =-\frac{1}{n}\partial_xn-\nu u
-          \]</div>
-          <div class="es-formula math-block">\[
-            E=-\frac{1}{n}\partial_xn
-            \qquad(\text{ambipolar})
-          \]</div>
-
-          <p class="es-note"><b>模型边界：</b>准中性、长波极限；离子有惯性，电子无惯性，电子压力由 ambipolar 电场平衡。没有 Debye 鞘、Landau 阻尼、电子惯性或磁场扰动。若解析 Debye 长度，色散关系为 \(\omega^2=k^2c_s^2/(1+k^2\lambda_D^2)\)。</p>
-          <a class="tiny-note" href="#sandbox-doc" style="color:var(--amber)">三个模型的完整说明 ↓</a>
-        </aside>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= MAGNETOSONIC WAVE ================= -->
-  <section class="section" id="magnetosonic">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="section-no">09</div>
-        <div>
-          <div class="kicker">Example 04 · compressible MHD wave</div>
-          <h2 class="section-title">磁声波：<span class="accent-cyan">压力与磁压一起驱动</span></h2>
-          <p class="section-lede">一维可压缩 MHD，磁场垂直于传播方向。密度、压力、速度和磁场都真实演化；压力梯度与磁压梯度共同推动流体，波以快磁声速度 \(c_f\) 传播。</p>
-        </div>
-      </div>
-
-      <div class="class-strip">
-        <span class="chip c">可压缩 · 密度和压力演化</span>
-        <span class="chip a">快磁声波</span>
-        <span class="chip">c_f² = c_s² + v_A²</span>
-        <span class="chip">HLL 有限体积 · 力预算</span>
-      </div>
-
-      <div class="es-shell">
-        <div class="es-main">
-          <div class="es-canvas-frame">
-            <canvas id="magCanvas" width="900" height="430" aria-label="一维可压缩 MHD 磁声波：密度、压力、磁场剖面与力预算"></canvas>
-            <div class="es-overlay">
-              <div class="sim-badge">t = <b id="magTime2">0.00</b><br>γ = 5/3</div>
-              <div class="sim-badge" style="text-align:right">1D ideal MHD<br>HLL · periodic</div>
-            </div>
-          </div>
-          <div class="es-legend">
-            <span><i></i>密度 ρ/ρ₀</span>
-            <span><i></i>压力 p/p₀</span>
-            <span><i></i>磁场 B/B₀</span>
-            <span style="color:var(--dim)">力预算：ρa / −∂ₓp / −∂ₓ(B²/2)</span>
-          </div>
-          <div class="es-metrics">
-            <div class="metric"><div class="m-label"><i style="background:var(--cyan)"></i>max |u|</div><div class="m-value" id="magMaxU">—</div></div>
-            <div class="metric"><div class="m-label"><i style="background:var(--amber)"></i>max c_f</div><div class="m-value" id="magCf">—</div></div>
-            <div class="metric"><div class="m-label"><i style="background:var(--violet)"></i>时间 t</div><div class="m-value" id="magTime">0.00</div></div>
-          </div>
-          <div class="tiny-note" id="magProbe">探针：点击上图选择 x</div>
-        </div>
-
-        <aside class="card es-controls">
-          <div>
-            <div class="kicker" style="margin-bottom:6px">Controls</div>
-            <h3>控制磁声波</h3>
-            <p class="lede">B₀ 是垂直于传播方向的均匀背景场；压力脉冲会分裂成左右传播的快磁声波。下方力预算把动量方程的三项拆开。</p>
-          </div>
-
-          <div class="slider-stack">
-            <div>
-              <div class="slider-head"><label for="magB0">背景场 B₀</label><output id="magB0Out">0.70</output></div>
-              <input class="range" id="magB0" type="range" min="0.20" max="1.50" step="0.05" value="0.70">
-            </div>
-            <div>
-              <div class="slider-head"><label for="magAmp">压力脉冲 δ</label><output id="magAmpOut">0.120</output></div>
-              <input class="range" id="magAmp" type="range" min="0.02" max="0.30" step="0.005" value="0.12">
-            </div>
-          </div>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-ghost btn-small" type="button" id="magToggle">暂停</button>
-            <button class="btn btn-ghost btn-small" type="button" id="magReset">重置</button>
-            <span class="sim-status" id="magStatus">RUNNING</span>
-          </div>
-
-          <div class="es-formula math-block">\[
-            \partial_t\rho+\partial_x(\rho u)=0
-          \]</div>
-          <div class="es-formula math-block">\[
-            \partial_t(\rho u)+\partial_x\!\left(\rho u^2+p+\frac{B^2}{2}\right)=0
-          \]</div>
-          <div class="es-formula math-block">\[
-            \partial_tB+\partial_x(uB)=0
-          \]</div>
-          <div class="es-formula math-block">\[
-            \rho\frac{Du}{Dt}
-            =-\partial_xp-\partial_x\!\left(\frac{B^2}{2}\right)
-          \]</div>
-
-          <p class="es-note"><b>模型边界：</b>一维理想 MHD，磁场垂直于 x；因此只有磁压、没有磁张力弯曲项。HLL 有限体积可以处理激波；但这是定性演示，不是定量求解器。力预算中的 \(\rho a\) 由动量方程残差计算。</p>
-          <a class="tiny-note" href="#sandbox-doc" style="color:var(--amber)">三个模型的完整说明 ↓</a>
-        </aside>
-      </div>
+      <p class="note" style="margin-top:12px">以上是磁约束几何的静态例子；本页的交互示例是二维磁声波与磁岛，见下方 2D 沙盒。</p>
     </div>
   </section>
 
@@ -1830,11 +1654,11 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
   <section class="section" id="mhd2d">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">10</div>
+        <div class="section-no">08</div>
         <div>
-          <div class="kicker">Example 05 · 2D compressible MHD</div>
-          <h2 class="section-title">2D 可压缩 MHD：<span class="accent-cyan">磁化爆炸波</span></h2>
-          <p class="section-lede">中心压力脉冲驱动一个向外传播的爆炸波，均匀背景磁场被流场弯曲。密度、压力、速度和磁场都演化；点击画布放置力探针，直接比较压力梯度与洛伦兹力。</p>
+          <div class="kicker">Example 03 · 2D compressible MHD</div>
+          <h2 class="section-title">2D 沙盒：<span class="accent-cyan">磁声波与磁岛</span></h2>
+          <p class="section-lede">两个共享同一套 2D 可压缩 MHD 方程的初值：均匀背景场中的磁声波脉冲，以及由磁通量函数形成的磁岛链。点击画布放置力探针，比较压力梯度与洛伦兹力。</p>
         </div>
       </div>
 
@@ -1856,12 +1680,12 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
           \qquad
           J_z=-\nabla^2A
         \]</div>
-        <p class="note" style="margin-top:10px">压力<strong>独立演化</strong>，不再由投影法充当拉格朗日乘子；\(A\) 保证 \(\nabla\cdot\mathbf B=0\)。这是一个半拉格朗日、定性演示的可压缩 MHD 模型，重点是让动量方程各项在探针处可见。</p>
+        <p class="note" style="margin-top:10px">压力<strong>独立演化</strong>，不再由投影法充当拉格朗日乘子；\(A\) 保证 \(\nabla\cdot\mathbf B=0\)。两个预设共用同一求解器：<b>磁声波</b>是均匀 \(B_0\) 上的压力脉冲；<b>磁岛</b>取 \(B_0=0\)、\(A=A_0\cos x+\varepsilon\cos y\)，并用 \(p+\frac12B^2\approx\) 常数初始化。重点仍然是让动量方程各项在探针处可见。</p>
       </div>
 
       <div class="sim-card">
         <div class="sim-head">
-          <div class="sim-title"><span class="live-dot" id="simLiveDot"></span><span>2D COMPRESSIBLE MHD</span><small>2D · N = 128² · FORCE PROBE</small><span class="sim-status" id="simStatus">RUNNING</span></div>
+          <div class="sim-title"><span class="live-dot" id="simLiveDot"></span><span>2D MHD LAB</span><small>2D · N = 128² · FORCE PROBE</small><span class="sim-status" id="simStatus">RUNNING</span></div>
           <div class="sim-head-right">
             <button class="btn btn-ghost btn-small" type="button" id="simToggle">
               <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="5" width="3.4" height="14" rx="1"/><rect x="13.6" y="5" width="3.4" height="14" rx="1"/></svg>
@@ -1878,7 +1702,8 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
 
         <div class="sim-toolbar no-print" style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:12px 19px;border-bottom:1px solid var(--line);background:rgba(5,10,18,.25)">
           <span class="panel-label" style="margin:0 3px 0 0">Example</span>
-          <span class="preset active" style="cursor:default">磁化爆炸波</span>
+          <button class="preset active" type="button" data-sim-preset="magnetosonic">磁声波</button>
+          <button class="preset" type="button" data-sim-preset="island">磁岛</button>
           <a class="preset" href="#sandbox-doc" style="text-decoration:none">模型详解 ↓</a>
           <span style="flex:1"></span>
           <span class="tiny-note">单击画布：放置力探针</span>
@@ -1887,7 +1712,7 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
         <div class="sim-body">
           <div class="sim-stage">
             <div class="sim-canvas-wrap" id="simCanvasWrap">
-              <canvas id="mhdCanvas" width="800" height="800" aria-label="二维可压缩 MHD 磁化爆炸波：均匀背景磁场、密度、压力、磁场线、示踪粒子与力探针。单击画布放置力探针。"></canvas>
+              <canvas id="mhdCanvas" width="800" height="800" aria-label="二维可压缩 MHD 沙盒：磁声波与磁岛。显示密度、压力、磁场线、示踪粒子与力探针。单击画布放置力探针。"></canvas>
               <div class="sim-overlay">
                 <div class="sim-badge">t = <b id="simTime">0.00</b><br>dt = 0.005</div>
                 <div class="sim-badge" style="text-align:right">E<sub>kin</sub> <b id="simKinBadge">0.000</b><br>E<sub>mag</sub> <b id="simMagBadge">0.000</b></div>
@@ -1950,144 +1775,57 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
           <div class="metric"><div class="m-label"><i style="background:var(--amber)"></i>max |J|</div><div class="m-value" id="simMaxJ">0.000</div></div>
           <div class="metric"><div class="m-label"><i style="background:var(--violet)"></i>max |u|</div><div class="m-value" id="simMaxU">0.000</div></div>
         </div>
-        <div class="sim-note"><b>例子说明：</b><span id="simDesc">磁化爆炸波：中心压力脉冲在均匀背景场 B0 中膨胀，磁场被弯曲；压力梯度向外推，洛伦兹力向内拉。单击画布放置力探针，比较 −∇p 与 J×B。</span> &nbsp; <b>模型：</b>∂ρ/∂t + ∇·(ρu) = 0，ρ(∂u/∂t + u·∇u) = −∇p + J×B + ν∇²u，∂p/∂t + u·∇p = −γp∇·u，B = B0x̂ + ∇×(Aẑ)，∂A/∂t + u·∇A = −B0uy + η∇²A，Jz = −∇²A。二维可压缩、无量纲、半拉格朗日定性演示；不是激波捕捉求解器。</div>
+        <div class="sim-note"><b>例子说明：</b><span id="simDesc">磁声波：均匀背景场中的压力脉冲，磁场被流场弯曲；压力梯度与洛伦兹力共同驱动。</span> &nbsp; <b>模型：</b>∂ρ/∂t + ∇·(ρu) = 0，ρ(∂u/∂t + u·∇u) = −∇p + J×B + ν∇²u，∂p/∂t + u·∇p = −γp∇·u，B = B0x̂ + ∇×(Aẑ)，∂A/∂t + u·∇A = −B0uy + η∇²A，Jz = −∇²A。二维可压缩、无量纲、半拉格朗日定性演示；磁岛预设用 B0=0 与 A=A0cos x+εcos y。</div>
       </div>
     </div>
   </section>
 
-  <!-- ================= WAVE & SANDBOX DOCUMENTATION ================= -->
+  <!-- ================= 2D MHD DOCUMENTATION ================= -->
   <section class="section" id="sandbox-doc">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">11</div>
+        <div class="section-no">09</div>
         <div>
-          <div class="kicker">Three models · equations · code</div>
-          <h2 class="section-title">三个模型：<span class="accent-cyan">物理、方程与代码</span></h2>
-          <p class="section-lede">从“有压力的离子流体”，到“可压缩 MHD 磁声波”，再到“带力探针的二维 MHD”。这一节把三个模型的物理图像、方程、数值方法和代码对应关系讲清楚。</p>
+          <div class="kicker">2D MHD · two examples</div>
+          <h2 class="section-title">2D 沙盒：<span class="accent-cyan">磁声波与磁岛</span></h2>
+          <p class="section-lede">两个初值，共用同一套二维可压缩 MHD 方程。磁声波展示压力脉冲如何弯曲均匀磁场；磁岛展示闭合磁面、X 点和总压平衡。</p>
         </div>
       </div>
 
       <div class="doc-layout">
         <aside class="card doc-toc">
           <div class="kicker" style="margin-bottom:7px">On this page</div>
-          <h3>模型文档</h3>
-          <a href="#doc-compare">1. 三个模型对照</a>
-          <a href="#doc-ion">2. 离子声波</a>
-          <a href="#doc-mag">3. 1D 磁声波</a>
-          <a href="#doc-mhd2d">4. 2D 可压缩 MHD</a>
+          <h3>2D 模型文档</h3>
+          <a href="#doc-compare">1. 两个例子对照</a>
+          <a href="#doc-mhd2d">2. 方程与数值</a>
+          <a href="#doc-magwave">3. 磁声波初值</a>
+          <a href="#doc-island">4. 磁岛平衡</a>
           <a href="#doc-code">5. 代码实现</a>
-          <a href="#doc-limits">6. 数值边界与读图</a>
+          <a href="#doc-limits">6. 边界与读图</a>
           <div class="doc-note">完整推导与 PDF 版见 <a href="MHD-notes.pdf" style="color:var(--amber)">MHD-notes.pdf</a> 第 8 节。</div>
         </aside>
 
         <div class="doc-content">
           <details class="doc-block" id="doc-compare" open>
-            <summary><span class="num">01</span>三个模型：各自回答什么问题<span class="arrow">+</span></summary>
+            <summary><span class="num">01</span>两个例子：波与拓扑<span class="arrow">+</span></summary>
             <div class="doc-body">
               <table class="doc-table">
-                <thead><tr><th></th><th>离子声波</th><th>1D 磁声波</th><th>2D 可压缩 MHD</th></tr></thead>
+                <thead><tr><th></th><th>磁声波</th><th>磁岛</th></tr></thead>
                 <tbody>
-                  <tr><td>恢复力</td><td>电子压力 / ambipolar E</td><td>压力 + 磁压</td><td>压力 + 洛伦兹力</td></tr>
-                  <tr><td>维数</td><td>1D</td><td>1D</td><td>2D</td></tr>
-                  <tr><td>可压缩？</td><td>是</td><td>是</td><td>是</td></tr>
-                  <tr><td>磁场</td><td>无（静电极限）</td><td>垂直背景场</td><td>由 A 演化</td></tr>
-                  <tr><td>关键诊断</td><td>密度、E</td><td>剖面 + 力预算</td><td>力探针 + 场线</td></tr>
-                  <tr><td>数值方法</td><td>迎风有限体积</td><td>HLL 有限体积</td><td>半拉格朗日</td></tr>
+                  <tr><td>初值</td><td>均匀 \(B_0\hat x\) + 中心压力脉冲</td><td>\(B_0=0\)，\(A=A_0\cos x+\varepsilon\cos y\)</td></tr>
+                  <tr><td>磁场线</td><td>总场 \(\mathbf B\) 的流线</td><td>\(A\) 的等值线（闭合岛）</td></tr>
+                  <tr><td>主要物理</td><td>压力梯度 + 洛伦兹力驱动快磁声波</td><td>闭合磁面、X 点、总压平衡</td></tr>
+                  <tr><td>力探针</td><td>压力脉冲前缘的 \(-\nabla p\) 与 \(\mathbf J\times\mathbf B\)</td><td>岛内侧与 X 点附近的力平衡</td></tr>
+                  <tr><td>观察</td><td>磁场被波弯曲，波向外传播</td><td>磁力线闭合/开放，电流片在 X 点附近</td></tr>
                 </tbody>
               </table>
-              <p><b>离子声波</b>回答“有质量的离子在电子压力下如何振动”；<b>1D 磁声波</b>回答“压力梯度与磁压梯度如何共同驱动可压缩波”；<b>2D MHD</b>回答“在二维磁化爆炸波里，某一点的加速度由哪些力提供”。</p>
-              <div class="doc-warning"><b>边界：</b>离子声波是准中性、长波极限，不是完整静电动力学；2D 模型是半拉格朗日定性演示，不是激波捕捉。它们的目标是让动量方程可见，而不是替代工程求解器。</div>
-            </div>
-          </details>
-
-          <details class="doc-block" id="doc-ion">
-            <summary><span class="num">02</span>离子声波：模型、色散与电场<span class="arrow">+</span></summary>
-            <div class="doc-body">
-              <h4>2.1 方程</h4>
-              <p>取 \(c_s=1\)，离子有惯性，电子无惯性；电子压力由 ambipolar 电场平衡：</p>
-              <div class="math-block">\[
-                \partial_t n+\partial_x(nu)=0,
-                \qquad
-                \partial_t u+u\,\partial_xu
-                =-\frac{1}{n}\partial_xn-\nu u,
-                \qquad
-                E=-\frac{1}{n}\partial_xn.
-              \]</div>
-              <p>这里 \(n\) 是离子密度，\(u\) 是离子速度，\(E\) 是由电子压力梯度反推的 ambipolar 电场。电子动量方程在无惯性极限下给出 \(e n E=-\partial_xp_e\)。</p>
-
-              <h4>2.2 线性色散</h4>
-              <p>令 \(n=1+\delta n\)：</p>
-              <div class="math-block">\[
-                \partial_t\delta n=-\partial_xu,
-                \qquad
-                \partial_tu=-\partial_x\delta n
-                \quad\Longrightarrow\quad
-                \omega^2=k^2c_s^2.
-              \]</div>
-              <p>若保留 Debye 长度，色散修正为：</p>
-              <div class="math-block">\[
-                \omega^2=\frac{k^2c_s^2}{1+k^2\lambda_D^2}.
-              \]</div>
-              <p>本演示使用长波、准中性极限，所以不解析 Debye 鞘；画面里的 \(E\) 是 ambipolar 场，不是由 Poisson 方程独立求出的。</p>
-
-              <h4>2.3 初值与数值</h4>
-              <p>初始取右行波：</p>
-              <div class="math-block">\[
-                n(x,0)=1+\delta\cos(kx),
-                \qquad
-                u(x,0)=\delta\cos(kx).
-              \]</div>
-              <p>256 个周期网格点；连续性用迎风面通量，动量用迎风平流；\(\Delta t=0.0018\)，每帧最多 3 步。\(\nu\) 是唯象离子—中性碰撞阻尼。</p>
-            </div>
-          </details>
-
-          <details class="doc-block" id="doc-mag">
-            <summary><span class="num">03</span>1D 磁声波：可压缩 MHD 与力预算<span class="arrow">+</span></summary>
-            <div class="doc-body">
-              <h4>3.1 方程</h4>
-              <p>一维理想 MHD，磁场垂直于传播方向 \(x\)。变量为 \(\rho,u,B,E_{\rm tot}\)：</p>
-              <div class="math-block">\[
-                \partial_t\rho+\partial_x(\rho u)=0,
-                \qquad
-                \partial_t(\rho u)+\partial_x\!\left(\rho u^2+p+\frac{B^2}{2}\right)=0,
-              \]</div>
-              <div class="math-block">\[
-                \partial_tB+\partial_x(uB)=0,
-                \qquad
-                \partial_tE_{\rm tot}
-                +\partial_x\!\left[\left(E_{\rm tot}+p+\frac{B^2}{2}\right)u\right]=0,
-              \]</div>
-              <div class="math-block">\[
-                E_{\rm tot}=\frac12\rho u^2+\frac{p}{\gamma-1}+\frac{B^2}{2},
-                \qquad
-                c_f^2=c_s^2+v_A^2.
-              \]</div>
-              <p>因为磁场垂直于 \(x\)，磁力只表现为磁压梯度；没有磁张力弯曲项。快磁声波把压力扰动和磁压扰动绑在一起。</p>
-
-              <h4>3.2 力预算</h4>
-              <div class="math-block">\[
-                \rho\frac{Du}{Dt}
-                =-\partial_xp-\partial_x\!\left(\frac{B^2}{2}\right).
-              \]</div>
-              <p>画面下半部分把 \(\rho a\)、\(-\partial_xp\)、\(-\partial_x(B^2/2)\) 三条曲线画在一起；探针处显示三项数值。这样可以直接看到“惯性 = 压力梯度 + 磁压梯度”。</p>
-
-              <h4>3.3 初值与数值</h4>
-              <p>初始为均匀背景 + 中心压力脉冲：</p>
-              <div class="math-block">\[
-                p=1+\delta e^{-((x-1/2)/\sigma)^2},
-                \qquad
-                \rho=1+0.15\,\delta e^{-((x-1/2)/\sigma)^2},
-                \qquad
-                B=B_0.
-              \]</div>
-              <p>256 格点；HLL 有限体积；\(\Delta t=0.0008\)，每帧最多 3 步。HLL 可以处理激波，但这里的初始脉冲较平滑，重点在力预算而不是激波分辨率。</p>
+              <div class="doc-warning"><b>共同点：</b>两者都用同一套二维可压缩 MHD 方程、同一套力探针。区别只在初值：一个从均匀场+压力脉冲出发，一个从磁通量函数的岛链平衡出发。</div>
             </div>
           </details>
 
           <details class="doc-block" id="doc-mhd2d">
-            <summary><span class="num">04</span>2D 可压缩 MHD：爆炸波与力探针<span class="arrow">+</span></summary>
+            <summary><span class="num">02</span>方程与数值：压力独立演化<span class="arrow">+</span></summary>
             <div class="doc-body">
-              <h4>4.1 方程</h4>
               <div class="math-block">\[
                 \partial_t\rho+\nabla\cdot(\rho\mathbf u)=0,
                 \qquad
@@ -2103,62 +1841,67 @@ n\mathbf F-\nabla p-\nabla\cdot\overleftrightarrow{\Pi}+\mathbf R</pre>
                 \qquad
                 J_z=-\nabla^2A.
               \]</div>
-              <p>压力独立演化，不再由投影法充当拉格朗日乘子；\(A\) 是扰动磁通量函数，\(B_0\hat x\) 是均匀背景场。这是一个<strong>半拉格朗日</strong>可压缩模型：标量用后向轨迹插值，源项用中心差分。</p>
+              <p>压力是独立演化的热力学量，不再用投影法充当拉格朗日乘子；\(A\) 保证 \(\nabla\cdot\mathbf B=0\)。磁声波取 \(B_0>0\)，磁岛取 \(B_0=0\)。</p>
 
-              <h4>4.2 初值：磁化爆炸波</h4>
-              <p>中心压力脉冲 + 一个较宽的磁扰动：</p>
+              <h4>数值</h4>
+              <p>\(128^2\) 网格、周期边界、\(\Delta t=0.005\)。速度、密度、压力用半拉格朗日平流；源项用中心差分。压力扩散系数 \(5\times10^{-6}\)；粘性 \(\nu\)、电阻 \(\eta\) 由滑块控制；\(A\) 每步做一次轻度低通以抑制网格噪声。半拉格朗日平流有数值扩散，不是激波捕捉求解器。</p>
+            </div>
+          </details>
+
+          <details class="doc-block" id="doc-magwave">
+            <summary><span class="num">03</span>磁声波：均匀场 + 压力脉冲<span class="arrow">+</span></summary>
+            <div class="doc-body">
+              <p>取均匀背景场 \(B_0\hat x\)，在中心加一个压力/密度脉冲，速度为零：</p>
               <div class="math-block">\[
-                p=1+0.90e^{-r^2/(2\sigma_p^2)},
+                p=1+0.60e^{-r^2/(2\sigma_p^2)},
                 \qquad
-                A=0.25e^{-r^2/(2\sigma_A^2)},
+                \rho=1+0.08e^{-r^2/(2\sigma_\rho^2)},
                 \qquad
-                \rho=1+0.12e^{-r^2/(2\sigma_\rho^2)}.
+                A=0,
+                \qquad
+                \sigma_p=0.10,\ \sigma_\rho=0.12.
               \]</div>
-              <p>其中 \(\sigma_p=0.085\)、\(\sigma_A=0.25\)、\(\sigma_\rho=0.11\)。压力把流体向外推，磁张力/磁压向内拉；爆炸波前经过探针时，\(-\nabla p\) 与 \(\mathbf J\times\mathbf B\) 的竞争会被记录在侧栏。</p>
+              <p>压力梯度向外推，磁场被流场弯曲；扰动以快磁声速度传播。磁力线用总场 \(\mathbf B\) 的 RK2 积分曲线绘制。力探针可比较 \(-\nabla p\)、\(\mathbf J\times\mathbf B\) 与 \(\rho\mathbf a\)。</p>
+              <p>线性极限下，垂直传播的快磁声速度满足 \(c_f^2=c_s^2+v_A^2\)。这里是非线性脉冲，所以波前会陡化。</p>
+            </div>
+          </details>
 
-              <h4>4.3 力探针</h4>
-              <p>在探针点计算：</p>
+          <details class="doc-block" id="doc-island">
+            <summary><span class="num">04</span>磁岛：闭合磁面、X 点与总压平衡<span class="arrow">+</span></summary>
+            <div class="doc-body">
+              <p>取 \(B_0=0\)，用二维磁通量函数造一个岛链：</p>
               <div class="math-block">\[
-                \mathbf f_p=-\nabla p,
+                A=A_0\cos(2\pi x)+\varepsilon\cos(2\pi y),
                 \qquad
-                \mathbf f_L=\mathbf J\times\mathbf B,
-                \qquad
-                \rho\mathbf a=\mathbf f_p+\mathbf f_L.
+                A_0=0.10,\ \varepsilon=0.10.
               \]</div>
-              <p>画面上的箭头分别是压力力、洛伦兹力和合力；侧栏显示 \(|\rho a|\)、\(|-\nabla p|\)、\(|\mathbf J\times\mathbf B|\)。点击画布可以移动探针。</p>
-
-              <h4>4.4 数值参数</h4>
-              <p>\(128^2\) 网格、周期边界、\(\Delta t=0.005\)；压力扩散系数 \(5\times10^{-6}\)；粘性 \(\nu\)、电阻 \(\eta\) 由滑块控制；\(A\) 每步做一次轻度低通以抑制网格噪声。半拉格朗日平流有数值扩散，不适合定量研究激波和湍流。</p>
+              <p>则 \(\mathbf B=\nabla\times(A\hat z)\)，磁力线是 \(A\) 的等值线。\(A\) 的局部极大/极小对应 O 点，鞍点对应 X 点；闭合等值线就是磁岛。</p>
+              <p>初始压力取近似总压平衡：</p>
+              <div class="math-block">\[
+                p=1.15-\frac12\left(B^2-\langle B^2\rangle\right),
+              \]</div>
+              <p>其中 \(\langle B^2\rangle\) 是全域平均。这样 \(p+\frac12B^2\) 近似为常数，磁岛不会立刻被压力梯度摧毁；但仍会因数值扩散和半拉格朗日误差缓慢演化。</p>
+              <p><b>注意：</b>这是磁岛<strong>平衡</strong>演示，不是撕裂模增长计算；没有电阻 tearing 不稳定性、没有动理学效应。</p>
             </div>
           </details>
 
           <details class="doc-block" id="doc-code">
-            <summary><span class="num">05</span>代码实现：三个求解器的对应关系<span class="arrow">+</span></summary>
+            <summary><span class="num">05</span>代码实现：一套求解器，两个初值<span class="arrow">+</span></summary>
             <div class="doc-body">
               <table class="doc-table">
-                <thead><tr><th>模型 / 步骤</th><th>代码位置</th><th>作用</th></tr></thead>
+                <thead><tr><th>步骤</th><th>代码位置</th><th>作用</th></tr></thead>
                 <tbody>
-                  <tr><td>离子声波：连续性</td><td><code>initIonAcoustic()</code> 的 <code>step()</code></td><td>迎风面通量 + 密度更新</td></tr>
-                  <tr><td>离子声波：动量</td><td><code>step()</code></td><td>迎风平流 + E − νu</td></tr>
-                  <tr><td>离子声波：电场</td><td><code>solveE()</code></td><td>\(E=-(1/n)\partial_xn\)</td></tr>
-                  <tr><td>磁声波：HLL 通量</td><td><code>hllFace()</code></td><td>快磁声波 Riemann 通量</td></tr>
-                  <tr><td>磁声波：一步</td><td><code>step()</code></td><td>守恒更新 + 正性限制</td></tr>
-                  <tr><td>磁声波：力预算</td><td><code>probeForce()</code></td><td>−∂ₓp 与 −∂ₓ(B²/2)</td></tr>
-                  <tr><td>2D MHD：B, J</td><td><code>derive()</code></td><td>B = B0x̂ + ∇×(Aẑ)，J = −∇²A</td></tr>
-                  <tr><td>2D MHD：一步</td><td><code>step()</code></td><td>平流 + 连续性/压力/动量源项</td></tr>
-                  <tr><td>2D MHD：力探针</td><td><code>probeValues()</code> / <code>drawProbe()</code></td><td>压力力、洛伦兹力、合力</td></tr>
+                  <tr><td>初值分发</td><td><code>reset(presetName)</code></td><td><code>magnetosonic</code> / <code>island</code></td></tr>
+                  <tr><td>B, J</td><td><code>derive()</code></td><td>\(B_x=B_0+\partial_yA\)，\(B_y=-\partial_xA\)，\(J_z=-\nabla^2A\)</td></tr>
+                  <tr><td>速度/密度/压力</td><td><code>step()</code></td><td>半拉格朗日平流 + 连续性/压力源项</td></tr>
+                  <tr><td>动量源</td><td><code>step()</code></td><td>\(-\nabla p+\mathbf J\times\mathbf B\) + 粘性</td></tr>
+                  <tr><td>A 演化</td><td><code>step()</code></td><td>\(-B_0u_y+\eta\nabla^2A\) + 低通</td></tr>
+                  <tr><td>力探针</td><td><code>probeValues()</code> / <code>drawProbe()</code></td><td>压力力、洛伦兹力、合力</td></tr>
+                  <tr><td>磁场线</td><td><code>drawFieldLines()</code></td><td>有 \(B_0\) 用流线，无 \(B_0\) 用 \(A\) 等值线</td></tr>
                 </tbody>
               </table>
 
-              <h4>磁声波的 HLL 通量（伪代码）</h4>
-              <pre class="doc-code"><span class="cm">// left/right states at face i</span>
-SL = min(uL - cfL, uR - cfR)
-SR = max(uL + cfL, uR + cfR)
-F = (SR*FL - SL*FR + SL*SR*(UR - UL)) / (SR - SL)
-U[i] -= dt/dx*(F[i+1] - F[i])</pre>
-
-              <h4>2D MHD 的一步（伪代码）</h4>
-              <pre class="doc-code"><span class="cm">// advect velocity and scalars</span>
+              <pre class="doc-code"><span class="cm">// one step (sketch)</span>
 u = advect(u); v = advect(v); rho = advect(rho); p = advect(p)
 derive()                    <span class="cm">// B = B0*xhat + curl(A), J = -lap(A)</span>
 divu = d(u)/dx + d(v)/dy
@@ -2166,25 +1909,25 @@ rho += -dt*rho*divu
 p   += -dt*gamma*p*divu + dt*kappa*lap(p)
 u   += dt*(-dp/dx + J*By + nu*lap(u))/rho
 v   += dt*(-dp/dy - J*Bx + nu*lap(v))/rho
-A   = advect(A) + dt*(-B0*v + eta*lap(A))</pre>
+A   = advect(A) + dt*(-B0*v + eta*lap(A))
+A   = lowpass(A)</pre>
 
-              <p>三个求解器都保持状态与渲染分离；离子声波和磁声波是 1D 有限体积，2D MHD 是半拉格朗日 + 源项。代码里没有使用投影法来求压力；2D 的压力是独立演化的热力学量。</p>
+              <p>切换预设时，<code>guideB0</code> 和初值一起切换：磁声波设 \(B_0=0.9\)，磁岛设 \(B_0=0\)。力探针与显示模式不变，因此两个例子可以直接对比。</p>
             </div>
           </details>
 
           <details class="doc-block" id="doc-limits">
-            <summary><span class="num">06</span>数值边界与读图<span class="arrow">+</span></summary>
+            <summary><span class="num">06</span>边界与读图<span class="arrow">+</span></summary>
             <div class="doc-body">
               <div class="doc-grid">
-                <div class="doc-mini"><div class="k">ION ACOUSTIC</div><div class="v">准中性、长波；无 Debye/Poisson、无电子惯性。</div></div>
-                <div class="doc-mini"><div class="k">MAGNETOSONIC</div><div class="v">1D 理想 MHD；HLL 有数值扩散。</div></div>
-                <div class="doc-mini"><div class="k">2D MHD</div><div class="v">半拉格朗日、可压缩；不是激波捕捉求解器。</div></div>
-                <div class="doc-mini"><div class="k">FORCE PROBE</div><div class="v">中心差分；探针值随网格尺度变化。</div></div>
+                <div class="doc-mini"><div class="k">方法</div><div class="v">半拉格朗日平流 + 中心差分源项；有数值扩散。</div></div>
+                <div class="doc-mini"><div class="k">压力</div><div class="v">独立演化；磁岛用近似总压平衡初始化。</div></div>
+                <div class="doc-mini"><div class="k">磁岛</div><div class="v">平衡/缓慢演化，不是 tearing 增长计算。</div></div>
+                <div class="doc-mini"><div class="k">探针</div><div class="v">中心差分，数值随网格尺度变化。</div></div>
               </div>
-              <p><b>离子声波：</b>看密度条纹与 E 的同相/反相关系；增加 \(\delta\) 看非线性，增加 \(\nu\) 看衰减。</p>
-              <p><b>磁声波：</b>看三条剖面是否一起传播；看下方力预算中 \(\rho a\) 是否等于两条力曲线之和；改变 \(B_0\) 看法向速度 \(c_f\) 的变化。</p>
-              <p><b>2D MHD：</b>先看压力背景的爆炸波前，再看探针箭头。压力力向外、洛伦兹力向内时，净加速度变小；这就是磁压/磁张力对动量方程的贡献。</p>
-              <div class="doc-warning"><b>重要：</b>这些模型是为了让“表面力/体积力/动量方程”可见。离子声波是静电极限；1D 磁声波只有磁压没有磁张力弯曲；2D MHD 是半拉格朗日定性演示。真实工程问题仍需要可压缩 MHD/动理学求解器。</div>
+              <p><b>磁声波：</b>看压力壳层向外传播，磁场线被弯曲；点击波前放置探针，比较压力力与洛伦兹力。</p>
+              <p><b>磁岛：</b>看 \(A\) 的闭合等值线与 X 点；切换背景到电流密度 \(J\)，X 点附近是电流片；探针显示岛内侧的力平衡。</p>
+              <div class="doc-warning"><b>重要：</b>这是一个二维、无量纲、半拉格朗日的定性沙盒。它能让你看见动量方程各项和磁拓扑，但不能替代可压缩 MHD/撕裂模/动理学求解器。</div>
             </div>
           </details>
         </div>
@@ -2197,7 +1940,7 @@ A   = advect(A) + dt*(-B0*v + eta*lap(A))</pre>
   <section class="section" id="scales">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">12</div>
+        <div class="section-no">10</div>
         <div>
           <div class="kicker">Interactive 03 / order of magnitude</div>
           <h2 class="section-title">量级实验室：<span class="accent-amber">谁在主导？</span></h2>
@@ -2274,7 +2017,7 @@ A   = advect(A) + dt*(-B0*v + eta*lap(A))</pre>
   <section class="section" id="pitfalls">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">13</div>
+        <div class="section-no">11</div>
         <div>
           <div class="kicker">Common traps</div>
           <h2 class="section-title">六个容易踩的<span class="accent-magenta">坑</span></h2>
@@ -2296,7 +2039,7 @@ A   = advect(A) + dt*(-B0*v + eta*lap(A))</pre>
   <section class="section" id="quiz">
     <div class="wrap">
       <div class="section-head">
-        <div class="section-no">14</div>
+        <div class="section-no">12</div>
         <div>
           <div class="kicker">Check yourself</div>
           <h2 class="section-title">用四个问题，<span class="accent-green">检验直觉</span></h2>
@@ -2374,10 +2117,8 @@ A   = advect(A) + dt*(-B0*v + eta*lap(A))</pre>
           <li><a href="#concept">散度定理与尺度</a></li>
           <li><a href="#equation">动量方程解剖</a></li>
           <li><a href="#em">磁压与磁张力</a></li>
-          <li><a href="#ion-acoustic">离子声波</a></li>
-          <li><a href="#magnetosonic">1D 磁声波</a></li>
-          <li><a href="#mhd2d">2D 可压缩 MHD</a></li>
-          <li><a href="#sandbox-doc">波与沙盒模型详解</a></li>
+          <li><a href="#mhd2d">2D 沙盒：磁声波 / 磁岛</a></li>
+          <li><a href="#sandbox-doc">2D MHD 模型详解</a></li>
           <li><a href="#scales">量级实验室</a></li>
           <li><a href="MHD-notes.pdf">完整讲义 PDF</a></li>
           <li><a href="MHD-notes.md">Markdown 源文件</a></li>
@@ -3080,7 +2821,7 @@ function sci(x, digits = 2) {
     showLines: true, showParticles: true, showForce: true,
     view: "pressure"
   };
-  let preset = "blast";
+  let preset = "magnetosonic";
   let running = true;
   let t = 0;
   let fScale = 1;
@@ -3178,27 +2919,50 @@ function sci(x, digits = 2) {
   }
 
   function reset(presetName) {
-    preset = presetName || "blast";
+    preset = presetName || "magnetosonic";
     u.fill(0); v.fill(0); A.fill(0); bx.fill(0); by.fill(0); J.fill(0); vort.fill(0);
     rho.fill(1); p.fill(1);
-    for (let j = 0; j < N; j++) {
-      for (let i = 0; i < N; i++) {
-        const x = (i + .5) / N - .5, y = (j + .5) / N - .5;
-        const r2 = x * x + y * y;
-        const k = j * N + i;
-        p[k] = 1 + 0.90 * Math.exp(-r2 / (2 * .085 * .085));
-        A[k] = 0.25 * Math.exp(-r2 / (2 * .25 * .25));
-        rho[k] = 1 + 0.12 * Math.exp(-r2 / (2 * .11 * .11));
+
+    if (preset === "island") {
+      guideB0 = 0;
+      const kx = 2 * Math.PI, ky = 2 * Math.PI;
+      const A0 = 0.10, eps = 0.10;
+      for (let j = 0; j < N; j++) {
+        for (let i = 0; i < N; i++) {
+          const x = (i + .5) / N, y = (j + .5) / N;
+          A[j * N + i] = A0 * Math.cos(kx * x) + eps * Math.cos(ky * y);
+        }
       }
+      derive();
+      let avgB2 = 0;
+      for (let k = 0; k < NN; k++) avgB2 += bx[k] * bx[k] + by[k] * by[k];
+      avgB2 /= NN;
+      for (let k = 0; k < NN; k++) {
+        p[k] = Math.max(0.15, 1.15 - 0.5 * (bx[k] * bx[k] + by[k] * by[k] - avgB2));
+      }
+      settings.view = "current";
+      $("#simView").value = "current";
+    } else {
+      guideB0 = 0.90;
+      for (let j = 0; j < N; j++) {
+        for (let i = 0; i < N; i++) {
+          const x = (i + .5) / N - .5, y = (j + .5) / N - .5;
+          const r2 = x * x + y * y;
+          const k = j * N + i;
+          p[k] = 1 + 0.60 * Math.exp(-r2 / (2 * .10 * .10));
+          rho[k] = 1 + 0.08 * Math.exp(-r2 / (2 * .12 * .12));
+          A[k] = 0;
+        }
+      }
+      derive();
+      settings.view = "pressure";
+      $("#simView").value = "pressure";
     }
-    let meanA = 0;
-    for (let k = 0; k < NN; k++) meanA += A[k];
-    meanA /= NN;
-    for (let k = 0; k < NN; k++) A[k] -= meanA;
-    derive();
+
     t = 0;
     accumulator = 0;
     resetParticles();
+    updatePresetUI(preset);
     updateReadouts(true);
     render();
   }
@@ -3759,6 +3523,15 @@ function sci(x, digits = 2) {
     $("#probeRhoA").textContent = simNum(pr.net);
   }
 
+  function updatePresetUI(name) {
+    $$("[data-sim-preset]").forEach(b => b.classList.toggle("active", b.dataset.simPreset === name));
+    const desc = {
+      magnetosonic: "磁声波：均匀背景场 B0 中的压力脉冲；磁场被流场弯曲，压力梯度与洛伦兹力共同驱动。",
+      island: "磁岛：B0=0，A=A0cos x+εcos y；闭合磁岛与 X 点。压力按总压近似平衡初始化，观察磁力线与电流。"
+    };
+    $("#simDesc").textContent = desc[name] || desc.magnetosonic;
+  }
+
   function setRunning(next) {
     running = next;
     const status = $("#simStatus");
@@ -3806,6 +3579,12 @@ function sci(x, digits = 2) {
     updateReadouts(true);
   });
   $("#simReset").addEventListener("click", () => reset(preset));
+  $$("[data-sim-preset]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      reset(btn.dataset.simPreset);
+      if (!running) render();
+    });
+  });
   $("#simView").addEventListener("change", e => { settings.view = e.target.value; render(); });
   $("#simFieldLines").addEventListener("change", e => { settings.showLines = e.target.checked; render(); });
   $("#simParticles").addEventListener("change", e => { settings.showParticles = e.target.checked; render(); });
@@ -3839,565 +3618,8 @@ function sci(x, digits = 2) {
 
   const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   setupCanvas();
-  reset("blast");
+  reset("magnetosonic");
   setRunning(!reduceMotion);
-  updateReadouts(true);
-  raf = requestAnimationFrame(loop);
-})();
-
-/* ================================================================
-   5.5 ion acoustic wave (1D quasineutral ion fluid)
-   ================================================================ */
-(function initIonAcoustic() {
-  const canvas = $("#esCanvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  const W = 900, H = 430;
-  const N = 256, dx = 1 / N;
-  let n = new Float64Array(N), u = new Float64Array(N), E = new Float64Array(N);
-  let nTmp = new Float64Array(N), uTmp = new Float64Array(N), flux = new Float64Array(N);
-  const state = {
-    amp: 0.06,
-    mode: 1,
-    damp: 0.002,
-    running: !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches),
-    t: 0
-  };
-  const ES_DT = 0.0018;
-  const plot = { x: 66, yTop: 72, yBot: 258, w: 792, hTop: 124, hBot: 124 };
-  const ui = {
-    amp: $("#esAmp"), mode: $("#esMode"), damp: $("#esDamp"),
-    ampOut: $("#esAmpOut"), modeOut: $("#esModeOut"), dampOut: $("#esDampOut"),
-    toggle: $("#esToggle"), reset: $("#esReset"), status: $("#esStatus"),
-    maxE: $("#esMaxE"), maxN: $("#esMaxN"), time: $("#esTime"), time2: $("#esTime2")
-  };
-  let last = 0, acc = 0, raf = 0, uiTick = 0;
-
-  function setupCanvas() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-  }
-
-  function solveE() {
-    /* quasineutral ambipolar field: E = -(1/n) dn/dx */
-    for (let i = 0; i < N; i++) {
-      const im = (i - 1 + N) % N, ip = (i + 1) % N;
-      E[i] = -(n[ip] - n[im]) / (2 * dx * Math.max(n[i], 1e-4));
-    }
-  }
-
-  function reset() {
-    state.amp = parseFloat(ui.amp.value);
-    state.mode = parseInt(ui.mode.value, 10);
-    state.damp = parseFloat(ui.damp.value);
-    ui.ampOut.textContent = state.amp.toFixed(3);
-    ui.modeOut.textContent = String(state.mode);
-    ui.dampOut.textContent = state.damp.toFixed(4);
-    for (let i = 0; i < N; i++) {
-      const x = (i + .5) / N;
-      const ph = 2 * Math.PI * state.mode * x;
-      n[i] = 1 + state.amp * Math.cos(ph);
-      u[i] = state.amp * Math.cos(ph);
-    }
-    solveE();
-    state.t = 0;
-    acc = 0;
-    render();
-    updateReadouts(true);
-  }
-
-  function step(dt) {
-    /* continuity: finite-volume upwind flux */
-    for (let i = 0; i < N; i++) {
-      const ip = (i + 1) % N;
-      const uf = 0.5 * (u[i] + u[ip]);
-      flux[i] = uf > 0 ? n[i] * uf : n[ip] * uf;
-    }
-    for (let i = 0; i < N; i++) {
-      const im = (i - 1 + N) % N, ip = (i + 1) % N;
-      nTmp[i] = Math.max(0.02,
-        n[i] - dt / dx * (flux[i] - flux[im]) +
-        0.002 * dt / (dx * dx) * (n[ip] + n[im] - 2 * n[i])
-      );
-    }
-    /* ion momentum: upwind advection + ambipolar E - damping */
-    for (let i = 0; i < N; i++) {
-      const im = (i - 1 + N) % N, ip = (i + 1) % N;
-      const du = u[i] > 0 ? (u[i] - u[im]) / dx : (u[ip] - u[i]) / dx;
-      uTmp[i] = u[i] + dt * (-u[i] * du + E[i] - state.damp * u[i]) +
-        0.002 * dt / (dx * dx) * (u[ip] + u[im] - 2 * u[i]);
-      if (uTmp[i] > 1.5) uTmp[i] = 1.5;
-      if (uTmp[i] < -1.5) uTmp[i] = -1.5;
-    }
-    [n, nTmp] = [nTmp, n];
-    [u, uTmp] = [uTmp, u];
-    solveE();
-    state.t += dt;
-  }
-
-  function render() {
-    ctx.fillStyle = "#050b13";
-    ctx.fillRect(0, 0, W, H);
-    const bg = ctx.createRadialGradient(W * .5, H * .45, 40, W * .5, H * .45, 520);
-    bg.addColorStop(0, "rgba(13,34,55,.55)");
-    bg.addColorStop(1, "rgba(4,9,16,0)");
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-
-    /* grid */
-    ctx.save();
-    ctx.strokeStyle = "rgba(154,184,220,.07)";
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= 4; i++) {
-      const x = plot.x + plot.w * i / 4;
-      ctx.beginPath(); ctx.moveTo(x, plot.yTop - 12); ctx.lineTo(x, plot.yBot + plot.hBot + 10); ctx.stroke();
-    }
-    for (const y of [plot.yTop, plot.yTop + plot.hTop / 2, plot.yTop + plot.hTop, plot.yBot, plot.yBot + plot.hBot / 2, plot.yBot + plot.hBot]) {
-      ctx.beginPath(); ctx.moveTo(plot.x, y); ctx.lineTo(plot.x + plot.w, y); ctx.stroke();
-    }
-    ctx.restore();
-
-    const toX = i => plot.x + (i + .5) / N * plot.w;
-
-    /* density panel */
-    const nBase = 1;
-    const nLo = 0.6, nHi = 1.4;
-    const yN = v => plot.yTop + plot.hTop * (1 - (v - nLo) / (nHi - nLo));
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(plot.x, plot.yTop - 10, plot.w, plot.hTop + 20);
-    ctx.clip();
-    const fill = ctx.createLinearGradient(0, plot.yTop, 0, plot.yTop + plot.hTop);
-    fill.addColorStop(0, "rgba(86,217,255,.20)");
-    fill.addColorStop(1, "rgba(86,217,255,.01)");
-    ctx.beginPath();
-    ctx.moveTo(toX(0), yN(n[0]));
-    for (let i = 1; i < N; i++) ctx.lineTo(toX(i), yN(n[i]));
-    ctx.lineTo(plot.x + plot.w, yN(nLo));
-    ctx.lineTo(plot.x, yN(nLo));
-    ctx.closePath();
-    ctx.fillStyle = fill;
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(toX(0), yN(n[0]));
-    for (let i = 1; i < N; i++) ctx.lineTo(toX(i), yN(n[i]));
-    ctx.strokeStyle = "#56d9ff";
-    ctx.lineWidth = 2;
-    ctx.shadowColor = "rgba(86,217,255,.6)";
-    ctx.shadowBlur = 12;
-    ctx.stroke();
-    ctx.restore();
-
-    /* E panel */
-    let maxE = 0.02;
-    for (let i = 0; i < N; i++) maxE = Math.max(maxE, Math.abs(E[i]));
-    const yE = v => plot.yBot + plot.hBot * .5 - v / maxE * plot.hBot * .46;
-    ctx.save();
-    ctx.strokeStyle = "rgba(154,184,220,.18)";
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(plot.x, yE(0)); ctx.lineTo(plot.x + plot.w, yE(0)); ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(toX(0), yE(E[0]));
-    for (let i = 1; i < N; i++) ctx.lineTo(toX(i), yE(E[i]));
-    ctx.strokeStyle = "#ffc15e";
-    ctx.lineWidth = 2;
-    ctx.shadowColor = "rgba(255,193,94,.6)";
-    ctx.shadowBlur = 12;
-    ctx.stroke();
-    ctx.restore();
-
-    /* axes and labels */
-    ctx.save();
-    ctx.fillStyle = "rgba(154,184,220,.65)";
-    ctx.font = "10px 'Cascadia Code', Consolas, monospace";
-    ctx.fillText("n_i(x)", plot.x + 8, plot.yTop - 8);
-    ctx.fillStyle = "rgba(86,217,255,.8)";
-    ctx.fillText("ion density", plot.x + 66, plot.yTop - 8);
-    ctx.fillStyle = "rgba(255,193,94,.85)";
-    ctx.fillText("E_amb(x)", plot.x + 8, plot.yBot - 10);
-    ctx.fillStyle = "rgba(154,184,220,.5)";
-    ctx.fillText("ambipolar E", plot.x + 72, plot.yBot - 10);
-    ctx.fillStyle = "rgba(154,184,220,.45)";
-    ctx.font = "9px 'Cascadia Code', Consolas, monospace";
-    for (let i = 0; i <= 4; i++) {
-      const x = plot.x + plot.w * i / 4;
-      ctx.fillText((i / 4).toFixed(2), x - 9, plot.yBot + plot.hBot + 28);
-    }
-    ctx.fillText("x / L", plot.x + plot.w - 32, plot.yBot + plot.hBot + 40);
-    ctx.restore();
-  }
-
-  function updateReadouts(force = false) {
-    if (!force && (uiTick++ % 4) !== 0) return;
-    let mE = 0, mN = 0;
-    for (let i = 0; i < N; i++) {
-      mE = Math.max(mE, Math.abs(E[i]));
-      mN = Math.max(mN, Math.abs(n[i] - 1));
-    }
-    ui.maxE.textContent = mE.toFixed(3);
-    ui.maxN.textContent = mN.toFixed(3);
-    ui.time.textContent = state.t.toFixed(2);
-    ui.time2.textContent = state.t.toFixed(2);
-  }
-
-  function setRunning(next) {
-    state.running = next;
-    ui.status.textContent = next ? "RUNNING" : "PAUSED";
-    ui.status.classList.toggle("paused", !next);
-    ui.toggle.textContent = next ? "暂停" : "继续";
-    last = 0;
-    acc = 0;
-  }
-
-  function loop(now) {
-    raf = requestAnimationFrame(loop);
-    if (!last) last = now;
-    let delta = now - last;
-    last = now;
-    if (delta > 100) delta = 100;
-    if (state.running) {
-      acc += delta;
-      const frame = 1000 / 60;
-      let steps = 0;
-      while (acc >= frame && steps < 3) {
-        step(ES_DT);
-        acc -= frame;
-        steps++;
-      }
-      if (acc > frame * 4) acc = 0;
-    }
-    render();
-    updateReadouts();
-  }
-
-  ["esAmp", "esMode"].forEach(id => {
-    $("#" + id).addEventListener("input", () => {
-      reset();
-    });
-  });
-  ui.damp.addEventListener("input", () => {
-    state.damp = parseFloat(ui.damp.value);
-    ui.dampOut.textContent = state.damp.toFixed(4);
-  });
-  ui.toggle.addEventListener("click", () => setRunning(!state.running));
-  ui.reset.addEventListener("click", () => reset());
-  window.addEventListener("resize", () => { setupCanvas(); render(); });
-
-  setupCanvas();
-  reset();
-  setRunning(state.running);
-  updateReadouts(true);
-  raf = requestAnimationFrame(loop);
-})();
-
-/* ================================================================
-   5.6 1D compressible MHD magnetosonic wave (HLL)
-   ================================================================ */
-(function initMagWave() {
-  const canvas = $("#magCanvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  const W = 900, H = 430;
-  const N = 256, dx = 1 / N, GAMMA = 5 / 3;
-  let rho = new Float64Array(N), mx = new Float64Array(N), B = new Float64Array(N), En = new Float64Array(N);
-  let rhoT = new Float64Array(N), mxT = new Float64Array(N), BT = new Float64Array(N), EnT = new Float64Array(N);
-  const FR = new Float64Array(N + 1), FM = new Float64Array(N + 1), FB = new Float64Array(N + 1), FE = new Float64Array(N + 1);
-  const state = {
-    B0: .70, amp: .12,
-    running: !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches),
-    t: 0, probeX: .60
-  };
-  const MAG_DT = 0.0008;
-  const plot = { x: 66, yTop: 72, yBot: 258, w: 792, hTop: 124, hBot: 124 };
-  const ui = {
-    B0: $("#magB0"), amp: $("#magAmp"), B0Out: $("#magB0Out"), ampOut: $("#magAmpOut"),
-    toggle: $("#magToggle"), reset: $("#magReset"), status: $("#magStatus"),
-    maxU: $("#magMaxU"), cf: $("#magCf"), time: $("#magTime"), time2: $("#magTime2"),
-    probe: $("#magProbe")
-  };
-  let last = 0, acc = 0, raf = 0, uiTick = 0;
-
-  function setupCanvas() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-  }
-
-  function pressure(r, m, b, e) {
-    return Math.max(1e-4, (GAMMA - 1) * (e - 0.5 * m * m / Math.max(r, 1e-5) - 0.5 * b * b));
-  }
-
-  function physicalFlux(r, m, b, e, out, i) {
-    const u = m / r;
-    const p = pressure(r, m, b, e);
-    const pt = p + 0.5 * b * b;
-    out[0][i] = m;
-    out[1][i] = m * u + pt;
-    out[2][i] = u * b;
-    out[3][i] = u * (e + pt);
-  }
-
-  function hllFace(rL, mL, bL, eL, rR, mR, bR, eR, i) {
-    const uL = mL / rL, uR = mR / rR;
-    const pL = pressure(rL, mL, bL, eL), pR = pressure(rR, mR, bR, eR);
-    const ptL = pL + 0.5 * bL * bL, ptR = pR + 0.5 * bR * bR;
-    const cfL = Math.sqrt(GAMMA * pL / rL + bL * bL / rL);
-    const cfR = Math.sqrt(GAMMA * pR / rR + bR * bR / rR);
-    const SL = Math.min(uL - cfL, uR - cfR);
-    const SR = Math.max(uL + cfL, uR + cfR);
-    const FLr = mL, FLm = mL * uL + ptL, FLb = uL * bL, FLe = uL * (eL + ptL);
-    const FRr = mR, FRm = mR * uR + ptR, FRb = uR * bR, FRe = uR * (eR + ptR);
-    if (SL >= 0) {
-      FR[i] = FLr; FM[i] = FLm; FB[i] = FLb; FE[i] = FLe;
-    } else if (SR <= 0) {
-      FR[i] = FRr; FM[i] = FRm; FB[i] = FRb; FE[i] = FRe;
-    } else {
-      const inv = 1 / Math.max(SR - SL, 1e-9);
-      FR[i] = (SR * FLr - SL * FRr + SL * SR * (rR - rL)) * inv;
-      FM[i] = (SR * FLm - SL * FRm + SL * SR * (mR - mL)) * inv;
-      FB[i] = (SR * FLb - SL * FRb + SL * SR * (bR - bL)) * inv;
-      FE[i] = (SR * FLe - SL * FRe + SL * SR * (eR - eL)) * inv;
-    }
-  }
-
-  function reset() {
-    state.B0 = parseFloat(ui.B0.value);
-    state.amp = parseFloat(ui.amp.value);
-    ui.B0Out.textContent = state.B0.toFixed(2);
-    ui.ampOut.textContent = state.amp.toFixed(3);
-    for (let i = 0; i < N; i++) {
-      const x = (i + .5) / N;
-      const pulse = Math.exp(-Math.pow((x - .5) / .055, 2));
-      rho[i] = 1 + 0.15 * state.amp * pulse;
-      const p = 1 + state.amp * pulse;
-      B[i] = state.B0;
-      mx[i] = 0;
-      En[i] = p / (GAMMA - 1) + 0.5 * state.B0 * state.B0;
-    }
-    state.t = 0;
-    acc = 0;
-    render();
-    updateReadouts(true);
-  }
-
-  function step(dt) {
-    for (let f = 0; f <= N; f++) {
-      const l = (f - 1 + N) % N, r = f % N;
-      hllFace(rho[l], mx[l], B[l], En[l], rho[r], mx[r], B[r], En[r], f);
-    }
-    for (let i = 0; i < N; i++) {
-      rhoT[i] = Math.max(0.04, rho[i] - dt / dx * (FR[i + 1] - FR[i]));
-      mxT[i] = mx[i] - dt / dx * (FM[i + 1] - FM[i]);
-      BT[i] = B[i] - dt / dx * (FB[i + 1] - FB[i]);
-      EnT[i] = En[i] - dt / dx * (FE[i + 1] - FE[i]);
-    }
-    for (let i = 0; i < N; i++) {
-      const p = pressure(rhoT[i], mxT[i], BT[i], EnT[i]);
-      rho[i] = Math.max(0.04, rhoT[i]);
-      mx[i] = Math.max(-12, Math.min(12, mxT[i]));
-      B[i] = BT[i];
-      En[i] = Math.max(0.02, p / (GAMMA - 1) + 0.5 * mx[i] * mx[i] / rho[i] + 0.5 * B[i] * B[i]);
-    }
-    state.t += dt;
-  }
-
-  function profiles() {
-    let pMax = 1, uMax = 0, cfMax = 0;
-    for (let i = 0; i < N; i++) {
-      const p = pressure(rho[i], mx[i], B[i], En[i]);
-      pMax = Math.max(pMax, p);
-      uMax = Math.max(uMax, Math.abs(mx[i] / rho[i]));
-      cfMax = Math.max(cfMax, Math.sqrt(GAMMA * p / rho[i] + B[i] * B[i] / rho[i]));
-    }
-    return { pMax, uMax, cfMax };
-  }
-
-  function probeForce() {
-    const i = Math.max(0, Math.min(N - 1, Math.round(state.probeX * N)));
-    const im = (i - 1 + N) % N, ip = (i + 1) % N;
-    const p0 = pressure(rho[i], mx[i], B[i], En[i]);
-    const dp = 0.5 * (pressure(rho[ip], mx[ip], B[ip], En[ip]) - pressure(rho[im], mx[im], B[im], En[im]));
-    const db2 = 0.5 * (B[ip] * B[ip] - B[im] * B[im]);
-    return { i, rho: rho[i], p: p0, dp, db2, acc: (-dp - 0.5 * db2) / rho[i] };
-  }
-
-  function render() {
-    ctx.fillStyle = "#050b13";
-    ctx.fillRect(0, 0, W, H);
-    const bg = ctx.createRadialGradient(W * .5, H * .45, 30, W * .5, H * .45, 500);
-    bg.addColorStop(0, "rgba(13,34,55,.5)");
-    bg.addColorStop(1, "rgba(4,9,16,0)");
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-
-    const ix = i => plot.x + (i + .5) / N * plot.w;
-    const topVals = [];
-    for (let i = 0; i < N; i++) {
-      topVals.push(rho[i], pressure(rho[i], mx[i], B[i], En[i]), B[i] / Math.max(state.B0, .05));
-    }
-    let lo = Math.min(...topVals), hi = Math.max(...topVals);
-    lo = Math.min(lo, .92); hi = Math.max(hi, 1.08);
-    const span = Math.max(hi - lo, .18);
-    const yTop = v => plot.yTop + plot.hTop * (1 - (v - lo) / span);
-
-    ctx.save();
-    ctx.strokeStyle = "rgba(154,184,220,.08)";
-    for (let i = 0; i <= 4; i++) {
-      const x = plot.x + plot.w * i / 4;
-      ctx.beginPath(); ctx.moveTo(x, plot.yTop - 10); ctx.lineTo(x, plot.yBot + plot.hBot + 6); ctx.stroke();
-    }
-    for (const y of [plot.yTop, plot.yTop + plot.hTop, plot.yBot, plot.yBot + plot.hBot]) {
-      ctx.beginPath(); ctx.moveTo(plot.x, y); ctx.lineTo(plot.x + plot.w, y); ctx.stroke();
-    }
-
-    const drawCurve = (values, color, width) => {
-      ctx.beginPath();
-      for (let i = 0; i < N; i++) {
-        const x = ix(i), y = yTop(values[i]);
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      }
-      ctx.strokeStyle = color;
-      ctx.lineWidth = width;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 8;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-    };
-    const rhoN = Array.from(rho);
-    const pN = Array.from({ length: N }, (_, i) => pressure(rho[i], mx[i], B[i], En[i]));
-    const bN = Array.from({ length: N }, (_, i) => B[i] / Math.max(state.B0, .05));
-    drawCurve(rhoN, "#56d9ff", 2);
-    drawCurve(pN, "#ffc15e", 1.6);
-    drawCurve(bN, "#a88bff", 1.3);
-    ctx.restore();
-
-    /* force budget */
-    let fMax = .01;
-    const fRhoA = [], fP = [], fB = [];
-    for (let i = 0; i < N; i++) {
-      const im = (i - 1 + N) % N, ip = (i + 1) % N;
-      const dp = 0.5 * (pressure(rho[ip], mx[ip], B[ip], En[ip]) - pressure(rho[im], mx[im], B[im], En[im]));
-      const db2 = 0.5 * (B[ip] * B[ip] - B[im] * B[im]);
-      const f = -dp - 0.5 * db2;
-      fRhoA.push(f);
-      fP.push(-dp);
-      fB.push(-0.5 * db2);
-      fMax = Math.max(fMax, Math.abs(f), Math.abs(dp), Math.abs(0.5 * db2));
-    }
-    const yF = f => plot.yBot + plot.hBot * .5 - f / fMax * plot.hBot * .42;
-    ctx.save();
-    ctx.strokeStyle = "rgba(154,184,220,.2)";
-    ctx.beginPath(); ctx.moveTo(plot.x, yF(0)); ctx.lineTo(plot.x + plot.w, yF(0)); ctx.stroke();
-    const drawF = (vals, color) => {
-      ctx.beginPath();
-      for (let i = 0; i < N; i++) {
-        const x = ix(i), y = yF(vals[i]);
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      }
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    };
-    drawF(fRhoA, "rgba(216,246,255,.9)");
-    drawF(fP, "rgba(255,193,94,.9)");
-    drawF(fB, "rgba(168,139,255,.9)");
-
-    /* probe line */
-    const px = plot.x + state.probeX * plot.w;
-    ctx.setLineDash([3, 3]);
-    ctx.strokeStyle = "rgba(216,246,255,.55)";
-    ctx.beginPath(); ctx.moveTo(px, plot.yTop - 8); ctx.lineTo(px, plot.yBot + plot.hBot + 6); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-
-    ctx.save();
-    ctx.font = "10px 'Cascadia Code', Consolas, monospace";
-    ctx.fillStyle = "rgba(154,184,220,.7)";
-    ctx.fillText("ρ/ρ₀", plot.x + 8, plot.yTop - 12);
-    ctx.fillStyle = "rgba(255,193,94,.85)";
-    ctx.fillText("p/p₀", plot.x + 60, plot.yTop - 12);
-    ctx.fillStyle = "rgba(168,139,255,.85)";
-    ctx.fillText("B/B₀", plot.x + 112, plot.yTop - 12);
-    ctx.fillStyle = "rgba(216,246,255,.75)";
-    ctx.fillText("force budget", plot.x + 8, plot.yBot - 9);
-    ctx.fillStyle = "rgba(255,193,94,.75)";
-    ctx.fillText("−∂ₓp", plot.x + 100, plot.yBot - 9);
-    ctx.fillStyle = "rgba(168,139,255,.75)";
-    ctx.fillText("−∂ₓ(B²/2)", plot.x + 156, plot.yBot - 9);
-    ctx.fillStyle = "rgba(154,184,220,.5)";
-    ctx.font = "9px 'Cascadia Code', Consolas, monospace";
-    for (let i = 0; i <= 4; i++) {
-      const x = plot.x + plot.w * i / 4;
-      ctx.fillText((i / 4).toFixed(2), x - 9, plot.yBot + plot.hBot + 24);
-    }
-    ctx.fillText("x / L", plot.x + plot.w - 32, plot.yBot + plot.hBot + 38);
-    ctx.restore();
-  }
-
-  function updateReadouts(force = false) {
-    if (!force && (uiTick++ % 4) !== 0) return;
-    const m = profiles();
-    ui.maxU.textContent = m.uMax.toFixed(3);
-    ui.cf.textContent = m.cfMax.toFixed(3);
-    ui.time.textContent = state.t.toFixed(2);
-    ui.time2.textContent = state.t.toFixed(2);
-    const pr = probeForce();
-    ui.probe.textContent = `x = ${state.probeX.toFixed(2)} · ρa = ${pr.acc.toFixed(3)} · −∂ₓp = ${(-pr.dp).toFixed(3)} · −∂ₓ(B²/2) = ${(-0.5 * pr.db2).toFixed(3)}`;
-  }
-
-  function setRunning(next) {
-    state.running = next;
-    ui.status.textContent = next ? "RUNNING" : "PAUSED";
-    ui.status.classList.toggle("paused", !next);
-    ui.toggle.textContent = next ? "暂停" : "继续";
-    last = 0; acc = 0;
-  }
-
-  function loop(now) {
-    raf = requestAnimationFrame(loop);
-    if (!last) last = now;
-    let delta = now - last;
-    last = now;
-    if (delta > 100) delta = 100;
-    if (state.running) {
-      acc += delta;
-      const frame = 1000 / 60;
-      let steps = 0;
-      while (acc >= frame && steps < 3) {
-        step(MAG_DT);
-        acc -= frame;
-        steps++;
-      }
-      if (acc > frame * 4) acc = 0;
-    }
-    render();
-    updateReadouts();
-  }
-
-  ui.B0.addEventListener("input", reset);
-  ui.amp.addEventListener("input", reset);
-  ui.toggle.addEventListener("click", () => setRunning(!state.running));
-  ui.reset.addEventListener("click", reset);
-  canvas.addEventListener("click", e => {
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width * W;
-    if (x < plot.x || x > plot.x + plot.w) return;
-    state.probeX = Math.max(0, Math.min(1, (x - plot.x) / plot.w));
-    render();
-    updateReadouts(true);
-  });
-  window.addEventListener("resize", () => { setupCanvas(); render(); });
-
-  setupCanvas();
-  reset();
-  setRunning(state.running);
   updateReadouts(true);
   raf = requestAnimationFrame(loop);
 })();
